@@ -1,0 +1,281 @@
+[{
+  "_id": {
+    "$oid": "672b7b86b5a7c377ef24b3ef"
+  },
+  "email": "admin@gmail.com",
+  "password": "$2b$10$SrXFf1kxKOoG9XIw5jON1e1iQiLsQKpxWD.cT0mtqwLamZ43xQPWO",
+  "roleId": "R1",
+  "isVerified": true,
+  "otpCode": "$2b$10$U5uXO3mJ7G/njahE/A23GO72xX1GxAu7gtZwhIkbeKN4FJJtoE7qu",
+  "createdAt": {
+    "$date": "2024-11-06T14:21:58.125Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-06T14:25:02.876Z"
+  },
+  "userId": 1,
+  "__v": 0,
+  "image": "1731429789265-admin.png"
+},
+{
+  "_id": {
+    "$oid": "6730c09dbb04ced4ae6a85b3"
+  },
+  "email": "duykien@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Phan Duy Kiên",
+  "address": "Bình Định",
+  "gender": "Male",
+  "birthDate": {
+    "$date": "1990-10-10T00:00:00.000Z"
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234333",
+  "image": "1731429789263-doctor1.png",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 2,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f1d285f21a3f924aaaedc"
+  },
+  "email": "huuthao@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Nguyễn Hữu Thảo",
+  "address": "Tiền Giang",
+  "gender": "Male",
+  "birthDate": {
+    "$date": "1995-10-12T00:00:00.000Z"
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234333",
+  "image": "1731429789264-doctor2.jpg",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 3,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f25a95f21a3f924aaaede"
+  },
+  "email": "hongquang@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Thái Hồng Quang",
+  "address": "Kiên Giang",
+  "gender": "Male",
+  "birthDate": {
+    "$date": {
+      "$numberLong": "-290995200000"
+    }
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234899",
+  "image": "1731429789266-doctor3.jpg",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 4,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f27565f21a3f924aaaee0"
+  },
+  "email": "anhvu@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Đỗ Anh Vũ",
+  "address": "Mỹ Tho",
+  "gender": "Male",
+  "birthDate": {
+    "$date": "1980-10-12T00:00:00.000Z"
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234333",
+  "image": "1731429789267-doctor4.png",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 5,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f289d5f21a3f924aaaee2"
+  },
+  "email": "hoaian@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Nguyễn Thị Hoài An",
+  "address": "Mỹ Tho",
+  "gender": "Female",
+  "birthDate": {
+    "$date": "1990-10-12T00:00:00.000Z"
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234333",
+  "image": "1731429789268-doctor5.jpg",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 6,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f2a2b5f21a3f924aaaee5"
+  },
+  "email": "vandoanh@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Nguyễn Văn Doanh",
+  "address": "Mỹ Tho",
+  "gender": "Male",
+  "birthDate": {
+    "$date": {
+      "$numberLong": "-290995200000"
+    }
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234333",
+  "image": "1731429789269-doctor6.jpg",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 7,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f2af55f21a3f924aaaee8"
+  },
+  "email": "tuanminh@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Nguyễn Tuấn Minh",
+  "address": "Long An",
+  "gender": "Male",
+  "birthDate": {
+    "$date": {
+      "$numberLong": "-290995200000"
+    }
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234333",
+  "image": "1731429789270-doctor7.jpg",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 8,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f2cc25f21a3f924aaaeed"
+  },
+  "email": "haan@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Trần Thị Hà An",
+  "address": "Quảng Nam",
+  "gender": "Female",
+  "birthDate": {
+    "$date": {
+      "$numberLong": "-290995200000"
+    }
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234333",
+  "image": "1731429789271-doctor8.jpg",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 9,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f2d8e5f21a3f924aaaeef"
+  },
+  "email": "thanhbinh@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Nguyễn Thanh Bình",
+  "address": "Quảng Nam",
+  "gender": "Female",
+  "birthDate": {
+    "$date": {
+      "$numberLong": "-290995200000"
+    }
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234333",
+  "image": "1731429789272-doctor9.jpg",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 10,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f2e5b5f21a3f924aaaef3"
+  },
+  "email": "vanquyet@gmail.com",
+  "password": "$2b$10$H.SM9ybgh4HclKaX9JuhDO2tGlLElZ30m7ac5xtizM/UmWgGBBUYq",
+  "fullname": "Hà Văn Quyết",
+  "address": "Quảng Nam",
+  "gender": "Male",
+  "birthDate": {
+    "$date": {
+      "$numberLong": "-290995200000"
+    }
+  },
+  "roleId": "R2",
+  "phoneNumber": "0934234333",
+  "image": "1731429789273-doctor10.jpg",
+  "isVerified": true,
+  "createdAt": {
+    "$date": "2024-11-10T14:18:05.615Z"
+  },
+  "updatedAt": {
+    "$date": "2024-11-16T06:05:34.448Z"
+  },
+  "userId": 11,
+  "__v": 0
+}]

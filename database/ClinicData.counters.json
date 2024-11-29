@@ -1,0 +1,56 @@
+[{
+  "_id": {
+    "$oid": "6713ac22f41891d279ee1708"
+  },
+  "reference_value": null,
+  "id": "clinicId",
+  "seq": 12
+},
+{
+  "_id": {
+    "$oid": "6713ac91f41891d279ee175b"
+  },
+  "reference_value": null,
+  "id": "specialtyId",
+  "seq": 10
+},
+{
+  "_id": {
+    "$oid": "671a56baf41891d279ee79fb"
+  },
+  "id": "scheduleId",
+  "reference_value": null,
+  "seq": 0
+},
+{
+  "_id": {
+    "$oid": "671a576ef41891d279ee7a65"
+  },
+  "id": "bookingId",
+  "reference_value": null,
+  "seq": 0
+},
+{
+  "_id": {
+    "$oid": "672b7b5bc1092d9b60333358"
+  },
+  "id": "userId",
+  "reference_value": null,
+  "seq": 11
+},
+{
+  "_id": {
+    "$oid": "672ce8f2c1092d9b60334a31"
+  },
+  "id": "patientRecordId",
+  "reference_value": null,
+  "seq": 0
+},
+{
+  "_id": {
+    "$oid": "67319cc4c1092d9b603390a7"
+  },
+  "id": "id",
+  "reference_value": null,
+  "seq": 14
+}]

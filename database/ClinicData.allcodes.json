@@ -1,0 +1,187 @@
+[{
+  "_id": {
+    "$oid": "67319cc4375ec33e5b351aa5"
+  },
+  "keyMap": "P0",
+  "type": "Position",
+  "valueEn": "Doctor",
+  "valueVi": "Bác sĩ",
+  "id": 1,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732181e71c573c998e32154"
+  },
+  "keyMap": "T1",
+  "type": "TIME",
+  "valueEn": "8:00 AM - 9:00 AM",
+  "valueVi": "8:00 - 9:00",
+  "id": 2,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732192971c573c998e32158"
+  },
+  "keyMap": "S1",
+  "type": "STATUS",
+  "valueEn": "New",
+  "valueVi": "Chưa xác nhận",
+  "id": 3,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732193e71c573c998e3215c"
+  },
+  "keyMap": "S2",
+  "type": "STATUS",
+  "valueEn": "Confirmed",
+  "valueVi": "Đã xác nhận",
+  "id": 4,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732195a71c573c998e32160"
+  },
+  "keyMap": "S4",
+  "type": "STATUS",
+  "valueEn": "Done",
+  "valueVi": "Đã khám xong",
+  "id": 5,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732196b71c573c998e32164"
+  },
+  "keyMap": "S5",
+  "type": "STATUS",
+  "valueEn": "Cancel",
+  "valueVi": "Đã hủy",
+  "id": 6,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732d2b3003b1e6f2a77317f"
+  },
+  "keyMap": "T2",
+  "type": "TIME",
+  "valueEn": "9:00 AM - 10:00 AM",
+  "valueVi": "9:00 - 10:00",
+  "id": 7,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732d2cf003b1e6f2a773183"
+  },
+  "keyMap": "T3",
+  "type": "TIME",
+  "valueEn": "10:00 AM - 11:00 AM",
+  "valueVi": "10:00 - 11:00",
+  "id": 8,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732d31e003b1e6f2a77318b"
+  },
+  "keyMap": "T4",
+  "type": "TIME",
+  "valueEn": "11:00 AM - 0:00 PM",
+  "valueVi": "11:00 - 12:00",
+  "id": 10,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732d333003b1e6f2a77318f"
+  },
+  "keyMap": "T5",
+  "type": "TIME",
+  "valueEn": "1:00 PM - 2:00 PM",
+  "valueVi": "13:00 - 14:00",
+  "id": 11,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732d346003b1e6f2a773193"
+  },
+  "keyMap": "T6",
+  "type": "TIME",
+  "valueEn": "2:00 PM - 3:00 PM",
+  "valueVi": "14:00 - 15:00",
+  "id": 12,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732d356003b1e6f2a773197"
+  },
+  "keyMap": "T7",
+  "type": "TIME",
+  "valueEn": "3:00 PM - 4:00 PM",
+  "valueVi": "15:00 - 16:00",
+  "id": 13,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6732d36e003b1e6f2a77319b"
+  },
+  "keyMap": "T8",
+  "type": "TIME",
+  "valueEn": "4:00 PM - 5:00 PM",
+  "valueVi": "16:00 - 17:00",
+  "id": 14,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6740ae833b9b96cb2dfd192f"
+  },
+  "keyMap": "P1",
+  "type": "Position",
+  "valueEn": "Head of Department",
+  "valueVi": "Trưởng khoa",
+  "id": 15,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6740aeae3b9b96cb2dfd1931"
+  },
+  "keyMap": "P2",
+  "type": "Position",
+  "valueEn": "Professor",
+  "valueVi": "Giáo sư",
+  "id": 16,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6740aece3b9b96cb2dfd1932"
+  },
+  "keyMap": "P3",
+  "type": "Position",
+  "valueEn": "Associate Professor",
+  "valueVi": "Phó giáo sư",
+  "id": 17,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6749d58b6e63fd9ae501a0e0"
+  },
+  "keyMap": "S3",
+  "type": "STATUS",
+  "valueEn": "Paid",
+  "valueVi": "Đã thanh toán",
+  "id": 18,
+  "__v": 0
+}]

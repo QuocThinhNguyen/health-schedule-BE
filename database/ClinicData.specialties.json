@@ -1,0 +1,100 @@
+[{
+  "_id": {
+    "$oid": "673f1307d267374f9be69ea9"
+  },
+  "image": "1732186887829-tieuhoaganmat.png",
+  "name": "Tiêu hóa gan mật",
+  "description": "hoa Tiêu hóa - Gan mật chuyên chẩn đoán và điều trị các bệnh lý liên quan đến hệ tiêu hóa, gan, mật và tụy. Các bệnh thường gặp bao gồm viêm loét dạ dày - tá tràng, viêm gan, xơ gan, sỏi mật, viêm tụy, hội chứng ruột kích thích và ung thư tiêu hóa.",
+  "specialtyId": 1,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f1371d267374f9be69ead"
+  },
+  "image": "1732186993210-noitongquat.png",
+  "name": "Nội tổng quát",
+  "description": "Khoa Nội tổng quát là nơi tiếp nhận, chẩn đoán và điều trị các bệnh lý không cần can thiệp phẫu thuật thuộc nhiều chuyên khoa khác nhau như hô hấp, tim mạch, tiêu hóa, tiết niệu, nội tiết, và thần kinh.",
+  "specialtyId": 2,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f140cd267374f9be69eb1"
+  },
+  "image": "1732187148350-dalieu.png",
+  "name": "Da liễu",
+  "description": "Khoa Da liễu chuyên chẩn đoán và điều trị các bệnh lý  thường gặp bao gồm viêm da, mụn trứng cá, vảy nến, eczema, nám da, rụng tóc, nhiễm trùng da, và các bệnh lý tự miễn.",
+  "specialtyId": 3,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f1495d267374f9be69eb5"
+  },
+  "image": "1732187285614-noitimmach.png",
+  "name": "Nội tim mạch",
+  "description": "Khoa Nội Tim mạch chuyên chẩn đoán và điều trị các bệnh lý tim mạch không cần can thiệp phẫu thuật. Các bệnh thường gặp bao gồm tăng huyết áp, bệnh mạch vành, rối loạn nhịp tim, suy tim, viêm cơ tim, và bệnh lý van tim.",
+  "specialtyId": 4,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f151ad267374f9be69eb9"
+  },
+  "image": "1732187418428-noithankinh.png",
+  "name": "Nội thần kinh",
+  "description": "Khoa Nội Thần kinh chuyên chẩn đoán và điều trị các bệnh lý liên quan đến hệ thần kinh trung ương và ngoại vi. Các bệnh thường gặp bao gồm đột quỵ, đau đầu, động kinh, rối loạn giấc ngủ, bệnh Parkinson, bệnh Alzheimer, viêm dây thần kinh, và thoát vị đĩa đệm.",
+  "specialtyId": 5,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f15c8d267374f9be69ebd"
+  },
+  "image": "1732187592856-noi_co_xuong_khop_11zon.png",
+  "name": "Nội cơ xương khớp",
+  "description": "Khoa Nội Cơ Xương Khớp chuyên chẩn đoán và điều trị các bệnh lý liên quan đến hệ cơ, xương và khớp. Các bệnh phổ biến bao gồm viêm khớp dạng thấp, thoái hóa khớp, loãng xương, gout, lupus ban đỏ, viêm cột sống dính khớp, và đau cơ xơ hóa.",
+  "specialtyId": 6,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f162dd267374f9be69ec1"
+  },
+  "image": "1732187693470-tai_mui_hong_11zon.png",
+  "name": "Tai mũi họng",
+  "description": "Khoa Tai Mũi Họng chuyên chẩn đoán và điều trị các bệnh lý liên quan đến tai, mũi, họng và các cấu trúc liên quan vùng đầu cổ. Các bệnh thường gặp bao gồm viêm tai giữa, viêm xoang, viêm amidan, viêm họng mãn tính, ù tai, mất thính lực, dị vật đường hô hấp, và rối loạn giọng nói.",
+  "specialtyId": 7,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f1686d267374f9be69ec5"
+  },
+  "image": "1732187782830-mat_11zon.png",
+  "name": "Mắt",
+  "description": "Khoa Mắt chuyên chẩn đoán và điều trị các bệnh lý liên quan đến mắt và thị lực. Các bệnh phổ biến bao gồm cận thị, viễn thị, loạn thị, đục thủy tinh thể, glôcôm, viêm kết mạc, viêm giác mạc, thoái hóa điểm vàng, và các chấn thương mắt. ",
+  "specialtyId": 8,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f16e9d267374f9be69ec9"
+  },
+  "image": "1732187881048-tieu_hoa_11zon.png",
+  "name": "Tiêu hóa",
+  "description": "Khoa Tiêu hóa chuyên chẩn đoán và điều trị các bệnh lý liên quan đến hệ tiêu hóa, bao gồm thực quản, dạ dày, ruột non, đại tràng, trực tràng, gan, mật và tụy.",
+  "specialtyId": 9,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "673f1757d267374f9be69ecd"
+  },
+  "image": "1732187991396-rang_ham_mat_11zon.png",
+  "name": "Răng hàm mặt",
+  "description": "Khoa Răng Hàm Mặt chuyên chẩn đoán và điều trị các bệnh lý liên quan đến răng, lợi, hàm và các cấu trúc vùng mặt. Các bệnh thường gặp bao gồm sâu răng, viêm lợi, viêm nha chu, răng khôn mọc lệch, hô, móm, lệch khớp cắn, và chấn thương hàm mặt.",
+  "specialtyId": 10,
+  "__v": 0
+}]

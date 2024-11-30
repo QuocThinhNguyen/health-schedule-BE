@@ -14,11 +14,12 @@ const routes = (app) => {
     app.use('/', homePageRouter)
     app.use('/allCode',allCodeRouter)
     app.use("/admin", adminRouter);
-    app.use('/user', userRouter)
+    app.use('/user', userRouter);
     app.use("/doctor", doctorInforRouter);
     app.use('/booking',bookingRouter)
     app.use('/clinic', clinicRouter)
-    app.use('/specialty', specialtyRouter)
+    app.use('/specialty', specialtyRouter);
+     app.use('/patientrecord', patientRecordsRouter);
     app.use(handleError);
 }
 export default routes;

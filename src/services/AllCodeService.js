@@ -26,6 +26,84 @@ const createAllCode = (data) => {
     })
 }
 
+const updateAllCode = (id, data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            const checkAllCode = await allCode.findOne({
+                id: id
+            })
+
+            if (!checkAllCode) {
+                resolve({
+                    status: 404,
+                    message: "Allcode not found"
+                });
+            }
+
+            await allCode.updateOne(
+                { id: id },
+                data,
+                { new: true }
+            )
+
+            resolve({
+                status: 200,
+                message: "Update allcode successfully"
+            })
+        } catch (e) {
+            reject(e)
+        }
+    })
+}
+
+const getAllCode = () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const allcodes = await allCode.find()
+            resolve({
+                status: 200,
+                message: "Get all allcodes successfully",
+                data: allcodes
+            })
+
+        } catch (e) {
+            reject(e)
+        }
+    })
+}
+
+const deleteAllCode = (id) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const findAllCode = await allCode.findOne({
+                id: id
+            })
+
+            if (!findAllCode) {
+                resolve({
+                    status: 404,
+                    message: "Allcode not found"
+                })
+            }
+
+            await allCode.deleteOne({
+                id: id
+            })
+
+            resolve({
+                status: 200,
+                message: "Delete allcode successfully"
+            })
+        } catch (e) {
+            reject(e)
+        }
+    })
+}
+
 export default {
-    createAllCode   
+    createAllCode,
+    updateAllCode,
+    getAllCode,
+    deleteAllCode
 }

@@ -7,7 +7,7 @@ const createAllCode = async (req,res)=>{
     }catch(e){
         return res.status(500).json({
             status: 500,
-            message: e.message
+            message: "Error from server"
         });
     }
 }
@@ -20,7 +20,7 @@ const updateAllCode = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             status: 500,
-            message: err.message
+            message: "Error from server"
     });
 }
 }
@@ -30,9 +30,9 @@ const getAllCode = async (req, res) => {
         const data = await allCodeService.getAllCode();
         return res.status(200).json(data)
     } catch (err) {
-        return res.status(200).json({
+        return res.status(500).json({
             status: 500,
-            message: err.message
+            message: "Error from server"
         })
     }
 }
@@ -43,9 +43,9 @@ const deleteAllCode = async (req, res) => {
         const data = await allCodeService.deleteAllCode(id);
         return res.status(200).json(data)
     } catch (err) {
-        return res.status(200).json({
+        return res.status(500).json({
             status: 500,
-            message: err.message
+            message: "Error from server"
         })
     }
 }

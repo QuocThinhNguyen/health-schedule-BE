@@ -12,7 +12,7 @@ export const generalAccessToken = async (payload) => {
       ...payload,
     },
     process.env.ACCESS_TOKEN,
-    { expiresIn: "60s" }
+    { expiresIn: "3600s" }
   );
 
   return access_token;

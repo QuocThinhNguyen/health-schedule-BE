@@ -1,16 +1,12 @@
-import User from "../models/users.js";
-import DoctorInfor from "../models/doctor_info.js"
+import user from "../models/users.js";
+import doctorInfor from "../models/doctor_info.js";
 import bcrypt from "bcrypt";
-import {
-  generalAccessToken,
-  generalRefreshToken,
-  generalResetPasswordToken,
-} from "./JwtService.js";
+import jwtService from "./JwtService.js";
 import dotenv from "dotenv";
 import sendMail from "../utils/sendMail.js";
 dotenv.config();
 
-export const createUserService = (newUser) => {
+const createUserService = (newUser) => {
   return new Promise(async (resolve, reject) => {
     const {
       email,
@@ -24,17 +20,17 @@ export const createUserService = (newUser) => {
       roleId,
     } = newUser;
     try {
-      const checkUser = await User.findOne({
+      const checkUser = await user.findOne({
         email: email,
       });
       if (checkUser !== null) {
         resolve({
-          status: "ERR",
+          status: 404,
           message: "The email is already exists!",
         });
       }
       const hash = bcrypt.hashSync(password, 10);
-      const createdUser = await User.create({
+      const createdUser = await user.create({
         email,
         password: hash,
         fullname,
@@ -48,13 +44,12 @@ export const createUserService = (newUser) => {
       });
       if (createdUser) {
         if (createdUser.roleId === "R2") {
-          const a = await DoctorInfor.create({
-            doctorId: createdUser.userId
-          })
-          console.log(a)
+          const a = await doctorInfor.create({
+            doctorId: createdUser.userId,
+          });
         }
         resolve({
-          status: "OK",
+          status: 200,
           message: "SUCCESS",
           data: createdUser,
         });
@@ -65,22 +60,22 @@ export const createUserService = (newUser) => {
   });
 };
 
-export const loginUserService = (userLogin) => {
+const loginUserService = (userLogin) => {
   return new Promise(async (resolve, reject) => {
     const { email, password } = userLogin;
     try {
-      const checkUser = await User.findOne({
+      const checkUser = await user.findOne({
         email: email,
       });
       if (checkUser === null) {
         resolve({
-          status: "ERR",
+          status: 404,
           message: "The email is not defined",
         });
       } else {
         if (!checkUser.isVerified) {
           resolve({
-            status: "ERR",
+            status: 404,
             message: "The email is not verified",
           });
         }
@@ -89,23 +84,23 @@ export const loginUserService = (userLogin) => {
 
       if (!comparePassword) {
         resolve({
-          status: "ERR",
+          status: 404,
           message: "The user or password is incorrect",
         });
       }
 
-      const access_token = await generalAccessToken({
+      const access_token = await jwtService.generalAccessToken({
         userId: checkUser.userId,
         roleId: checkUser.roleId,
       });
 
-      const refresh_token = await generalRefreshToken({
+      const refresh_token = await jwtService.generalRefreshToken({
         userId: checkUser.userId,
         roleId: checkUser.roleId,
       });
 
       resolve({
-        status: "OK",
+        status: 200,
         message: "SUCCESS",
         access_token,
         refresh_token,
@@ -116,21 +111,21 @@ export const loginUserService = (userLogin) => {
   });
 };
 
-export const resetUserPasswordService = (email) => {
+const resetUserPasswordService = (email) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const checkEmail = await User.findOne({
+      const checkEmail = await user.findOne({
         email: email,
       });
       if (checkEmail === null) {
         resolve({
-          status: "ERR",
+          status: 404,
           message: "The email is not defined",
         });
       }
 
       // Create reset password token
-      const token = await generalResetPasswordToken(email);
+      const token = await jwtService.generalResetPasswordToken(email);
       // Create reset password link
       const resetLink = `${process.env.WEB_LINK}/reset-password/${token}`;
       // Create text
@@ -139,7 +134,7 @@ export const resetUserPasswordService = (email) => {
       sendMail(email, text, subject);
 
       resolve({
-        status: "OK",
+        status: 200,
         message: "Password reset link has been sent to your email",
       });
     } catch (e) {
@@ -148,7 +143,7 @@ export const resetUserPasswordService = (email) => {
   });
 };
 
-export const updateUserService = (id, data) => {
+const updateUserService = (id, data) => {
   return new Promise(async (resolve, reject) => {
     const {
       password,
@@ -161,12 +156,12 @@ export const updateUserService = (id, data) => {
       roleId,
     } = data;
     try {
-      const checkUser = await User.findOne({
+      const checkUser = await user.findOne({
         userId: id,
       });
       if (checkUser === null) {
         resolve({
-          status: "ERR",
+          status: 404,
           message: "The user is not defined",
         });
       }
@@ -182,13 +177,13 @@ export const updateUserService = (id, data) => {
       if (data.image) updateData.image = data.image;
       if (data.roleId) updateData.roleId = data.roleId;
 
-      const updatedUser = await User.findOneAndUpdate(
+      const updatedUser = await user.findOneAndUpdate(
         { userId: id }, // Điều kiện tìm kiếm
         updateData, // Giá trị cần cập nhật
         { new: true }
       );
       resolve({
-        status: "OK",
+        status: 200,
         message: "SUCCESS",
         data: updatedUser,
       });
@@ -198,23 +193,23 @@ export const updateUserService = (id, data) => {
   });
 };
 
-export const deleteUserService = (id) => {
+const deleteUserService = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const checkUser = await User.findOne({
+      const checkUser = await user.findOne({
         userId: id,
       });
       if (checkUser === null) {
         resolve({
-          status: "ERR",
+          status: 404,
           message: "The user is not defined",
         });
       }
 
-      await User.findOneAndDelete({ userId: id });
-      await DoctorInfor.findOneAndDelete({doctorId: id})
+      await user.findOneAndDelete({ userId: id });
+      await doctorInfor.findOneAndDelete({ doctorId: id });
       resolve({
-        status: "OK",
+        status: 200,
         message: "Delete user success",
       });
     } catch (e) {
@@ -223,27 +218,27 @@ export const deleteUserService = (id) => {
   });
 };
 
-export const getAllUserService = (query, skip, limit) => {
+const getAllUserService = (query, skip, limit) => {
   return new Promise(async (resolve, reject) => {
     try {
-      let formatQuery = {}
+      let formatQuery = {};
       // Sử dụng biểu thức chính quy để tìm kiếm không chính xác
       if (query.query) {
         formatQuery = {
           $or: [
-            { fullname: { $regex: query.query, $options: 'i' } }, // Tìm trong trường 'name'
-            { address: { $regex: query.query, $options: 'i' } }, // Tìm trong trường 'address'
+            { fullname: { $regex: query.query, $options: "i" } }, // Tìm trong trường 'name'
+            { address: { $regex: query.query, $options: "i" } }, // Tìm trong trường 'address'
           ],
         };
       }
-      const allUsers = await User.find(formatQuery).skip(skip).limit(limit);
-      const totalUsers = await User.countDocuments(formatQuery)
+      const allUsers = await user.find(formatQuery).skip(skip).limit(limit);
+      const totalUsers = await user.countDocuments(formatQuery);
       const totalPages = Math.ceil(totalUsers / limit);
       resolve({
-        status: "OK",
+        status: 200,
         message: "SUCCESS",
         data: allUsers,
-        totalPages
+        totalPages,
       });
     } catch (e) {
       reject(e);
@@ -251,31 +246,33 @@ export const getAllUserService = (query, skip, limit) => {
   });
 };
 
-export const getDetailsUserService = (id) => {
+const getDetailsUserService = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user = await User.findOne({
-        userId: id,
-      }).lean();
+      const user = await user
+        .findOne({
+          userId: id,
+        })
+        .lean();
       if (user === null) {
         resolve({
-          status: "ERR",
+          status: 404,
           message: "The user is not defined",
         });
       }
       let formatUser = {
-        ...user
-      }
+        ...user,
+      };
       if (user.birthDate) {
-        const birthDateOnly = user.birthDate.toISOString().split('T')[0];
+        const birthDateOnly = user.birthDate.toISOString().split("T")[0];
         formatUser = {
           ...user,
-          birthDate: birthDateOnly
-        }
+          birthDate: birthDateOnly,
+        };
       }
 
       resolve({
-        status: "OK",
+        status: 200,
         message: "Success",
         data: formatUser,
       });
@@ -285,35 +282,39 @@ export const getDetailsUserService = (id) => {
   });
 };
 
-export const getUserByNameOrEmailService = (keyword) => {
+const getUserByNameOrEmailService = (keyword) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user = await User.find({
+      const user = await user.find({
         $or: [
           { fullname: { $regex: keyword, $options: "i" } }, // Tìm kiếm không phân biệt hoa thường
           { email: { $regex: keyword, $options: "i" } }, // Tìm kiếm không phân biệt hoa thường
         ],
       });
       resolve({
-        status: "OK",
+        status: 200,
         message: "Success",
         data: user,
       });
     } catch (e) {
-      console.error(e);
       reject(e);
     }
   });
 };
 
-export const updatePassword = async (userId, oldPassword, newPassword, confirmPassword) => {
+const updatePassword = async (
+  userId,
+  oldPassword,
+  newPassword,
+  confirmPassword
+) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Tìm người dùng theo userId
-      const user = await User.findOne({ userId: userId });
+      const user = await user.findOne({ userId: userId });
       if (!user) {
         return resolve({
-          status: "ERR",
+          status: 404,
           message: "User not found",
         });
       }
@@ -322,7 +323,7 @@ export const updatePassword = async (userId, oldPassword, newPassword, confirmPa
       const isMatch = await bcrypt.compare(oldPassword, user.password);
       if (!isMatch) {
         return resolve({
-          status: "ERR",
+          status: 404,
           message: "Mật khẩu cũ không đúng",
         });
       }
@@ -330,7 +331,7 @@ export const updatePassword = async (userId, oldPassword, newPassword, confirmPa
       // Kiểm tra mật khẩu mới và xác nhận mật khẩu mới
       if (newPassword !== confirmPassword) {
         return resolve({
-          status: "ERR",
+          status: 404,
           message: "New password and confirm password do not match",
         });
       }
@@ -344,12 +345,12 @@ export const updatePassword = async (userId, oldPassword, newPassword, confirmPa
       await user.save();
 
       resolve({
-        status: "OK",
+        status: 200,
         message: "Password updated successfully",
       });
     } catch (e) {
       reject({
-        status: "ERR",
+        status: 500,
         message: "Error from server",
         error: e.message,
       });
@@ -357,18 +358,31 @@ export const updatePassword = async (userId, oldPassword, newPassword, confirmPa
   });
 };
 
-export const getDropdownUsersService = () => {
+const getDropdownUsersService = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      const dropdowUsers = await User.find()
+      const dropdowUsers = await user.find();
 
       resolve({
-        errCode: 0,
+        status: 200,
         message: "Get dropdown user successfully",
-        data: dropdowUsers
-      })
+        data: dropdowUsers,
+      });
     } catch (e) {
-      reject(e)
+      reject(e);
     }
-  })
-}
+  });
+};
+
+export default {
+  createUserService,
+  loginUserService,
+  resetUserPasswordService,
+  updateUserService,
+  deleteUserService,
+  getAllUserService,
+  getDetailsUserService,
+  getUserByNameOrEmailService,
+  updatePassword,
+  getDropdownUsersService,
+};

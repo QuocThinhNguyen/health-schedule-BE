@@ -67,7 +67,7 @@ const getAllSpecialty = (query) => {
         const specialties = await specialty.find(formatQuery)
           .skip((page - 1) * limit)
           .limit(limit);
-        const totalSpecialties = await spe.countDocuments(formatQuery);
+        const totalSpecialties = await specialty.countDocuments(formatQuery);
         const totalPages = Math.ceil(totalSpecialties / limit);
         resolve({
           status: 200,

@@ -102,6 +102,8 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
           result = detailedBookings;
         }
   
+        result.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate));
+
         resolve({
             status: 200,
             message: "SUCCESS",

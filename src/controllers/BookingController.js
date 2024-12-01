@@ -1,4 +1,5 @@
 import bookingService from "../services/BookingService.js"
+import paymentService from "../services/PaymentService.js"
 
 const getAllBookingByUserId = async (req, res) => {
     try {
@@ -123,7 +124,7 @@ const getAllBookingByUserId = async (req, res) => {
       console.log(e);
       return res.status(500).json({
         status: 500,
-        message: "Error from server",
+        message: e.message,
       });
     }
   };

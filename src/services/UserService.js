@@ -249,24 +249,24 @@ const getAllUserService = (query, skip, limit) => {
 const getDetailsUserService = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user = await user
+      const userFind = await user
         .findOne({
           userId: id,
         })
         .lean();
-      if (user === null) {
+      if (userFind === null) {
         resolve({
           status: 404,
           message: "The user is not defined",
         });
       }
       let formatUser = {
-        ...user,
+        ...userFind,
       };
-      if (user.birthDate) {
-        const birthDateOnly = user.birthDate.toISOString().split("T")[0];
+      if (userFind.birthDate) {
+        const birthDateOnly = userFind.birthDate.toISOString().split("T")[0];
         formatUser = {
-          ...user,
+          ...userFind,
           birthDate: birthDateOnly,
         };
       }
@@ -285,7 +285,7 @@ const getDetailsUserService = (id) => {
 const getUserByNameOrEmailService = (keyword) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const user = await user.find({
+      const userFind = await user.find({
         $or: [
           { fullname: { $regex: keyword, $options: "i" } }, // Tìm kiếm không phân biệt hoa thường
           { email: { $regex: keyword, $options: "i" } }, // Tìm kiếm không phân biệt hoa thường
@@ -294,7 +294,7 @@ const getUserByNameOrEmailService = (keyword) => {
       resolve({
         status: 200,
         message: "Success",
-        data: user,
+        data: userFind,
       });
     } catch (e) {
       reject(e);
@@ -311,8 +311,8 @@ const updatePassword = async (
   return new Promise(async (resolve, reject) => {
     try {
       // Tìm người dùng theo userId
-      const user = await user.findOne({ userId: userId });
-      if (!user) {
+      const userFind = await user.findOne({ userId: userId });
+      if (!userFind) {
         return resolve({
           status: 404,
           message: "User not found",
@@ -320,7 +320,7 @@ const updatePassword = async (
       }
 
       // Kiểm tra mật khẩu cũ
-      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      const isMatch = await bcrypt.compare(oldPassword, userFind.password);
       if (!isMatch) {
         return resolve({
           status: 404,
@@ -341,8 +341,8 @@ const updatePassword = async (
       const hashedPassword = await bcrypt.hash(newPassword, salt);
 
       // Cập nhật mật khẩu mới
-      user.password = hashedPassword;
-      await user.save();
+      userFind.password = hashedPassword;
+      await userFind.save();
 
       resolve({
         status: 200,

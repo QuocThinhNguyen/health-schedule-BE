@@ -98,11 +98,7 @@ const handlePaymentReturn = async (req, res) => {
       // const booking = await bookingService.getBooking(bookingId);
 
       const emailResult = await bookingService.getEmailByBookingId(bookingId);
-      const {patientEmail, userEmail, namePatient, reason, price,time,nameClinic,nameSpecialty,nameDoctor,nameUser }=emailResult.data;
-
-      // console.log("EmailResult:", emailResult);
-      // console.log("PatientEmail:", patientEmail);
-      // console.log("UserEmail:", userEmail);
+      const {patientEmail, userEmail, namePatient, reason, price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic }=emailResult.data;
 
       const booking = await Booking.findOne({
         bookingId: bookingId,
@@ -124,7 +120,8 @@ const handlePaymentReturn = async (req, res) => {
         });
       const { doctorId, appointmentDate, timeType } = booking;
       const appointmentDateString = appointmentDate.toISOString().split("T")[0]; // Chỉ lấy phần ngày
-      const data = {namePatient, reason, appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser};
+      const button = "Đã thanh toán"
+      const data = {namePatient, reason, appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,button};
 
       const schedule = await Schedules.findOne({
         doctorId: doctorId.userId,
@@ -133,7 +130,7 @@ const handlePaymentReturn = async (req, res) => {
       });
       schedule.currentNumber += 1;
       await schedule.save();
-      await sendMail.sendMailSuccess([patientEmail, userEmail], data, "Booking Payment Success");
+      await sendMail.sendMailSuccess([patientEmail, userEmail], data, "Đặt lịch khám thành công");
       return res.redirect(`http://localhost:${process.env.FE_PORT}/`);
       // return res.status(200).json({
       //   status: "OK",

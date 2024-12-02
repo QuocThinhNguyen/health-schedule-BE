@@ -131,7 +131,7 @@ const resetUserPasswordService = (email) => {
       // Create text
       const text = `Click the link to reset your password: ${resetLink}`;
       const subject = "Reset password";
-      sendMail(email, text, subject);
+      sendMail.sendMail(email, text, subject);
 
       resolve({
         status: 200,

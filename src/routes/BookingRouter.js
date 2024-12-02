@@ -11,5 +11,6 @@ router.get("/:id",authMiddleware,bookingController.getBooking);
 router.get("/",authMiddleware,bookingController.getAllBooking)
 router.put("/:id",authMiddleware,bookingController.updateBooking);
 router.get("/doctor/:doctorId", authDoctorMiddleware, bookingController.getBookingByDoctorId)
+router.get("/email/:bookingId", authMiddleware, bookingController.getEmailByBookingId)
 
 export default router;

@@ -4,6 +4,7 @@ import momoConfig from "../config/momoConfig.js";
 import bookingService from "../services/BookingService.js";
 import Schedules from "../models/schedule.js";
 import Booking from "../models/booking.js";
+import sendMail from "../utils/sendMail.js";
 
 const createPaymentUrl = async (bookingId, amount, orderInfo) => {
   const requestId = bookingId + "_" + new Date().getTime();
@@ -89,11 +90,19 @@ const handlePaymentReturn = async (req, res) => {
     // console.log("QUERYYYYY", req.query);
     const { orderId, resultCode } = req.query;
     const bookingId = orderId.split("_")[0];
+    
 
     if (resultCode === "0") {
       // Thanh toán thành công
       await bookingService.updateBookingStatus(bookingId, "S3");
       // const booking = await bookingService.getBooking(bookingId);
+
+      const emailResult = await bookingService.getEmailByBookingId(bookingId);
+      const {patientEmail, userEmail, namePatient, reason, price,time,nameClinic,nameSpecialty,nameDoctor,nameUser }=emailResult.data;
+
+      // console.log("EmailResult:", emailResult);
+      // console.log("PatientEmail:", patientEmail);
+      // console.log("UserEmail:", userEmail);
 
       const booking = await Booking.findOne({
         bookingId: bookingId,
@@ -115,11 +124,8 @@ const handlePaymentReturn = async (req, res) => {
         });
       const { doctorId, appointmentDate, timeType } = booking;
       const appointmentDateString = appointmentDate.toISOString().split("T")[0]; // Chỉ lấy phần ngày
+      const data = {namePatient, reason, appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser};
 
-      // console.log("Bookingggg:", booking);
-      // console.log("DoctorIDee:", doctorId.userId);
-      // console.log("AppointmentDateeee:", appointmentDateString);
-      // console.log("TimeTypeêe:", timeType);
       const schedule = await Schedules.findOne({
         doctorId: doctorId.userId,
         scheduleDate: appointmentDateString,
@@ -127,7 +133,7 @@ const handlePaymentReturn = async (req, res) => {
       });
       schedule.currentNumber += 1;
       await schedule.save();
-
+      await sendMail.sendMailSuccess([patientEmail, userEmail], data, "Booking Payment Success");
       return res.redirect(`http://localhost:${process.env.FE_PORT}/`);
       // return res.status(200).json({
       //   status: "OK",

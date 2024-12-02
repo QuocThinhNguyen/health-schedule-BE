@@ -153,6 +153,19 @@ const getAllBookingByUserId = async (req, res) => {
     return paymentService.handlePaymentReturn(req, res);
   };
 
+const getEmailByBookingId = async(req,res)=>{
+  try{
+    const bookingId = req.params.bookingId;
+    const response = await bookingService.getEmailByBookingId(bookingId);
+    return res.status(200).json(response);
+  }catch(e){
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server"
+    });
+}
+}
+
   export default {
     getAllBookingByUserId,
     getAllBooking,
@@ -162,5 +175,6 @@ const getAllBookingByUserId = async (req, res) => {
     getBookingByDoctorId,
     patientBookingOnline,
     patientBookingDirect,
-    handlePaymentReturn
+    handlePaymentReturn,
+    getEmailByBookingId
   }

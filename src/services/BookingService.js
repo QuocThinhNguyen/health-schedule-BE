@@ -4,6 +4,7 @@ import doctor_Info from "../models/doctor_info.js"
 import specialty from "../models/specialty.js"
 import clinic from "../models/clinic.js"
 import schedules from "../models/schedule.js"
+import user from "../models/users.js"
 
 
 const getAllBookingByUserId = (userId, startDate, endDate) => {
@@ -542,6 +543,91 @@ const getAllBooking = (query) => {
     });
   };
 
+const getEmailByBookingId = async(bookingId)=>{
+  return new Promise(async (resolve, reject) => {
+    try{
+      const bookingFind = await booking.findOne({
+        bookingId: bookingId
+      })
+      .populate({
+        path: "patientRecordId",
+        model: "PatientRecords",
+        localField: "patientRecordId",
+        foreignField: "patientRecordId",
+        select: "email patientId fullname"
+      })
+      .populate({
+        path:"timeType",
+        model:"AllCodes",
+        localField:"timeType",
+        foreignField:"keyMap",
+        select:"valueEn valueVi"
+      })
+      .populate({
+        path:"doctorId",
+        model:"DoctorInfo",
+        localField:"doctorId",
+        foreignField:"doctorId",
+        select:"doctorId clinicId specialtyId position" 
+      })
+  
+      if (!bookingFind || !bookingFind.patientRecordId){
+        return {
+          status: 404,
+          message: "The booking is not defined"
+        }
+      }
+  
+      const patientRecordEmail = bookingFind.patientRecordId.email;
+      const patientId = bookingFind.patientRecordId.patientId;
+      const clinicId = bookingFind.doctorId.clinicId;
+      const specialtyId = bookingFind.doctorId.specialtyId;
+      const doctorId = bookingFind.doctorId.doctorId;
+
+      const clinicFind = await clinic.findOne({
+        clinicId: clinicId
+      },"name");
+    
+      const specialtyFind = await specialty.findOne({
+        specialtyId: specialtyId
+      },"name")
+
+      const doctorFind = await user.findOne({
+        userId: doctorId
+      },"fullname")
+  
+      const userFind = await user.findOne({
+        userId: patientId
+      },"email fullname");
+  
+      resolve({
+        status: 200,
+        message: "SUCCESS",
+        data: {
+          patientEmail: patientRecordEmail,
+          userEmail: userFind.email,
+          namePatient: bookingFind.patientRecordId.fullname,
+          reason:bookingFind.reason,
+          appointmentDate: bookingFind.appointmentDate,
+          price: bookingFind.price,
+          time: bookingFind.timeType.valueVi,
+          nameClinic: clinicFind.name,
+          nameSpecialty: specialtyFind.name,
+          nameDoctor: doctorFind.fullname,
+          nameUser: userFind.fullname
+        }
+      });
+  
+    }catch(e){
+      reject({
+        status: 500,
+        message: "Error from server",
+        error: e.message
+      })
+    }
+  })
+}
+
   export default {
     getAllBookingByUserId,
     getAllBooking,
@@ -552,5 +638,6 @@ const getAllBooking = (query) => {
     patientBookingOnline,
     patientBookingDirect,
     updateBookingStatus,
-    updateBookingPaymentUrl
+    updateBookingPaymentUrl,
+    getEmailByBookingId
   }

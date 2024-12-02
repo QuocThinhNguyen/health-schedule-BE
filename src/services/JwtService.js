@@ -103,7 +103,7 @@ const createAndSendOTPService = async (newUser, otp_token) => {
             { new: true }
           );
 
-          await sendMail(email, text, subject);
+          await sendMail.sendMail(email, text, subject);
           resolve({
             status: 200,
             message: text,
@@ -118,7 +118,7 @@ const createAndSendOTPService = async (newUser, otp_token) => {
         password: hashedPassword,
         otpCode: hashedOTP,
       });
-      await sendMail(email, text, subject);
+      await sendMail.sendMail(email, text, subject);
       resolve({
         status: 200,
         message: text,

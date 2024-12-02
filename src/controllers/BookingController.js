@@ -144,7 +144,7 @@ const getAllBookingByUserId = async (req, res) => {
     } catch (e) {
       return res.status(500).json({
         status: 500,
-        message: "Error from server",
+        message: e.message
       });
     }
   };
@@ -152,6 +152,32 @@ const getAllBookingByUserId = async (req, res) => {
   const handlePaymentReturn = async (req, res) => {
     return paymentService.handlePaymentReturn(req, res);
   };
+
+const getEmailByBookingId = async(req,res)=>{
+  try{
+    const bookingId = req.params.bookingId;
+    const response = await bookingService.getEmailByBookingId(bookingId);
+    return res.status(200).json(response);
+  }catch(e){
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server"
+    });
+}
+}
+
+const confirmBooking = async (req, res) => {
+  try{
+    const { bookingId, doctorId, appointmentDate, timeType } = req.query;
+    const response = await bookingService.confirmBooking({bookingId, doctorId, appointmentDate, timeType});
+    return res.redirect(`http://localhost:${process.env.FE_PORT}/`);
+  }catch(e){
+    return res.status(500).json({
+      status: 500,
+      message: e.message
+    });
+  }
+}
 
   export default {
     getAllBookingByUserId,
@@ -162,5 +188,7 @@ const getAllBookingByUserId = async (req, res) => {
     getBookingByDoctorId,
     patientBookingOnline,
     patientBookingDirect,
-    handlePaymentReturn
+    handlePaymentReturn,
+    getEmailByBookingId,
+    confirmBooking
   }

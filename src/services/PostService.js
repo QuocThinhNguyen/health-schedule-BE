@@ -1,4 +1,3 @@
-import moment from "moment-timezone";
 import post from "../models/Post.js";
 
 const getAllPost = (query) => {

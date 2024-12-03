@@ -64,60 +64,6 @@ const getAllDoctor = (query) => {
       const page = parseInt(query.page) || 1;
       const limit = parseInt(query.limit) || 6;
       let formatQuery = {};
-      // Sử dụng biểu thức chính quy để tìm kiếm không chính xác
-      // if (query.query) {
-      //     formatQuery = {
-      //         $or: [
-      //             { 'doctorId.fullname': { $regex: query.query, $options: 'i' } },
-      //             { 'clinicId.name': { $regex: query.query, $options: 'i' } },
-      //             { 'specialtyId.name': { $regex: query.query, $options: 'i' } }
-      //         ]
-      //     };
-      // }
-
-      // const allDoctor = await doctorInfor.aggregate([
-      //     {
-      //         $lookup: {
-      //             from: 'users', // Tên bộ sưu tập của người dùng
-      //             localField: 'doctorId', // Trường doctor có doctorId
-      //             foreignField: 'userId', // Trường userId của user
-      //             as: 'user'
-      //         }
-      //     },
-      //     {
-      //         $lookup: {
-      //             from: 'clinics', // Tên bộ sưu tập của phòng khám
-      //             localField: 'clinicId', // Trường doctor có clinicId
-      //             foreignField: 'clinicId', // Trường clinicId của clinic
-      //             as: 'clinic'
-      //         }
-      //     },
-      //     {
-      //         $lookup: {
-      //             from: 'specialties', // Tên bộ sưu tập của chuyên khoa
-      //             localField: 'specialtyId', // Trường doctor có specialtyId
-      //             foreignField: 'specialtyId', // Trường specialtyId của specialty
-      //             as: 'specialty'
-      //         }
-      //     },
-      //     {
-      //         $match: formatQuery // Áp dụng bộ lọc từ formatQuery
-      //     },
-      //     {
-      //         $project: {
-      //             'user.fullname': 1,
-      //             'user.address': 1,
-      //             'user.image': 1,
-      //             'user.phoneNumber': 1,
-      //             'clinic.name': 1,
-      //             'specialty.name': 1,
-      //             position: 1,
-      //             clinicId: 1,
-      //             specialtyId: 1,
-      //         }
-      //     }
-      // ])
-
       // Thêm điều kiện truy vấn theo clinicId và specialtyId
       if (query.clinicId) {
         formatQuery.clinicId = query.clinicId;
@@ -152,6 +98,7 @@ const getAllDoctor = (query) => {
       // .skip((page - 1) * limit)
       // .limit(limit)
 
+      console.log(allDoctor);
       // Bộ lọc
       const regex = new RegExp(query.query, "i");
 

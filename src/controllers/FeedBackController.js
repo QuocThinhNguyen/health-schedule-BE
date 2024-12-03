@@ -81,11 +81,27 @@ const checkFeedBacked = async (req, res) => {
         })
     }
 }
+
+const getAllFeedBackByFilter=async(req,res)=>{
+    try {
+        // Gọi service và truyền query từ request
+        const data = await feedBackService.getAllFeedBackByFilter(req.query);
+        console.log('Query received:', req.query);
+
+        return res.status(200).json(data);
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'Error from server',
+        });
+    }
+}
 export default {
     createFeedBack, 
     updateFeedBack,
     getAllFeedBack,
     deleteFeedBack,
     getFeedBackByDoctorId,
-    checkFeedBacked
+    checkFeedBacked,
+    getAllFeedBackByFilter
 }

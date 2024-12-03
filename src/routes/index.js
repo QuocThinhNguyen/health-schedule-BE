@@ -8,6 +8,7 @@ import bookingRouter from "./BookingRouter.js"
 import clinicRouter from "./ClinicRouter.js"
 import specialtyRouter from "./SpecialtyRouter.js"
 import patientRecordsRouter from "./PatientRecordsRouter.js"
+import feedBackRouter from "./FeedBackRouter.js"
 import postRouter from "./PostRouter.js"
 import {handleError} from "../middlewares/authMiddleware.js"
 
@@ -23,7 +24,7 @@ const routes = (app) => {
     app.use('/clinic', clinicRouter)
     app.use('/specialty', specialtyRouter);
     app.use('/patientrecord', patientRecordsRouter);
-
+    app.use('/feedback', feedBackRouter);
     app.use('/post',postRouter);
 
     app.use(handleError);

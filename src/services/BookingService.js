@@ -30,7 +30,7 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
             localField: "patientRecordId",
             foreignField: "patientRecordId",
             select:
-              "fullname gender birthDate phoneNumber CCCD email job address ",
+              "fullname gender birthDate phoneNumber CCCD email job address patientId ",
           })
           .populate({
             path: "doctorId",

@@ -7,8 +7,18 @@ const router = express.Router();
 
 router.get("/", postController.getAllPost);
 router.get("/:id", postController.getPostById);
-router.post("/", upload.single("image"), postController.createPost);
-router.put("/:id", upload.single("image"), postController.updatePost);
-router.delete("/:id", postController.deletePost);
+router.post(
+  "/",
+  authAdminMiddleware,
+  upload.single("image"),
+  postController.createPost
+);
+router.put(
+  "/:id",
+  authAdminMiddleware,
+  upload.single("image"),
+  postController.updatePost
+);
+router.delete("/:id", authAdminMiddleware, postController.deletePost);
 
 export default router;

@@ -19,6 +19,13 @@ const getAllPost = (query) => {
 
       const posts = await post
         .find(formatQuery)
+        .populate({
+          path: "userId",
+          model: "Users",
+          localField: "userId",
+          foreignField: "userId",
+          select: "fullname",
+        })
         .skip((page - 1) * limit)
         .limit(limit);
 
@@ -65,9 +72,11 @@ const getPostById = (id) => {
 const createPost = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      if (!data.userId || !data.image || !data.content) {
+      console.log(data);
+      
+      if (!data.userId || !data.title || !data.image || !data.content) {
         resolve({
-          status: 400,
+          status: 404,
           message: "Please provide all data",
         });
       } else {

@@ -223,7 +223,7 @@ const searchDoctor = (data) => {
         });
       }
     } catch (e) {
-        reject(e);
+      reject(e);
     }
   });
 };

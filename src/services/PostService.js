@@ -47,9 +47,17 @@ const getAllPost = (query) => {
 const getPostById = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const postById = await post.findOne({
-        postId: id,
-      });
+      const postById = await post
+        .findOne({
+          postId: id,
+        })
+        .populate({
+          path: "userId",
+          model: "Users",
+          localField: "userId",
+          foreignField: "userId",
+          select: "fullname",
+        });
 
       if (!postById) {
         resolve({
@@ -73,7 +81,7 @@ const createPost = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
       console.log(data);
-      
+
       if (!data.userId || !data.title || !data.image || !data.content) {
         resolve({
           status: 404,

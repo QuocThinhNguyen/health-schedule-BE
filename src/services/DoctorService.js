@@ -213,7 +213,7 @@ const searchDoctor = (data) => {
       if (doctorFind.length === 0) {
         resolve({
           status: 404,
-          message: "No clinic found",
+          message: "No doctor found",
         });
       } else {
         resolve({

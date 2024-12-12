@@ -96,7 +96,7 @@ const getAllBookingByUserId = async (req, res) => {
       const result = await bookingService.getBookingByDoctorId(doctorId, date);
       return res.status(200).json(result);
     } catch (e) {
-      console.log(e);
+      // console.log(e);
       return res.status(500).json({
         status: 500,
         message: "Error from server",
@@ -121,7 +121,7 @@ const getAllBookingByUserId = async (req, res) => {
         return res.status(400).json(result);
       }
     } catch (e) {
-      console.log(e);
+      // console.log(e);
       return res.status(500).json({
         status: 500,
         message: e.message,

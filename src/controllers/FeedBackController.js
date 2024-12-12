@@ -66,7 +66,7 @@ const getFeedBackByDoctorId = async (req, res) => {
 const checkFeedBacked = async (req, res) => {
     try{
         const {patientId, doctorId, date} = req.body;
-        console.log(req.body)
+        // console.log(req.body)
         const data = await feedBackService.checkFeedBacked(patientId, doctorId, date);
         return res.status(200).json({
             status: 200,
@@ -86,7 +86,7 @@ const getAllFeedBackByFilter=async(req,res)=>{
     try {
         // Gọi service và truyền query từ request
         const data = await feedBackService.getAllFeedBackByFilter(req.query);
-        console.log('Query received:', req.query);
+        // console.log('Query received:', req.query);
 
         return res.status(200).json(data);
     } catch (err) {

@@ -461,10 +461,10 @@ const getAllBooking = (query) => {
                   status: 'S1'
                 })
                 await newBooking.save();
-                console.log("IDD", newBooking.bookingId);
+                // console.log("IDD", newBooking.bookingId);
                 const bookingId = newBooking.bookingId;
                 const emailResult = await getEmailByBookingId(bookingId);
-                console.log("KQ", emailResult);
+                // console.log("KQ", emailResult);
       const {patientEmail, userEmail, namePatient, reason, price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic }=emailResult.data;
 
       const bookingFind = await booking.findOne({
@@ -683,10 +683,10 @@ const confirmBooking= async({bookingId,doctorId,appointmentDate,timeType})=>{
   const emailResult = await getEmailByBookingId(bookingId);
       const {patientEmail, userEmail, namePatient, reason, price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic }=emailResult.data;
       const appointmentDateString = appointmentDate;
-      console.log("DATEEEE",appointmentDate)
+      // console.log("DATEEEE",appointmentDate)
       const button ="Đã xác nhận"
       const datas = {namePatient, reason, appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,button};
-      console.log("DATAS",datas)
+      // console.log("DATAS",datas)
 
   await sendMail.sendMailSuccess([patientEmail, userEmail], datas, "Xác nhận đặt lịch khám thành công");
 

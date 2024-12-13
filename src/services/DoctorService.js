@@ -98,7 +98,7 @@ const getAllDoctor = (query) => {
       // .skip((page - 1) * limit)
       // .limit(limit)
 
-      console.log(allDoctor);
+      // console.log(allDoctor);
       // Bộ lọc
       const regex = new RegExp(query.query, "i");
 
@@ -213,7 +213,7 @@ const searchDoctor = (data) => {
       if (doctorFind.length === 0) {
         resolve({
           status: 404,
-          message: "No clinic found",
+          message: "No doctor found",
         });
       } else {
         resolve({
@@ -223,7 +223,7 @@ const searchDoctor = (data) => {
         });
       }
     } catch (e) {
-        reject(e);
+      reject(e);
     }
   });
 };

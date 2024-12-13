@@ -223,7 +223,7 @@ const sendMailVerify = async (emails, data, subject) => {
 
     const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
     let { namePatient, reason,appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,bookingId,doctorId,timeType }=data;
-    console.log("Dataaaa:", data);
+    // console.log("Dataaaa:", data);
     let priceInVND = Number(price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
     // send mail with defined transport object

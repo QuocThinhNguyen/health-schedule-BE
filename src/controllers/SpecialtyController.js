@@ -23,7 +23,10 @@ const updateSpecialty = async (req, res) => {
         const image = req.file ? `${req.file.filename}` : null;
         const specialtyData = {
             ...req.body,
-            image
+        }
+
+        if (image) {
+            specialtyData.image = image;
         }
         const info = await specialtyService.updateSpecialty(id, specialtyData);
         return res.status(200).json(info);

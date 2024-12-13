@@ -130,8 +130,8 @@ const resetUserPasswordService = (email) => {
       const resetLink = `${process.env.WEB_LINK}/reset-password/${token}`;
       // Create text
       const text = `Click the link to reset your password: ${resetLink}`;
-      const subject = "Reset password";
-      sendMail.sendMail(email, text, subject);
+      const subject = "Đặt lại mật khẩu";
+      sendMail.sendMailResetPassword(email, resetLink, subject);
 
       resolve({
         status: 200,

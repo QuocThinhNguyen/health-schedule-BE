@@ -55,20 +55,54 @@ const generalOTPToken = async (email) => {
   return otp_token;
 };
 
+// const handleResetPasswordTokenService = async (token) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const decoded = jwt.verify(token, process.env.SECRET_KEY);
+//       const tempPassword = crypto.randomBytes(8).toString("hex").slice(0, 8);
+//       const hash = bcrypt.hashSync(tempPassword, 10);
+//       await user.findOneAndUpdate(
+//         { email: decoded.email }, // Điều kiện tìm kiếm
+//         { password: hash }, // Giá trị cần cập nhật
+//         { new: true }
+//       );
+//       resolve({
+//         status: 200,
+//         message: `Token is valid. Your new password of ${decoded.email} is ${tempPassword}`,
+//       });
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
+
 const handleResetPasswordTokenService = async (token) => {
   return new Promise(async (resolve, reject) => {
     try {
       const decoded = jwt.verify(token, process.env.SECRET_KEY);
       const tempPassword = crypto.randomBytes(8).toString("hex").slice(0, 8);
       const hash = bcrypt.hashSync(tempPassword, 10);
-      await user.findOneAndUpdate(
+      const updateUser = await user.findOneAndUpdate(
         { email: decoded.email }, // Điều kiện tìm kiếm
         { password: hash }, // Giá trị cần cập nhật
         { new: true }
       );
+
+      if (!updateUser){
+        reject({
+          status: 404,
+          message: "The user is not defined",
+        })
+      }
+
+      const text = `Xin chào, đây là mật khẩu mới của bạn: ${tempPassword}`;
+      const subject = "Mật khẩu mới";
+
+      sendMail.sendMail(decoded.email, text, subject);
+      
       resolve({
         status: 200,
-        message: `Token is valid. Your new password of ${decoded.email} is ${tempPassword}`,
+        message: `Mật khẩu mới đã được gửi về mail của bạn`,
       });
     } catch (e) {
       reject(e);

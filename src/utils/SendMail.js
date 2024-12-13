@@ -22,6 +22,31 @@ const sendMail = async (email, text, subject) => {
     return info
 }
 
+const sendMailResetPassword = async (email, resetLink, subject) => {
+    const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false, // true for port 465, false for other ports
+        auth: {
+            user: process.env.EMAIL_NAME,
+            pass: process.env.EMAIL_APP_PASSWORD,
+        },
+    });
+
+    // send mail with defined transport object
+    const info = await transporter.sendMail({
+        from: '"EasyMed" <no-reply@easymed.com>', // sender address
+        to: email, // list of receivers
+        subject, // Subject line
+        html: `
+    <p>Để đặt lại mật khẩu của bạn, vui lòng nhấp vào liên kết dưới đây. Sau khi nhấp vào liên kết, chúng tôi sẽ gửi mật khẩu mới đến email này.</p>
+    <a href="${resetLink}">Đặt lại mật khẩu của bạn</a>
+  `,
+    });
+
+    return info
+}
+
 const sendMailSuccess = async (emails, data, subject) => {
     const transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
@@ -403,5 +428,6 @@ attachments: [
 export default {
     sendMail,
     sendMailSuccess,
-    sendMailVerify
+    sendMailVerify,
+    sendMailResetPassword
 }

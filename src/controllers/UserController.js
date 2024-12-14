@@ -1,6 +1,10 @@
 import jwtService from "../services/JwtService.js";
 import userService from "../services/UserService.js";
+import user from "../models/users.js";
+import { OAuth2Client } from "google-auth-library";
 
+const clinet_id=process.env.GOOGLE_CLIENT_ID;
+const client = new OAuth2Client(clinet_id);
 const createUserController = async (req, res) => {
   try {
     const {
@@ -324,6 +328,63 @@ const getDropdownUsersController = async (req, res) => {
   }
 };
 
+const verifyToken=async(token)=>{
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: clinet_id,
+  })
+  const payload = ticket.getPayload();
+  return payload;
+}
+
+const googleLogin = async(req,res)=>{
+  try{
+    const {token}= req.body;
+    const payload = await verifyToken(token);
+    const {email,name, sub}=payload;
+
+    let account = await user.findOne({
+      email:email
+    })
+
+  if (!account){
+      account = await user.create({
+        fullname: name,
+        email: email,
+        roleId:"R3"
+      })
+  }
+  const access_token = await jwtService.generalAccessToken({
+          userId: account.userId,
+          roleId: account.roleId,
+        });
+
+  const refresh_token = await jwtService.generalRefreshToken({
+    userId: account.userId,
+    roleId: account.roleId,
+        });
+
+        res.cookie("refresh_token", refresh_token, {
+          HttpOnly: true,
+          Secure: false,
+          SameSite: "Strict",
+        });
+
+  return res.status(200).json({
+    status: 200,
+    message: "Login successfully",
+    data: account,
+    access_token:access_token
+  });
+  }
+  catch (e) {
+    return res.status(404).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+}
+
 export default {
   createUserController,
   loginUserController,
@@ -340,4 +401,5 @@ export default {
   getUserByNameOrEmailController,
   updatePasswordController,
   getDropdownUsersController,
+  googleLogin
 };

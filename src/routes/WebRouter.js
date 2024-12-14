@@ -13,5 +13,6 @@ router.get(
   userController.handleResetPasswordTokenController
 );
 router.post("/refresh_token", userController.refreshToken);
+router.post("/google-login", userController.googleLogin);
 
 export default router;

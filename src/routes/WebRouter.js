@@ -14,5 +14,6 @@ router.get(
 );
 router.post("/refresh_token", userController.refreshToken);
 router.post("/google-login", userController.googleLogin);
+router.post("/facebook-login", userController.facebookLogin);
 
 export default router;

@@ -5,11 +5,23 @@ const adminHomePage = async (req, res) => {
     const response = await adminService.adminHomePage();
     return res.status(200).json(response);
   } catch (e) {
-    return res.status(404).json({
+    return res.status(500).json({
       status: 500,
       message: e.message,
     });
   }
 };
 
-export default { adminHomePage };
+const revenueChart = async (req, res) => {
+  try {
+    const response = await adminService.revenueChart();
+    return res.status(200).json(response);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+}
+
+export default { adminHomePage, revenueChart };

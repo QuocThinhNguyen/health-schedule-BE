@@ -26,6 +26,7 @@ const getAllPost = (query) => {
           foreignField: "userId",
           select: "fullname",
         })
+        .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit);
 

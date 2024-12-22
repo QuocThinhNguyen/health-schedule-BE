@@ -371,7 +371,7 @@ const getAllBooking = (query) => {
           if (existingBooking) {
             resolve({
               status:409,
-              message: "This booking has already existed",
+              message: "Bạn đã đặt khung giờ này !",
             });
           } else {
             const schedule = await schedules.findOne({
@@ -438,7 +438,7 @@ const getAllBooking = (query) => {
           if (existingBooking) {
             resolve({
               status: 409,
-              message: "This booking has already existed",
+              message: "Bạn đã đặt khung giờ này !",
             });
           } else {
             const schedule = await schedules.findOne({

@@ -27,49 +27,6 @@ const adminHomePage = async () => {
           $lt: startOfNextMonth,
         },
       });
-      const revenueThisMonth = await booking.aggregate([
-        {
-          $match: {
-            appointmentDate: {
-              $gte: startOfMonth,
-              $lt: startOfNextMonth,
-            },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            totalRevenue: {
-              $sum: {
-                $toDouble: "$price",
-              },
-            },
-          },
-        },
-      ]);
-      const revenueEachMonth = await booking.aggregate([
-        {
-          $match: {
-            appointmentDate: {
-              $gte: new Date(currentYear, 0, 1),
-              $lt: new Date(currentYear + 1, 0, 1),
-            },
-          },
-        },
-        {
-          $group: {
-            _id: { month: { $month: "$appointmentDate" } },
-            totalRevenue: {
-              $sum: {
-                $toDouble: "$price",
-              },
-            },
-          },
-        },
-        {
-          $sort: { "_id.month": 1 },
-        },
-      ]);
 
       resolve({
         status: 200,
@@ -118,13 +75,11 @@ const revenueChart = async () => {
         },
       ]);
 
-      // Tạo một mảng mặc định với 12 tháng
       const fullYearRevenue = Array.from({ length: 12 }, (_, i) => ({
         month: i + 1,
         totalRevenue: 0,
       }));
 
-      // Kết hợp kết quả tổng hợp với mảng mặc định
       revenueEachMonth.forEach((item) => {
         fullYearRevenue[item._id.month - 1].totalRevenue = item.totalRevenue;
       });
@@ -231,7 +186,7 @@ const bookingDayInMonthChart = async () => {
               $gte: firstDayOfMonth,
               $lt: firstDayOfNextMonth,
             },
-            status: { $in: ["S2", "S3"] },
+            status: { $in: ["S2", "S3", "S4", "S5"] },
           },
         },
         {
@@ -292,7 +247,7 @@ const bookingMonthInYearChart = async () => {
               $gte: new Date(currentYear, 0, 1),
               $lt: new Date(currentYear + 1, 0, 1),
             },
-            status: { $in: ["S2", "S3"] },
+            status: { $in: ["S2", "S3", "S4", "S5"] },
           },
         },
         {
@@ -313,12 +268,12 @@ const bookingMonthInYearChart = async () => {
         total: 0,
       }));
 
-      bookingMonthInYear.forEach(item => {
+      bookingMonthInYear.forEach((item) => {
         fullYear[item._id.month - 1].total = item.total;
       });
 
-      const labels = fullYear.map(item => `Tháng ${item.month}`);
-      const values = fullYear.map(item => item.total);
+      const labels = fullYear.map((item) => `Tháng ${item.month}`);
+      const values = fullYear.map((item) => item.total);
 
       resolve({
         status: 200,
@@ -332,12 +287,12 @@ const bookingMonthInYearChart = async () => {
       reject(e);
     }
   });
-}
+};
 
 export default {
   adminHomePage,
   revenueChart,
   statusBookingChart,
   bookingDayInMonthChart,
-  bookingMonthInYearChart
+  bookingMonthInYearChart,
 };

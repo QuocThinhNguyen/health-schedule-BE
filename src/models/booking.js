@@ -34,12 +34,12 @@ const bookingSchema = new Schema({
   },
   reason: {
     type: String,
-    default:''
+    default: "",
   },
   status: {
     type: String,
     ref: "AllCodes",
-    default:''
+    default: "",
   },
 });
 

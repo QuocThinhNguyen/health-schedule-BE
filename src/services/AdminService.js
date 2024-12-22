@@ -5,101 +5,95 @@ import booking from "../models/booking.js";
 
 const adminHomePage = async () => {
   return new Promise(async (resolve, reject) => {
-    const today = new Date();
-
-    const currentYear = today.getFullYear(); // Lấy năm hiện tại
-    const currentMonth = today.getMonth(); // Lấy tháng hiện tại (0-11)
-
-    // Ngày đầu tiên của tháng hiện tại
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
     const startOfMonth = new Date(currentYear, currentMonth, 1);
-
-    // Ngày đầu tiên của tháng tiếp theo (để xác định khoảng thời gian của tháng hiện tại)
     const startOfNextMonth = new Date(currentYear, currentMonth + 1, 1);
 
     try {
-      // đếm tổng số người dùng mới
       const countOfNewUserThisMonth = await user.countDocuments({
-        isVerified: true, // Điều kiện isVerified = true
+        isVerified: true,
         createdAt: {
-          // Điều kiện createdAt nằm trong tháng hiện tại
-          $gte: startOfMonth, // Lớn hơn hoặc bằng ngày đầu tiên của tháng
-          $lt: startOfNextMonth, // Nhỏ hơn ngày đầu tiên của tháng tiếp theo
+          $gte: startOfMonth,
+          $lt: startOfNextMonth,
         },
       });
-
-      // Đếm tổng số bác sĩ
       const totalDoctors = await doctor.countDocuments();
-
-      // Đếm tổng số phòng khám
       const totalClinics = await clinic.countDocuments();
-
-      // Đếm tổng số lượt đặt khám bệnh trong tháng
       const totalBookingThisMonth = await booking.countDocuments({
         appointmentDate: {
-          // Điều kiện createdAt nằm trong tháng hiện tại
-          $gte: startOfMonth, // Lớn hơn hoặc bằng ngày đầu tiên của tháng
-          $lt: startOfNextMonth, // Nhỏ hơn ngày đầu tiên của tháng tiếp theo
+          $gte: startOfMonth,
+          $lt: startOfNextMonth,
         },
       });
-
-      // Tính tổng doanh thu tháng hiện tại
-      const revenueThisMonth = await booking.aggregate([
-        {
-          $match: {
-            appointmentDate: {
-              $gte: startOfMonth, // Ngày đầu tiên của tháng hiện tại
-              $lt: startOfNextMonth, // Ngày đầu tiên của tháng tiếp theo
-            },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            totalRevenue: {
-              $sum: {
-                $toDouble: "$price", // Chuyển đổi price từ String sang Number
-              },
-            },
-          },
-        },
-      ]);
-
-      // Tính tổng doanh thu từng tháng trong năm
-      const revenueEachMonth = await booking.aggregate([
-        {
-          $match: {
-            appointmentDate: {
-              $gte: new Date(currentYear, 0, 1), // Ngày đầu tiên của năm
-              $lt: new Date(currentYear + 1, 0, 1), // Ngày đầu tiên của năm tiếp theo
-            },
-          },
-        },
-        {
-          $group: {
-            _id: { month: { $month: "$appointmentDate" } }, // Nhóm theo tháng
-            totalRevenue: {
-              $sum: {
-                $toDouble: "$price", // Chuyển đổi price từ String sang Number
-              },
-            },
-          },
-        },
-        {
-          $sort: { "_id.month": 1 }, // Sắp xếp theo thứ tự tháng
-        },
-      ]);
 
       resolve({
         status: 200,
         message: "Success",
-        countOfNewUserThisMonth: countOfNewUserThisMonth,
-        totalDoctors: totalDoctors,
-        totalClinics: totalClinics,
-        totalBookingThisMonth: totalBookingThisMonth,
-        revenueThisMonth: revenueThisMonth.length
-          ? revenueThisMonth[0].totalRevenue
-          : 0,
-        revenueEachMonth: revenueEachMonth,
+        data: {
+          totalClinics: totalClinics,
+          totalDoctors: totalDoctors,
+          countOfNewUserThisMonth: countOfNewUserThisMonth,
+          totalBookingThisMonth: totalBookingThisMonth,
+        },
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+const revenueChart = async () => {
+  return new Promise(async (resolve, reject) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+
+    try {
+      const revenueEachMonth = await booking.aggregate([
+        {
+          $match: {
+            appointmentDate: {
+              $gte: new Date(currentYear, 0, 1),
+              $lt: new Date(currentYear + 1, 0, 1),
+            },
+            status: "S4",
+          },
+        },
+        {
+          $group: {
+            _id: { month: { $month: "$appointmentDate" } },
+            totalRevenue: {
+              $sum: {
+                $toDouble: "$price",
+              },
+            },
+          },
+        },
+        {
+          $sort: { "_id.month": 1 },
+        },
+      ]);
+
+      const fullYearRevenue = Array.from({ length: 12 }, (_, i) => ({
+        month: i + 1,
+        totalRevenue: 0,
+      }));
+
+      revenueEachMonth.forEach((item) => {
+        fullYearRevenue[item._id.month - 1].totalRevenue = item.totalRevenue;
+      });
+
+      const labels = fullYearRevenue.map((item) => `Tháng ${item.month}`);
+      const values = fullYearRevenue.map((item) => item.totalRevenue);
+
+      resolve({
+        status: 200,
+        message: "Success",
+        data: {
+          labels,
+          values,
+        },
       });
     } catch (e) {
       reject(e);
@@ -198,7 +192,8 @@ const bookingDayInMonthChart = async () => {
         {
           $group: {
             _id: {
-              day: { $dayOfMonth: "$appointmentDate" }
+              day: { $dayOfMonth: "$appointmentDate" },
+              status: "$status",
             },
             total: {
               $sum: 1,

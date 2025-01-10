@@ -266,10 +266,39 @@ const getDropdownDoctors = () => {
   });
 };
 
+const getAcademicRanksAndDegrees = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const academicRanksAndDegrees = await allcodes.find({
+        type: "Position",
+      });
+
+      const filterAcademicRanksAndDegrees = academicRanksAndDegrees.map(
+        (item) => {
+          return {
+            keyMap: item.keyMap,
+            valueEn: item.valueEn,
+            valueVi: item.valueVi,
+          };
+        }
+      );
+
+      resolve({
+        status: 200,
+        message: "success",
+        data: filterAcademicRanksAndDegrees,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   getDoctorInfor,
   updateDoctorInfor,
   searchDoctor,
   getAllDoctor,
   getDropdownDoctors,
+  getAcademicRanksAndDegrees,
 };

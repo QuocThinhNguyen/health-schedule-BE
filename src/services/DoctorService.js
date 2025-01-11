@@ -3,6 +3,8 @@ import users from "../models/users.js";
 import specialties from "../models/specialty.js";
 import clinics from "../models/clinic.js";
 import allcodes from "../models/allcodes.js";
+import feedBacks from "../models/feedbacks.js";
+import booking from "../models/booking.js";
 
 const getDoctorInfor = (id) => {
   return new Promise(async (resolve, reject) => {
@@ -58,9 +60,39 @@ const getDoctorInfor = (id) => {
   });
 };
 
+const getPriceRange = (query) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const minPrice = await doctorInfor
+        .find()
+        .sort({ price: 1 })
+        .limit(1)
+        .select("price");
+      const maxPrice = await doctorInfor
+        .find()
+        .sort({ price: -1 })
+        .limit(1)
+        .select("price");
+
+      resolve({
+        status: 200,
+        message: "success",
+        data: {
+          minPrice: minPrice[0].price,
+          maxPrice: maxPrice[0].price,
+        },
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 const getAllDoctor = (query) => {
   return new Promise(async (resolve, reject) => {
     try {
+      console.log("Query:", query);
+
       const page = parseInt(query.page) || 1;
       const limit = parseInt(query.limit) || 6;
       let formatQuery = {};
@@ -71,6 +103,14 @@ const getAllDoctor = (query) => {
       if (query.specialtyId) {
         formatQuery.specialtyId = query.specialtyId;
       }
+
+      if (query.minPrice && query.maxPrice) {
+        formatQuery.price = {
+          $gte: parseFloat(query.minPrice),
+          $lte: parseFloat(query.maxPrice),
+        };
+      }
+
       const allDoctor = await doctorInfor
         .find(formatQuery)
         .populate({
@@ -95,10 +135,43 @@ const getAllDoctor = (query) => {
           foreignField: "clinicId",
           select: "name address",
         });
-      // .skip((page - 1) * limit)
-      // .limit(limit)
 
-      // console.log(allDoctor);
+      // Tính trung bình cộng số rating từ bảng Feedback cho mỗi doctorId
+      const doctorIds = allDoctor.map((doctor) => doctor.doctorId.userId);
+      const avgFeedbacks = await feedBacks.aggregate([
+        { $match: { doctorId: { $in: doctorIds } } },
+        { $group: { _id: "$doctorId", avgRating: { $avg: "$rating" } } },
+        { $project: { avgRating: { $round: ["$avgRating", 1] } } },
+      ]);
+
+      // Tạo một map để dễ dàng truy cập rating trung bình theo doctorId
+      const feedbackMap = avgFeedbacks.reduce((acc, feedback) => {
+        acc[feedback._id] = feedback.avgRating;
+        return acc;
+      }, {});
+
+      // Thêm rating trung bình vào allDoctor
+      allDoctor.forEach((doctor) => {
+        doctor._doc.avgRating = feedbackMap[doctor.doctorId.userId] || 0;
+      });
+
+      // Đếm số lượt được đặt khám của từng bác sĩ trong bảng Booking
+      const bookingCounts = await booking.aggregate([
+        { $match: { doctorId: { $in: doctorIds } } },
+        { $group: { _id: "$doctorId", count: { $sum: 1 } } },
+      ]);
+
+      // Tạo một map để dễ dàng truy cập số lượt đặt khám theo doctorId
+      const bookingMap = bookingCounts.reduce((acc, booking) => {
+        acc[booking._id] = booking.count;
+        return acc;
+      }, {});
+
+      // Thêm số lượt đặt khám vào allDoctor
+      allDoctor.forEach((doctor) => {
+        doctor._doc.bookingCount = bookingMap[doctor.doctorId.userId] || 0;
+      });
+
       // Bộ lọc
       const regex = new RegExp(query.query, "i");
 
@@ -121,14 +194,47 @@ const getAllDoctor = (query) => {
           );
         })
         .slice((page - 1) * limit, page * limit); // Phân trang bằng slice
+
+      // Xác định tiêu chí sắp xếp
+      let sortCriteria = {};
+      if (query.sort) {
+        switch (query.sort) {
+          case "danh-gia-cao-den-thap":
+            sortCriteria = { avgRating: -1 };
+            break;
+          case "danh-gia-thap-den-cao":
+            sortCriteria = { avgRating: 1 };
+            break;
+          case "gia-cao-den-thap":
+            sortCriteria = { price: -1 };
+            break;
+          case "gia-thap-den-cao":
+            sortCriteria = { price: 1 };
+            break;
+          default:
+            sortCriteria = {};
+        }
+      }
+
+      // Sắp xếp danh sách đã filter
+      filteredDoctors.sort((a, b) => {
+        for (let key in sortCriteria) {
+          if (a._doc[key] < b._doc[key]) return -sortCriteria[key];
+          if (a._doc[key] > b._doc[key]) return sortCriteria[key];
+        }
+        return 0;
+      });
+
       // tính totalPages
       const totalPages = Math.ceil(totalFilteredDoctors / limit);
+      console.log("filteredDoctors:", filteredDoctors);
 
       resolve({
         status: 200,
         message: "Success",
         data: filteredDoctors,
-        totalPages,
+        totalDoctors: totalFilteredDoctors,
+        totalPages: totalPages,
       });
     } catch (e) {
       reject(e);
@@ -255,6 +361,42 @@ const getDropdownDoctors = () => {
           select: "name address",
         });
 
+         // Tính trung bình cộng số rating từ bảng Feedback cho mỗi doctorId
+      const doctorIds = dropdownDoctors.map((doctor) => doctor.doctorId.userId);
+      const avgFeedbacks = await feedBacks.aggregate([
+        { $match: { doctorId: { $in: doctorIds } } },
+        { $group: { _id: "$doctorId", avgRating: { $avg: "$rating" } } },
+        { $project: { avgRating: { $round: ["$avgRating", 1] } } },
+      ]);
+
+      // Tạo một map để dễ dàng truy cập rating trung bình theo doctorId
+      const feedbackMap = avgFeedbacks.reduce((acc, feedback) => {
+        acc[feedback._id] = feedback.avgRating;
+        return acc;
+      }, {});
+
+      // Thêm rating trung bình vào allDoctor
+      dropdownDoctors.forEach((doctor) => {
+        doctor._doc.avgRating = feedbackMap[doctor.doctorId.userId] || 0;
+      });
+
+      // Đếm số lượt được đặt khám của từng bác sĩ trong bảng Booking
+      const bookingCounts = await booking.aggregate([
+        { $match: { doctorId: { $in: doctorIds } } },
+        { $group: { _id: "$doctorId", count: { $sum: 1 } } },
+      ]);
+
+      // Tạo một map để dễ dàng truy cập số lượt đặt khám theo doctorId
+      const bookingMap = bookingCounts.reduce((acc, booking) => {
+        acc[booking._id] = booking.count;
+        return acc;
+      }, {});
+
+      // Thêm số lượt đặt khám vào allDoctor
+      dropdownDoctors.forEach((doctor) => {
+        doctor._doc.bookingCount = bookingMap[doctor.doctorId.userId] || 0;
+      });
+
       resolve({
         status: 200,
         message: "Get dropdown doctor successfully",
@@ -298,6 +440,7 @@ export default {
   getDoctorInfor,
   updateDoctorInfor,
   searchDoctor,
+  getPriceRange,
   getAllDoctor,
   getDropdownDoctors,
   getAcademicRanksAndDegrees,

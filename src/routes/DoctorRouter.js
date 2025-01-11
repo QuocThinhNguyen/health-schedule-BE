@@ -8,6 +8,7 @@ const router = express.Router();
 router.get('/dropdown', doctorController.getDropdownDoctors);
 router.get('/search', doctorController.searchDoctor);
 router.get('/academic-ranks-and-degrees', doctorController.getAcademicRanksAndDegrees);
+router.get('/price', doctorController.getPriceRange);
 router.get('/', doctorController.getAllDoctor);
 router.get('/:id', doctorController.getDoctorInfor);
 router.put('/:id', authDoctorMiddleware, upload.single("image"), doctorController.updateDoctorInfor);

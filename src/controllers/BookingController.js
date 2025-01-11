@@ -107,11 +107,24 @@ const getAllBookingByUserId = async (req, res) => {
 
   const patientBookingOnline = async (req, res) => {
     try {
-      const data = req.body;
+      const files = req.files || [];
+      // const data = req.body;
+      const data = {
+        ...req.body,
+        // images
+    }
       const result = await bookingService.patientBookingOnline(data);
       if (result.status === 200) {
         // console.log("IDDDD:", result.data.bookingId, typeof result.data.bookingId.toString());
-  
+        const bookingId = result.data.bookingId;
+
+        // Lưu tất cả ảnh vào bảng BookingImages
+        for (const file of files) {
+          await BookingImage.create({
+            bookingId: bookingId,
+            imageName: file.filename,
+          });
+        }
         const paymentUrl = await paymentService.createPaymentUrl(result.data.bookingId.toString(), result.data.price, 'Payment for booking');
         return res.status(200).json({
           status: 200,

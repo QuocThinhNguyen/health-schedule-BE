@@ -71,10 +71,23 @@ const getDropdownDoctors = async (req, res) => {
   }
 };
 
+const getAcademicRanksAndDegrees = async (req, res) => {
+  try {
+    const data = await doctorInforService.getAcademicRanksAndDegrees();
+    return res.status(200).json(data);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+}
+
 export default {
   getDoctorInfor,
   updateDoctorInfor,
   searchDoctor,
   getAllDoctor,
   getDropdownDoctors,
+  getAcademicRanksAndDegrees,
 };

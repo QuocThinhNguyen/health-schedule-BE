@@ -88,18 +88,18 @@ const handleResetPasswordTokenService = async (token) => {
         { new: true }
       );
 
-      if (!updateUser){
+      if (!updateUser) {
         reject({
           status: 404,
           message: "The user is not defined",
-        })
+        });
       }
 
       const text = `Xin chào, đây là mật khẩu mới của bạn: ${tempPassword}`;
       const subject = "Mật khẩu mới";
 
       sendMail.sendMail(decoded.email, text, subject);
-      
+
       resolve({
         status: 200,
         message: `Mật khẩu mới đã được gửi về mail của bạn`,

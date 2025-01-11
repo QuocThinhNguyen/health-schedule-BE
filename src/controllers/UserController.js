@@ -390,7 +390,7 @@ const googleLogin = async(req,res)=>{
 const facebookLogin = async(req,res)=>{
   try{
     const {accessToken}= req.body;
-    console.log("accesstoken: ",accessToken);
+    // console.log("accesstoken: ",accessToken);
 
     if (!accessToken){
       return res.status(404).json({

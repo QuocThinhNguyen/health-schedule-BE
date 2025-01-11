@@ -36,7 +36,6 @@ const patientRecordsSchema = new Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
   },
   job: {
     type: String,

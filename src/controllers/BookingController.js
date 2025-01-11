@@ -1,5 +1,6 @@
 import bookingService from "../services/BookingService.js"
 import paymentService from "../services/PaymentService.js"
+import BookingImage from "../models/booking_images.js"
 
 const getAllBookingByUserId = async (req, res) => {
     try {
@@ -131,9 +132,28 @@ const getAllBookingByUserId = async (req, res) => {
 
   const patientBookingDirect = async (req, res) => {
     try {
-      const data = req.body;
+      // console.log(req.body);
+      // console.log("FILES",req.files);
+      // console.log(req)
+      // const images = req.files ? req.files.map(file => file.filename) : [];
+      const files = req.files || [];
+      // const data = req.body;
+      const data = {
+        ...req.body,
+        // images
+    }
+
       const result = await bookingService.patientBookingDirect(data);
       if (result.status === 200) {  
+        const bookingId = result.data.bookingId;
+
+      // Lưu tất cả ảnh vào bảng BookingImages
+      for (const file of files) {
+        await BookingImage.create({
+          bookingId: bookingId,
+          imageName: file.filename,
+        });
+      }
         return res.status(200).json({
           status: 200,
           message: "Booking created successfully",

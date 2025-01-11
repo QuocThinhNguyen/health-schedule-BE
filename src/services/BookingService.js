@@ -458,7 +458,7 @@ const getAllBooking = (query) => {
                   timeType: data.timeType,
                   price: data.price,
                   reason: data.reason || '',
-                  status: 'S1'
+                  status: 'S1',
                 })
                 await newBooking.save();
                 // console.log("IDD", newBooking.bookingId);

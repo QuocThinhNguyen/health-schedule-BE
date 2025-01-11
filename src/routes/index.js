@@ -10,6 +10,7 @@ import specialtyRouter from "./SpecialtyRouter.js"
 import patientRecordsRouter from "./PatientRecordsRouter.js"
 import feedBackRouter from "./FeedBackRouter.js"
 import postRouter from "./PostRouter.js"
+import bookingImageRouter from "./BookingImageRouter.js";
 import {handleError} from "../middlewares/authMiddleware.js"
 
 const routes = (app) => {
@@ -26,6 +27,7 @@ const routes = (app) => {
     app.use('/patientrecord', patientRecordsRouter);
     app.use('/feedback', feedBackRouter);
     app.use('/post',postRouter);
+    app.use('/bookingImage',bookingImageRouter);
 
     app.use(handleError);
 }

@@ -113,8 +113,8 @@ const getFeedBackByDoctorId = (doctorId) => {
           path: "patientId",
           model: "PatientRecords",
           localField: "patientId",
-          // foreignField: "patientRecordId",
-          foreignField: "patientId",
+          foreignField: "patientRecordId",
+          // foreignField: "patientId",
           select: "fullname",
         });
       resolve({

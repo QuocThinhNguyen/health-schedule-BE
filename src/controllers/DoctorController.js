@@ -13,6 +13,18 @@ const getDoctorInfor = async (req, res) => {
   }
 };
 
+const getPriceRange = async (req, res) => {
+  try {
+    const data = await doctorInforService.getPriceRange(req.query);
+    return res.status(200).json(data);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+};
+
 const getAllDoctor = async (req, res) => {
   try {
     const data = await doctorInforService.getAllDoctor(req.query);
@@ -20,7 +32,8 @@ const getAllDoctor = async (req, res) => {
   } catch (e) {
     return res.status(500).json({
       status: 500,
-      message: "Error from server",
+
+      message: `Error from server, ${e.message}`,
     });
   }
 };
@@ -81,12 +94,13 @@ const getAcademicRanksAndDegrees = async (req, res) => {
       message: e.message,
     });
   }
-}
+};
 
 export default {
   getDoctorInfor,
   updateDoctorInfor,
   searchDoctor,
+  getPriceRange,
   getAllDoctor,
   getDropdownDoctors,
   getAcademicRanksAndDegrees,

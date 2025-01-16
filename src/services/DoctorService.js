@@ -126,7 +126,7 @@ const getAllDoctor = (query) => {
           model: "Specialty",
           localField: "specialtyId",
           foreignField: "specialtyId",
-          select: "name",
+          select: "name image",
         })
         .populate({
           path: "clinicId",

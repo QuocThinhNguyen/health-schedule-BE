@@ -4,7 +4,7 @@ import { authAdminMiddleware } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/homepage", authAdminMiddleware, adminController.adminHomePage);
+router.get("/homepage", adminController.adminHomePage);
 router.get("/revenue-chart", authAdminMiddleware, adminController.revenueChart);
 router.get(
   "/status-booking-chart",

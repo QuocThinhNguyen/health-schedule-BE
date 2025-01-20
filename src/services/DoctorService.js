@@ -95,7 +95,9 @@ const getAllDoctor = (query) => {
 
       const page = parseInt(query.page) || 1;
       const limit = parseInt(query.limit) || 6;
+
       let formatQuery = {};
+
       // Thêm điều kiện truy vấn theo clinicId và specialtyId
       if (query.clinicId) {
         formatQuery.clinicId = query.clinicId;
@@ -110,6 +112,7 @@ const getAllDoctor = (query) => {
           $lte: parseFloat(query.maxPrice),
         };
       }
+      console.log("formatQuery:", formatQuery);
 
       const allDoctor = await doctorInfor
         .find(formatQuery)
@@ -179,8 +182,9 @@ const getAllDoctor = (query) => {
       const totalFilteredDoctors = allDoctor.filter((doctor) => {
         return (
           regex.test(doctor.doctorId?.fullname) ||
-          regex.test(doctor.clinicId?.name) ||
-          regex.test(doctor.specialtyId?.name)
+          regex.test(doctor.clinicId?.name) 
+          // ||
+          // regex.test(doctor.specialtyId?.name)
         );
       }).length;
 
@@ -189,8 +193,9 @@ const getAllDoctor = (query) => {
         .filter((doctor) => {
           return (
             regex.test(doctor.doctorId?.fullname) ||
-            regex.test(doctor.clinicId?.name) ||
-            regex.test(doctor.specialtyId?.name)
+            regex.test(doctor.clinicId?.name) 
+            // ||
+            // regex.test(doctor.specialtyId?.name)
           );
         })
         .slice((page - 1) * limit, page * limit); // Phân trang bằng slice
@@ -227,7 +232,7 @@ const getAllDoctor = (query) => {
 
       // tính totalPages
       const totalPages = Math.ceil(totalFilteredDoctors / limit);
-      console.log("filteredDoctors:", filteredDoctors);
+      // console.log("filteredDoctors:", filteredDoctors);
 
       resolve({
         status: 200,
@@ -361,7 +366,7 @@ const getDropdownDoctors = () => {
           select: "name address",
         });
 
-         // Tính trung bình cộng số rating từ bảng Feedback cho mỗi doctorId
+      // Tính trung bình cộng số rating từ bảng Feedback cho mỗi doctorId
       const doctorIds = dropdownDoctors.map((doctor) => doctor.doctorId.userId);
       const avgFeedbacks = await feedBacks.aggregate([
         { $match: { doctorId: { $in: doctorIds } } },

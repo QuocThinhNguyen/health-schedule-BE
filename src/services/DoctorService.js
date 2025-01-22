@@ -43,6 +43,7 @@ const getDoctorInfor = (id) => {
         specialtyName: specialtyData.name,
         clinicName: clinicData.name,
         addressClinic: clinicData.address,
+        clinicId: doctorData.clinicId,
         price: doctorData.price,
         note: doctorData.note,
         description: doctorData.description,

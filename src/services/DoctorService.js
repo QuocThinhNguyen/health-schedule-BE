@@ -136,7 +136,7 @@ const getAllDoctor = (query) => {
           model: "Clinic",
           localField: "clinicId",
           foreignField: "clinicId",
-          select: "name address",
+          select: "name image address",
         });
 
       // Tính trung bình cộng số rating từ bảng Feedback cho mỗi doctorId

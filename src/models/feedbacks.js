@@ -31,6 +31,11 @@ const feedBackSchema = new Schema({
     type: Date,
     required: true,
   },
+  // clinicId:{
+  //   type: Number,
+  //   ref: "Clinic",
+  //   required: true
+  // }
 });
 
 feedBackSchema.plugin(AutoIncrement, { inc_field: "feedBackId", start_seq: 1 });

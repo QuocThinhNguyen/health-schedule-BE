@@ -1,4 +1,5 @@
 import feedBack from "../models/feedbacks.js";
+import doctorInfo from "../models/doctor_info.js";
 
 const createFeedBack = (data) => {
   return new Promise(async (resolve, reject) => {
@@ -21,6 +22,7 @@ const createFeedBack = (data) => {
           rating: data.rating,
           comment: data.comment,
           date: data.date,
+          clinicId: data.clinicId,
         });
         resolve({
           status: 200,
@@ -102,32 +104,70 @@ const deleteFeedBack = (id) => {
   });
 };
 
-const getFeedBackByDoctorId = (doctorId) => {
+// const getFeedBackByDoctorId = (doctorId) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const feedBacks = await feedBack
+//         .find({
+//           doctorId: doctorId,
+//         })
+//         .populate({
+//           path: "patientId",
+//           model: "PatientRecords",
+//           localField: "patientId",
+//           foreignField: "patientRecordId",
+//           // foreignField: "patientId",
+//           select: "fullname",
+//         });
+//       resolve({
+//         status: 200,
+//         message: "Get all feedbacks successfully",
+//         data: feedBacks,
+//       });
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
+
+const getFeedBackByDoctorId = (query) => {
   return new Promise(async (resolve, reject) => {
     try {
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 10;
+
+      const formatQuery = {
+        doctorId: query.doctorId,
+      };
+
       const feedBacks = await feedBack
-        .find({
-          doctorId: doctorId,
-        })
+        .find(formatQuery)
         .populate({
           path: "patientId",
           model: "PatientRecords",
           localField: "patientId",
           foreignField: "patientRecordId",
-          // foreignField: "patientId",
           select: "fullname",
-        });
+        })
+        .sort({ date: -1 }) // Sắp xếp theo ngày và giờ mới nhất
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      const totalFeedBacks = await feedBack.countDocuments(formatQuery);
+      const totalPages = Math.ceil(totalFeedBacks / limit);
+
       resolve({
         status: 200,
         message: "Get all feedbacks successfully",
         data: feedBacks,
+        totalPages,
+        totalFeedBacks
       });
     } catch (e) {
       reject(e);
     }
   });
 };
-
 const checkFeedBacked = (patientId, doctorId, date) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -270,6 +310,78 @@ const getAllFeedBackByFilter = (query) => {
   });
 };
 
+const getFeedBackByClinicId = (query) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 10;
+
+      // Lấy danh sách doctorId theo clinicId
+      const doctors = await doctorInfo.find({ clinicId: query.clinicId }).select("doctorId");
+      const doctorIds = doctors.map((doc) => doc.doctorId);
+
+      // console.log("CHEKC: ",doctorIds);
+      if (doctorIds.length === 0) {
+        return resolve({
+          status: 200,
+          message: "No feedbacks found",
+          data: [],
+          totalPages: 0,
+          totalFeedBacks: 0,
+        });
+      }
+
+      // Lấy danh sách feedbacks theo doctorId trong danh sách
+      const feedBacks = await feedBack.find({ doctorId: { $in: doctorIds } })
+        // .populate({
+        //   path: "patientId",
+        //   model: "PatientRecords",
+        //   select: "fullname",
+        // })
+        .populate({
+          path: "patientId",
+          model: "PatientRecords",
+          localField: "patientId",
+          foreignField: "patientRecordId",
+          select: "fullname",
+        })
+        .populate({
+          path: "doctorId",
+          model: "Users",
+          localField: "doctorId",
+          foreignField: "userId",
+          select: "fullname image "
+        })
+        .sort({ date: -1 }) // Sắp xếp theo ngày mới nhất
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      // Tính tổng số feedbacks
+      const totalFeedBacks = await feedBack.countDocuments({ doctorId: { $in: doctorIds } });
+      const totalPages = Math.ceil(totalFeedBacks / limit);
+
+      // Thêm thông tin position vào feedbacks
+      // const feedbacksWithPosition = await Promise.all(feedBacks.map(async feedback => {
+      //   const doctorInfos = await doctorInfo.findOne({ doctorId: feedback.doctorId }).select("position");
+      //   return {
+      //     ...feedback._doc,
+      //     position: doctorInfos ? doctorInfo.position : null,
+      //   };
+      // }));
+      resolve({
+        status: 200,
+        message: "Get all feedbacks successfully",
+        data: feedBacks,
+        totalPages,
+        totalFeedBacks,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+
 export default {
   createFeedBack,
   updateFeedBack,
@@ -278,4 +390,5 @@ export default {
   getFeedBackByDoctorId,
   checkFeedBacked,
   getAllFeedBackByFilter,
+  getFeedBackByClinicId
 };

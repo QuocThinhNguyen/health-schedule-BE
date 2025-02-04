@@ -50,18 +50,36 @@ const deleteFeedBack = async (req, res) => {
     }
 }
 
+// const getFeedBackByDoctorId = async (req, res) => {
+//     try {
+//         const doctorId = req.params.doctorId;
+//         const data = await feedBackService.getFeedBackByDoctorId(doctorId);
+//         return res.status(200).json(data)
+//     } catch (err) {
+//         return res.status(500).json({
+//             status: 500,
+//             message: "Error from server"
+//         })
+//     }
+// }
+
 const getFeedBackByDoctorId = async (req, res) => {
     try {
-        const doctorId = req.params.doctorId;
-        const data = await feedBackService.getFeedBackByDoctorId(doctorId);
-        return res.status(200).json(data)
+      const doctorId = req.params.doctorId;
+      const query = {
+        doctorId: doctorId,
+        page: req.query.page,
+        limit: req.query.limit,
+      };
+      const data = await feedBackService.getFeedBackByDoctorId(query);
+      return res.status(200).json(data);
     } catch (err) {
-        return res.status(500).json({
-            status: 500,
-            message: "Error from server"
-        })
+      return res.status(500).json({
+        status: 500,
+        message: "Error from server",
+      });
     }
-}
+  };
 
 const checkFeedBacked = async (req, res) => {
     try{
@@ -96,6 +114,27 @@ const getAllFeedBackByFilter=async(req,res)=>{
         });
     }
 }
+
+const getFeedBackByClinicId = async (req, res) => {
+    try {
+      const clinicId = req.params.clinicId;
+      const query = {
+        clinicId: clinicId,
+        page: req.query.page,
+        limit: req.query.limit,
+      };
+      console.log("TEST ",query);
+      const data = await feedBackService.getFeedBackByClinicId(query);
+      return res.status(200).json(data);
+    } catch (err) {
+      return res.status(500).json({
+        status: 500,
+        message: err.message,
+      });
+    }
+  };
+  
+
 export default {
     createFeedBack, 
     updateFeedBack,
@@ -103,5 +142,6 @@ export default {
     deleteFeedBack,
     getFeedBackByDoctorId,
     checkFeedBacked,
-    getAllFeedBackByFilter
+    getAllFeedBackByFilter,
+    getFeedBackByClinicId
 }

@@ -10,6 +10,6 @@ router.get('/',feedBackController.getAllFeedBack);
 router.delete('/:id',feedBackController.deleteFeedBack);
 router.get('/:doctorId',feedBackController.getFeedBackByDoctorId);
 router.post('/check',feedBackController.checkFeedBacked);
-
+router.get('/clinic/:clinicId', feedBackController.getFeedBackByClinicId);
 
 export default router;

@@ -113,9 +113,8 @@ const getAllDoctor = (query) => {
           $lte: parseFloat(query.maxPrice),
         };
       }
-      console.log("formatQuery:", formatQuery);
 
-      const allDoctor = await doctorInfor
+      let allDoctor = await doctorInfor
         .find(formatQuery)
         .populate({
           path: "doctorId",
@@ -140,23 +139,48 @@ const getAllDoctor = (query) => {
           select: "name image address",
         });
 
-      // Tính trung bình cộng số rating từ bảng Feedback cho mỗi doctorId
+      if (query.gender) {
+        allDoctor = allDoctor.filter((doctor) =>
+          query.gender.includes(doctor.doctorId.gender)
+        );
+      }
+
+      // Tính trung bình cộng số rating và tổng số feedback từ bảng Feedback cho mỗi doctorId
       const doctorIds = allDoctor.map((doctor) => doctor.doctorId.userId);
       const avgFeedbacks = await feedBacks.aggregate([
         { $match: { doctorId: { $in: doctorIds } } },
-        { $group: { _id: "$doctorId", avgRating: { $avg: "$rating" } } },
-        { $project: { avgRating: { $round: ["$avgRating", 1] } } },
+        {
+          $group: {
+            _id: "$doctorId",
+            avgRating: { $avg: "$rating" },
+            countFeedBack: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            avgRating: { $round: ["$avgRating", 1] },
+            countFeedBack: 1,
+          },
+        },
       ]);
 
-      // Tạo một map để dễ dàng truy cập rating trung bình theo doctorId
+      // Tạo một map để dễ dàng truy cập rating trung bình và tổng số feedback theo doctorId
       const feedbackMap = avgFeedbacks.reduce((acc, feedback) => {
-        acc[feedback._id] = feedback.avgRating;
+        acc[feedback._id] = {
+          avgRating: feedback.avgRating,
+          countFeedBack: feedback.countFeedBack,
+        };
         return acc;
       }, {});
 
-      // Thêm rating trung bình vào allDoctor
+      // Thêm rating trung bình và tổng số feedback vào allDoctor
       allDoctor.forEach((doctor) => {
-        doctor._doc.avgRating = feedbackMap[doctor.doctorId.userId] || 0;
+        const feedback = feedbackMap[doctor.doctorId.userId] || {
+          avgRating: 0,
+          countFeedBack: 0,
+        };
+        doctor._doc.avgRating = feedback.avgRating;
+        doctor._doc.countFeedBack = feedback.countFeedBack;
       });
 
       // Đếm số lượt được đặt khám của từng bác sĩ trong bảng Booking
@@ -183,7 +207,7 @@ const getAllDoctor = (query) => {
       const totalFilteredDoctors = allDoctor.filter((doctor) => {
         return (
           regex.test(doctor.doctorId?.fullname) ||
-          regex.test(doctor.clinicId?.name) 
+          regex.test(doctor.clinicId?.name)
           // ||
           // regex.test(doctor.specialtyId?.name)
         );
@@ -194,7 +218,7 @@ const getAllDoctor = (query) => {
         .filter((doctor) => {
           return (
             regex.test(doctor.doctorId?.fullname) ||
-            regex.test(doctor.clinicId?.name) 
+            regex.test(doctor.clinicId?.name)
             // ||
             // regex.test(doctor.specialtyId?.name)
           );
@@ -233,7 +257,6 @@ const getAllDoctor = (query) => {
 
       // tính totalPages
       const totalPages = Math.ceil(totalFilteredDoctors / limit);
-      // console.log("filteredDoctors:", filteredDoctors);
 
       resolve({
         status: 200,

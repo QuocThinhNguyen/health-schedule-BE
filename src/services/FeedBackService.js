@@ -161,7 +161,7 @@ const getFeedBackByDoctorId = (query) => {
         message: "Get all feedbacks successfully",
         data: feedBacks,
         totalPages,
-        totalFeedBacks
+        totalFeedBacks,
       });
     } catch (e) {
       reject(e);
@@ -317,7 +317,9 @@ const getFeedBackByClinicId = (query) => {
       const limit = parseInt(query.limit) || 10;
 
       // Lấy danh sách doctorId theo clinicId
-      const doctors = await doctorInfo.find({ clinicId: query.clinicId }).select("doctorId");
+      const doctors = await doctorInfo
+        .find({ clinicId: query.clinicId })
+        .select("doctorId");
       const doctorIds = doctors.map((doc) => doc.doctorId);
 
       // console.log("CHEKC: ",doctorIds);
@@ -326,13 +328,15 @@ const getFeedBackByClinicId = (query) => {
           status: 200,
           message: "No feedbacks found",
           data: [],
-          totalPages: 0,
+          avgRating: 0,
           totalFeedBacks: 0,
+          totalPages: 0,
         });
       }
 
       // Lấy danh sách feedbacks theo doctorId trong danh sách
-      const feedBacks = await feedBack.find({ doctorId: { $in: doctorIds } })
+      const feedBacks = await feedBack
+        .find({ doctorId: { $in: doctorIds } })
         // .populate({
         //   path: "patientId",
         //   model: "PatientRecords",
@@ -350,37 +354,79 @@ const getFeedBackByClinicId = (query) => {
           model: "Users",
           localField: "doctorId",
           foreignField: "userId",
-          select: "fullname image "
+          select: "fullname image ",
         })
         .sort({ date: -1 }) // Sắp xếp theo ngày mới nhất
         .skip((page - 1) * limit)
         .limit(limit);
 
       // Tính tổng số feedbacks
-      const totalFeedBacks = await feedBack.countDocuments({ doctorId: { $in: doctorIds } });
+      const totalFeedBacks = await feedBack.countDocuments({
+        doctorId: { $in: doctorIds },
+      });
       const totalPages = Math.ceil(totalFeedBacks / limit);
 
-      // Thêm thông tin position vào feedbacks
-      // const feedbacksWithPosition = await Promise.all(feedBacks.map(async feedback => {
-      //   const doctorInfos = await doctorInfo.findOne({ doctorId: feedback.doctorId }).select("position");
-      //   return {
-      //     ...feedback._doc,
-      //     position: doctorInfos ? doctorInfo.position : null,
-      //   };
-      // }));
+      // Tính trung bình cộng số rating và tổng số feedback từ bảng Feedback cho mỗi doctorId
+      const avgFeedbacks = await feedBack.aggregate([
+        { $match: { doctorId: { $in: doctorIds } } },
+        {
+          $group: {
+            _id: "$doctorId",
+            avgRating: { $avg: "$rating" },
+            count: { $sum: 1 },
+          },
+        },
+        { $project: { avgRating: { $round: ["$avgRating", 1] }, count: 1 } },
+      ]);
+
+      // Tạo một map để dễ dàng truy cập rating trung bình và tổng số feedback theo doctorId
+      const feedbackMap = avgFeedbacks.reduce((acc, feedback) => {
+        acc[feedback._id] = {
+          avgRating: feedback.avgRating,
+          count: feedback.count,
+        };
+        return acc;
+      }, {});
+
+      // Thêm rating trung bình và tổng số feedback vào feedBacks
+      feedBacks.forEach((feedback) => {
+        const feedbackData = feedbackMap[feedback.doctorId] || {
+          avgRating: 0,
+          count: 0,
+        };
+        feedback._doc.avgRating = feedbackData.avgRating;
+        feedback._doc.feedbackCount = feedbackData.count;
+      });
+
+      // Tính trung bình cộng của tổng số feedbacks và rating
+      const totalFeedbackCount = avgFeedbacks.reduce(
+        (acc, feedback) => acc + feedback.count,
+        0
+      );
+      const avgRating =
+        totalFeedbackCount > 0
+          ? avgFeedbacks.reduce(
+              (acc, feedback) => acc + feedback.avgRating * feedback.count,
+              0
+            ) / totalFeedbackCount
+          : 0;
+
+      console.log("totalFeedbackCount", totalFeedbackCount);
+      console.log("totalPages", totalPages);
+
       resolve({
         status: 200,
         message: "Get all feedbacks successfully",
         data: feedBacks,
-        totalPages,
-        totalFeedBacks,
+        avgRating: avgRating.toFixed(1),
+        totalFeedbacks: totalFeedBacks,
+        totalPages: totalPages,
       });
     } catch (e) {
       reject(e);
     }
   });
 };
-
 
 export default {
   createFeedBack,
@@ -390,5 +436,5 @@ export default {
   getFeedBackByDoctorId,
   checkFeedBacked,
   getAllFeedBackByFilter,
-  getFeedBackByClinicId
+  getFeedBackByClinicId,
 };

@@ -146,6 +146,7 @@ const filterClinics = (query) => {
         .find(formatQuery)
         .skip((page - 1) * limit)
         .limit(limit);
+        
       const totalClinics = await clinic.countDocuments(formatQuery);
       const totalPages = Math.ceil(totalClinics / limit);
 

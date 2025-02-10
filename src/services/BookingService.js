@@ -206,7 +206,7 @@ const getAllBooking = (query) => {
             model: "PatientRecords",
             localField: "patientRecordId",
             foreignField: "patientRecordId",
-            select: "fullname gender phoneNumber birthDate address",
+            select: "fullname gender phoneNumber birthDate address CCCD email job",
           }).lean()
           const newBooking = {
             ...bookingFind,

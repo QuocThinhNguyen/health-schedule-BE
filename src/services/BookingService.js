@@ -285,71 +285,283 @@ const getAllBooking = (query) => {
     });
   };
 
-  const getBookingByDoctorId = (doctorId, date) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const query = {
-          doctorId: doctorId
+  // const getBookingByDoctorId = (doctorId, date) => {
+  //   return new Promise(async (resolve, reject) => {
+  //     try {
+  //       const query = {
+  //         doctorId: doctorId
+  //       };
+  
+  //       if (date) {
+  //         const startOfDay = new Date(date);
+  //         startOfDay.setHours(0, 0, 0, 0);
+  
+  //         const endOfDay = new Date(date);
+  //         endOfDay.setHours(23, 59, 59, 999);
+  
+  //         query.appointmentDate = {
+  //           $gte: startOfDay,
+  //           $lte: endOfDay
+  //         };
+  //       }
+  //       const data = await booking.find(query)
+  //         .populate({
+  //           path: "doctorId",
+  //           model: "Users",
+  //           localField: "doctorId",
+  //           foreignField: "userId",
+  //           select: "fullname",
+  //         })
+  //         .populate({
+  //           path: "patientRecordId",
+  //           model: "PatientRecords",
+  //           localField: "patientRecordId",
+  //           foreignField: "patientRecordId",
+  //           select: "fullname gender birthDate phoneNumber CCCD email job address"
+  //         })
+  //         .populate({
+  //           path: "status",
+  //           model: "AllCodes",
+  //           localField: "status",
+  //           foreignField: "keyMap",
+  //           select: "valueEn valueVi"
+  //         })
+  //         .populate({
+  //           path: "timeType",
+  //           model: "AllCodes",
+  //           localField: "timeType",
+  //           foreignField: "keyMap",
+  //           select: "valueEn valueVi"
+  //         })
+  //       if (data.length === 0) {
+  //         resolve({
+  //           status: 404,
+  //           message: "The booking is not defined",
+  //         });
+  //       } else {
+  //         const totalPatients = new Set(data.map(b => b.patientRecordId?.toString())).size;
+  //         const totalBooking = data.length;
+
+  //         resolve({
+  //           status: 200,
+  //           message: "SUCCESS",
+  //           data: data,
+  //           totalPatients,
+  //           totalBooking
+  //         });
+  //       }
+  //     } catch (e) {
+  //       reject(e);
+  //     }
+  //   });
+  // }
+
+const getBookingByDoctorId = (doctorId, date, page = 1, limit = 10, search) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const query = { doctorId };
+
+      if (date) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        query.appointmentDate = {
+          $gte: startOfDay,
+          $lte: endOfDay
         };
-  
-        if (date) {
-          const startOfDay = new Date(date);
-          startOfDay.setHours(0, 0, 0, 0);
-  
-          const endOfDay = new Date(date);
-          endOfDay.setHours(23, 59, 59, 999);
-  
-          query.appointmentDate = {
-            $gte: startOfDay,
-            $lte: endOfDay
-          };
-        }
-        const data = await booking.find(query)
-          .populate({
-            path: "doctorId",
-            model: "Users",
-            localField: "doctorId",
-            foreignField: "userId",
-            select: "fullname",
-          })
-          .populate({
-            path: "patientRecordId",
-            model: "PatientRecords",
-            localField: "patientRecordId",
-            foreignField: "patientRecordId",
-            select: "fullname gender birthDate phoneNumber CCCD email job address"
-          })
-          .populate({
-            path: "status",
-            model: "AllCodes",
-            localField: "status",
-            foreignField: "keyMap",
-            select: "valueEn valueVi"
-          })
-          .populate({
-            path: "timeType",
-            model: "AllCodes",
-            localField: "timeType",
-            foreignField: "keyMap",
-            select: "valueEn valueVi"
-          })
-        if (data.length === 0) {
-          resolve({
-            status: 404,
-            message: "The booking is not defined",
-          });
-        } else {
-          resolve({
-            status: 200,
-            message: "SUCCESS",
-            data: data,
-          });
-        }
-      } catch (e) {
-        reject(e);
       }
-    });
-  }
+
+      // Chuyển page & limit sang kiểu số nguyên
+      page = parseInt(page) || 1;
+      limit = parseInt(limit) || 10;
+      if (page < 1) page = 1; // Đảm bảo page không nhỏ hơn 1
+
+      // Lấy danh sách booking có phân trang
+      const bookings = await booking.find(query)
+        .populate({
+          path: "doctorId",
+          model: "Users",
+          localField: "doctorId",
+          foreignField: "userId",
+          select: "fullname",
+        })
+        .populate({
+          path: "patientRecordId",
+          model: "PatientRecords",
+          localField: "patientRecordId",
+          foreignField: "patientRecordId",
+          select: "fullname gender birthDate phoneNumber CCCD email job address"
+        })
+        .populate({
+          path: "status",
+          model: "AllCodes",
+          localField: "status",
+          foreignField: "keyMap",
+          select: "valueEn valueVi"
+        })
+        .populate({
+          path: "timeType",
+          model: "AllCodes",
+          localField: "timeType",
+          foreignField: "keyMap",
+          select: "valueEn valueVi"
+        })
+        .sort({ appointmentDate: -1 }) // Sắp xếp giảm dần theo ngày đặt lịch
+        .lean(); // Sử dụng lean() để chuyển đổi kết quả sang đối tượng JavaScript thuần
+
+        // console.log("Bookings", bookings);
+      // Tìm kiếm với $regex
+      let filteredBookings = bookings;
+      if (search) {
+        const regex = new RegExp(search, 'i');
+        console.log("Regex", regex);
+        console.log("FILTER:",filteredBookings)
+        filteredBookings = bookings.filter((booking) => {
+          return (
+            regex.test(booking.patientRecordId?.fullname) ||
+            regex.test(booking.patientRecordId?.phoneNumber) ||
+            regex.test(booking.patientRecordId?.CCCD)
+          );
+        });
+      }
+
+      console.log("Filered bookings", filteredBookings);
+
+      // Phân trang kết quả
+      const totalBooking = filteredBookings.length;
+      const totalPages = Math.ceil(totalBooking / limit);
+      const paginatedBookings = filteredBookings.slice((page - 1) * limit, page * limit);
+
+      if (paginatedBookings.length === 0) {
+        resolve({
+          status: 404,
+          message: "No bookings found",
+          totalBooking: 0,
+          totalPatients: 0,
+          totalPages: 0,
+          data: [],
+        });
+      } else {
+        // Đếm số lượng bệnh nhân duy nhất
+        const totalPatients = new Set(paginatedBookings.map(b => b.patientRecordId?.toString())).size;
+
+        resolve({
+          status: 200,
+          message: "SUCCESS",
+          data: paginatedBookings,
+          totalPatients,
+          totalBooking,
+          totalPages,
+        });
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+const getBookingLatestByDoctorId = async (doctorId, date, page = 1, limit = 10, search) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const query = { doctorId };
+
+      if (date) {
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        query.appointmentDate = {
+          $gte: startOfDay,
+          $lte: endOfDay
+        };
+      }
+
+      if (search) {
+        query.$or = [
+          { "patientRecordId.fullname": { $regex: search, $options: "i" } }, // Tìm theo tên
+          { "patientRecordId.phoneNumber": { $regex: search, $options: "i" } }, // Tìm theo số điện thoại
+          { "patientRecordId.CCCD": { $regex: search, $options: "i" } }, // Tìm theo CCCD
+        ];
+      }
+
+
+      // Chuyển page & limit sang kiểu số nguyên
+      page = parseInt(page) || 1;
+      limit = parseInt(limit) || 10;
+      if (page < 1) page = 1; // Đảm bảo page không nhỏ hơn 1
+
+      // Lấy danh sách booking có phân trang
+      const bookings = await booking.find(query)
+        .populate({
+          path: "doctorId",
+          model: "Users",
+          localField: "doctorId",
+          foreignField: "userId",
+          select: "fullname",
+        })
+        .populate({
+          path: "patientRecordId",
+          model: "PatientRecords",
+          localField: "patientRecordId",
+          foreignField: "patientRecordId",
+          select: "fullname gender birthDate phoneNumber CCCD email job address"
+        })
+        .populate({
+          path: "status",
+          model: "AllCodes",
+          localField: "status",
+          foreignField: "keyMap",
+          select: "valueEn valueVi"
+        })
+        .populate({
+          path: "timeType",
+          model: "AllCodes",
+          localField: "timeType",
+          foreignField: "keyMap",
+          select: "valueEn valueVi"
+        })
+        .sort({ appointmentDate: -1 }) // Sắp xếp giảm dần theo ngày đặt lịch
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+
+        
+      // Tính tổng số lượng booking
+      const totalBooking = await booking.countDocuments(query);
+      const totalPages = Math.ceil(totalBooking / limit);
+
+      if (bookings.length === 0) {
+        resolve({
+          status: 404,
+          message: "No bookings found",
+          totalBooking: 0,
+          totalPatients: 0,
+          totalPages: 0,
+          data: [],
+        });
+      } else {
+        // Đếm số lượng bệnh nhân duy nhất
+        const totalPatients = new Set(bookings.map(b => b.patientRecordId?.toString())).size;
+
+        resolve({
+          status: 200,
+          message: "SUCCESS",
+          data: bookings,
+          totalPatients,
+          totalBooking,
+          totalPages,
+        });
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
 
   const patientBookingOnline = (data) => {
     return new Promise(async (resolve, reject) => {
@@ -717,5 +929,6 @@ const confirmBooking= async({bookingId,doctorId,appointmentDate,timeType})=>{
     updateBookingStatus,
     updateBookingPaymentUrl,
     getEmailByBookingId,
-    confirmBooking
+    confirmBooking,
+    getBookingLatestByDoctorId
   }

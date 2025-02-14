@@ -1,3 +1,4 @@
+import { console } from "inspector";
 import clinic from "../models/clinic.js";
 
 const createClinic = (data) => {
@@ -142,6 +143,8 @@ const filterClinics = (query) => {
           ],
         };
       }
+
+      console.log("Search",formatQuery);
       const clinics = await clinic
         .find(formatQuery)
         .skip((page - 1) * limit)

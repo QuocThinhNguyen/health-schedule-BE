@@ -12,6 +12,7 @@ router.post("/allbooking", authMiddleware, bookingController.getAllBookingByUser
 router.get("/:id",authMiddleware,bookingController.getBooking);
 router.get("/",authMiddleware,bookingController.getAllBooking)
 router.put("/:id",authMiddleware,bookingController.updateBooking);
+router.get("/doctor/latest/:doctorId", authDoctorMiddleware, bookingController.getBookingLatestByDoctorId)
 router.get("/doctor/:doctorId", authDoctorMiddleware, bookingController.getBookingByDoctorId)
 router.get("/email/:bookingId", authMiddleware, bookingController.getEmailByBookingId)
 

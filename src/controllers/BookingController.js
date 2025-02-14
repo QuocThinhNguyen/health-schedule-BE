@@ -89,21 +89,55 @@ const getAllBookingByUserId = async (req, res) => {
     }
   };
 
+  // const getBookingByDoctorId = async (req, res) => {
+  //   try {
+  //     const { doctorId } = req.params;
+  //     const { date } = req.query; // Lấy tham số ngày từ query string
+  
+  //     const result = await bookingService.getBookingByDoctorId(doctorId, date);
+  //     return res.status(200).json(result);
+  //   } catch (e) {
+  //     // console.log(e);
+  //     return res.status(500).json({
+  //       status: 500,
+  //       message: e.message,
+  //     });
+  //   }
+  // }
+
   const getBookingByDoctorId = async (req, res) => {
     try {
       const { doctorId } = req.params;
-      const { date } = req.query; // Lấy tham số ngày từ query string
+      const { date, page, limit,search  } = req.query; // Lấy tham số page, limit từ query
+
+      console.log("Check query", req.query);
   
-      const result = await bookingService.getBookingByDoctorId(doctorId, date);
+      const result = await bookingService.getBookingByDoctorId(doctorId, date, page, limit,search );
       return res.status(200).json(result);
     } catch (e) {
-      // console.log(e);
       return res.status(500).json({
         status: 500,
-        message: "Error from server",
+        message: e.message,
       });
     }
+};
+const getBookingLatestByDoctorId = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const { date, page, limit,search  } = req.query; // Lấy tham số page, limit từ query
+
+    console.log("Check query", req.query);
+
+    const result = await bookingService.getBookingLatestByDoctorId(doctorId, date, page, limit,search );
+    return res.status(200).json(result);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: e.message,
+    });
   }
+};
+
 
   const patientBookingOnline = async (req, res) => {
     try {
@@ -223,5 +257,6 @@ const confirmBooking = async (req, res) => {
     patientBookingDirect,
     handlePaymentReturn,
     getEmailByBookingId,
-    confirmBooking
+    confirmBooking,
+    getBookingLatestByDoctorId
   }

@@ -156,12 +156,17 @@ const getFeedBackByDoctorId = (query) => {
       const totalFeedBacks = await feedBack.countDocuments(formatQuery);
       const totalPages = Math.ceil(totalFeedBacks / limit);
 
+      // Tính tổng và trung bình rating
+      const totalRating = feedBacks.reduce((sum, fb) => sum + fb.rating, 0);
+      const averageRating = totalFeedBacks > 0 ? (totalRating / totalFeedBacks).toFixed(1) : 0;
+
       resolve({
         status: 200,
         message: "Get all feedbacks successfully",
         data: feedBacks,
         totalPages,
         totalFeedBacks,
+        averageRating
       });
     } catch (e) {
       reject(e);

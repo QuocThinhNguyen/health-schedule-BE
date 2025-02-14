@@ -202,6 +202,7 @@ const getAllDoctor = (query) => {
 
       // Bộ lọc
       const regex = new RegExp(query.query, "i");
+      console.log("Regex:", regex);
 
       // 1. Tính tổng số lượng doctor phù hợp (không phân trang)
       const totalFilteredDoctors = allDoctor.filter((doctor) => {

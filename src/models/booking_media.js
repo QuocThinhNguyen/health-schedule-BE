@@ -4,8 +4,8 @@ const AutoIncrement = pkg(mongoose);
 
 const { Schema } = mongoose;
 
-const bookingImagesSchema = new Schema({
-    bookingImageId: {
+const bookingMediaSchema = new Schema({
+    bookingMediaId: {
         type: Number,
         unique: true
     },
@@ -14,13 +14,13 @@ const bookingImagesSchema = new Schema({
         ref: 'Booking',
         required: true
     },
-    imageName: {
+    name: {
         type: String,
         required: true
     }
 });
 
-bookingImagesSchema.plugin(AutoIncrement, { inc_field: 'bookingImageId', start_seq: 1 });
-const BookingImages = mongoose.model('BookingImages', bookingImagesSchema);
+bookingMediaSchema.plugin(AutoIncrement, { inc_field: 'bookingMediaId', start_seq: 1 });
+const BookingMedia = mongoose.model('BookingMedia', bookingMediaSchema);
 
-export default BookingImages;
+export default BookingMedia;

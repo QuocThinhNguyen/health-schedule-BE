@@ -1,6 +1,6 @@
 import bookingService from "../services/BookingService.js"
 import paymentService from "../services/PaymentService.js"
-import BookingImage from "../models/booking_images.js"
+import BookingMedia from "../models/booking_media.js"
 
 const getAllBookingByUserId = async (req, res) => {
     try {
@@ -154,9 +154,9 @@ const getBookingLatestByDoctorId = async (req, res) => {
 
         // Lưu tất cả ảnh vào bảng BookingImages
         for (const file of files) {
-          await BookingImage.create({
+          await BookingMedia.create({
             bookingId: bookingId,
-            imageName: file.filename,
+            name: file.filename,
           });
         }
         const paymentUrl = await paymentService.createPaymentUrl(result.data.bookingId.toString(), result.data.price, 'Payment for booking');
@@ -196,9 +196,9 @@ const getBookingLatestByDoctorId = async (req, res) => {
 
       // Lưu tất cả ảnh vào bảng BookingImages
       for (const file of files) {
-        await BookingImage.create({
+        await BookingMedia.create({
           bookingId: bookingId,
-          imageName: file.filename,
+          name: file.filename,
         });
       }
         return res.status(200).json({

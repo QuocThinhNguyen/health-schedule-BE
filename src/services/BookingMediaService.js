@@ -1,9 +1,9 @@
-import bookingImage from "../models/booking_images.js";
+import bookingMedia from "../models/booking_media.js";
 
 const getAllBookingImageByBookingId = async (bookingId) => {
   return new Promise(async (resolve, reject) => {
     try {
-        const data = await bookingImage.find({
+        const data = await bookingMedia.find({
           bookingId: bookingId
         })
         if (!data) {

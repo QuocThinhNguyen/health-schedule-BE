@@ -1,9 +1,22 @@
 import feedBackService from "../services/FeedBackService.js";
-
+import ReviewMedia from "../models/review_media.js";
 const createFeedBack = async (req,res)=>{
     try{
+        console.log("CHECK:",req.body)
+        const files = req.files || [];
+        console.log("FILES:",files)
         const info = await feedBackService.createFeedBack(req.body);
-        return res.status(200).json(info);
+        console.log("INFO:",info)
+
+        if (info.status === 200){
+            for (const file of files) {
+                await ReviewMedia.create({
+                    feedBackId: info.data.feedBackId,
+                    mediaName: file.filename,
+                });
+              }
+              return res.status(200).json(info);
+        } 
     }catch(e){
         return res.status(500).json({
             status: 500,
@@ -76,7 +89,7 @@ const getFeedBackByDoctorId = async (req, res) => {
     } catch (err) {
       return res.status(500).json({
         status: 500,
-        message: "Error from server",
+        message: err.message,
       });
     }
   };

@@ -13,14 +13,14 @@ const storage = multer.diskStorage({
 
 // Kiểm tra định dạng file
 const fileFilter = (req, file, cb) => {
-  const fileTypes = /jpeg|jpg|png|gif/;
+  const fileTypes = /jpeg|jpg|png|gif|mp4|mov|avi|mkv/;
   const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = fileTypes.test(file.mimetype);
 
   if (extname && mimetype) {
     cb(null, true);
   } else {
-    cb(new Error("Only images are allowed!"), false);
+    cb(new Error("Only images and videos are allowed!"), false);
   }
 };
 
@@ -28,7 +28,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Giới hạn kích thước file 5MB
+  limits: { fileSize: 50 * 1024 * 1024 }, // Giới hạn kích thước file 50MB
 });
 
 export default upload;

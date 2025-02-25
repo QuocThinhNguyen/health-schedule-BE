@@ -1,7 +1,9 @@
 import feedBack from "../models/feedbacks.js";
 import doctorInfo from "../models/doctor_info.js";
+import ReviewMedia from "../models/review_media.js";
 
 const createFeedBack = (data) => {
+  console.log("DATA: ", data);
   return new Promise(async (resolve, reject) => {
     try {
       if (
@@ -16,6 +18,7 @@ const createFeedBack = (data) => {
           message: "Missing required fields",
         });
       } else {
+        const newFeedBack =
         await feedBack.create({
           patientId: data.patientId,
           doctorId: data.doctorId,
@@ -27,6 +30,7 @@ const createFeedBack = (data) => {
         resolve({
           status: 200,
           message: "Create feedback successfully",
+          data: newFeedBack,
         });
       }
     } catch (e) {
@@ -149,6 +153,13 @@ const getFeedBackByDoctorId = (query) => {
           foreignField: "patientRecordId",
           select: "fullname",
         })
+        // .populate({
+        //   path:"feedBackId",
+        //   model:"ReviewMedia",
+        //   localField:"feedBackId",
+        //   foreignField:"feedBackId",
+        //   select:"mediaName"
+        // })
         .sort({ date: -1 }) // Sắp xếp theo ngày và giờ mới nhất
         .skip((page - 1) * limit)
         .limit(limit);
@@ -160,10 +171,19 @@ const getFeedBackByDoctorId = (query) => {
       const totalRating = feedBacks.reduce((sum, fb) => sum + fb.rating, 0);
       const averageRating = totalFeedBacks > 0 ? (totalRating / totalFeedBacks).toFixed(1) : 0;
 
+      // Lấy tất cả các mediaName từ ReviewMedia
+      const feedbacksWithMedia = await Promise.all(feedBacks.map(async (feedback) => {
+        const media = await ReviewMedia.find({ feedBackId: feedback.feedBackId }).select("mediaName");
+        return {
+          ...feedback._doc,
+          mediaNames: media.map(m => m.mediaName)
+        };
+      }));
+
       resolve({
         status: 200,
         message: "Get all feedbacks successfully",
-        data: feedBacks,
+        data: feedbacksWithMedia,
         totalPages,
         totalFeedBacks,
         averageRating
@@ -415,14 +435,20 @@ const getFeedBackByClinicId = (query) => {
               0
             ) / totalFeedbackCount
           : 0;
-
+          const feedbacksWithMedia = await Promise.all(feedBacks.map(async (feedback) => {
+            const media = await ReviewMedia.find({ feedBackId: feedback.feedBackId }).select("mediaName");
+            return {
+              ...feedback._doc,
+              mediaNames: media.map(m => m.mediaName)
+            };
+          }));
       console.log("totalFeedbackCount", totalFeedbackCount);
       console.log("totalPages", totalPages);
 
       resolve({
         status: 200,
         message: "Get all feedbacks successfully",
-        data: feedBacks,
+        data: feedbacksWithMedia,
         avgRating: avgRating.toFixed(1),
         totalFeedbacks: totalFeedBacks,
         totalPages: totalPages,

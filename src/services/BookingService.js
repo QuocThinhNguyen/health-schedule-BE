@@ -356,7 +356,7 @@ const getAllBooking = (query) => {
   //   });
   // }
 
-const getBookingByDoctorId = (doctorId, date, page = 1, limit = 100, search) => {
+const getBookingByDoctorId = (doctorId, date, page = 1, limit = 1000, search) => {
   return new Promise(async (resolve, reject) => {
     try {
       const query = { doctorId };
@@ -413,21 +413,26 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 100, search) => 
         .lean(); // Sử dụng lean() để chuyển đổi kết quả sang đối tượng JavaScript thuần
 
         // console.log("Bookings", bookings);
-        const totalPatients = new Set(bookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
+        // const totalPatients = new Set(bookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
+        const totalPatients = bookings.length;
 
         // Tính tổng số bệnh nhân trong 1 tuần
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-      startOfWeek.setHours(0, 0, 0, 0);
-
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(endOfWeek.getDate() + 6);
-      endOfWeek.setHours(23, 59, 59, 999);
+        const startOfWeek = new Date();
+        const day = startOfWeek.getDay();
+        const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Điều chỉnh để bắt đầu từ Thứ Hai
+        startOfWeek.setDate(diff);
+        startOfWeek.setHours(0, 0, 0, 0);
+        // console.log("Check 1:", startOfWeek);
+        
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(endOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
+        // console.log("Check 2:", endOfWeek);
 
       const weeklyBookings = await booking.find({
         doctorId,
         appointmentDate: {
-          $gte: startOfWeek,
+          $gt: startOfWeek,
           $lte: endOfWeek
         }
       }).populate({
@@ -438,20 +443,25 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 100, search) => 
         select: "CCCD"
       }).lean();
 
-      const totalPatientsInWeek = new Set(weeklyBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
+      // const totalPatientsInWeek = new Set(weeklyBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
+      const totalPatientsInWeek = weeklyBookings.length;
+
+      console.log("Total patients in week", totalPatientsInWeek);
 
       // Tính tổng số bệnh nhân trong tuần trước
       const startOfLastWeek = new Date(startOfWeek);
       startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+      // console.log("Start of last week", startOfLastWeek);
 
       const endOfLastWeek = new Date(startOfWeek);
       endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
       endOfLastWeek.setHours(23, 59, 59, 999);
+      // console.log("End of last week", endOfLastWeek);
 
       const lastWeekBookings = await booking.find({
         doctorId,
         appointmentDate: {
-          $gte: startOfLastWeek,
+          $gt: startOfLastWeek,
           $lte: endOfLastWeek
         }
       }).populate({
@@ -462,22 +472,29 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 100, search) => 
         select: "CCCD"
       }).lean();
 
-      const totalPatientsLastWeek = new Set(lastWeekBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
+      // console.log("Last week bookings", lastWeekBookings);
+
+      // const totalPatientsLastWeek = new Set(lastWeekBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
+      const totalPatientsLastWeek = lastWeekBookings.length;
+
+      console.log("Total patients last week", totalPatientsLastWeek);
 
       // Tính tổng số booking trong tháng này
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
+      // console.log("Start of month", startOfMonth);
 
       const endOfMonth = new Date(startOfMonth);
       endOfMonth.setMonth(endOfMonth.getMonth() + 1);
       endOfMonth.setDate(0);
       endOfMonth.setHours(23, 59, 59, 999);
+      // console.log("End of month", endOfMonth);
 
       const monthlyBookings = await booking.find({
         doctorId,
         appointmentDate: {
-          $gte: startOfMonth,
+          $gt: startOfMonth,
           $lte: endOfMonth
         }
       }).lean();
@@ -487,15 +504,17 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 100, search) => 
       // Tính tổng số booking trong tháng trước
       const startOfLastMonth = new Date(startOfMonth);
       startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1);
+      // console.log("Start of last month", startOfLastMonth);
 
       const endOfLastMonth = new Date(startOfMonth);
       endOfLastMonth.setDate(0);
       endOfLastMonth.setHours(23, 59, 59, 999);
+      // console.log("End of last month", endOfLastMonth);
 
       const lastMonthBookings = await booking.find({
         doctorId,
         appointmentDate: {
-          $gte: startOfLastMonth,
+          $gt: startOfLastMonth,
           $lte: endOfLastMonth
         }
       }).lean();
@@ -506,8 +525,8 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 100, search) => 
       let filteredBookings = bookings;
       if (search) {
         const regex = new RegExp(search, 'i');
-        console.log("Regex", regex);
-        console.log("FILTER:",filteredBookings)
+        // console.log("Regex", regex);
+        // console.log("FILTER:",filteredBookings)
         filteredBookings = bookings.filter((booking) => {
           return (
             regex.test(booking.patientRecordId?.fullname) ||
@@ -524,32 +543,41 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 100, search) => 
       const totalPages = Math.ceil(totalBooking / limit);
       const paginatedBookings = filteredBookings.slice((page - 1) * limit, page * limit);
 
-      if (paginatedBookings.length === 0) {
-        resolve({
-          status: 404,
-          message: "No bookings found",
-          totalBooking: 0,
-          totalPatients: 0,
-          totalPages: 0,
-          data: [],
-        });
-      } else {
-        // Đếm số lượng bệnh nhân duy nhất
-        
-
-        resolve({
-          status: 200,
-          message: "SUCCESS",
-          data: paginatedBookings,
-          totalPatients,
-          totalBooking,
-          totalPages,
-          totalPatientsInWeek,
-          totalPatientsLastWeek,
-          totalBookingThisMonth,
-          totalBookingLastMonth
-        });
-      }
+      resolve({
+        status: 200,
+        message: "SUCCESS",
+        data: paginatedBookings,
+        totalPatients,
+        totalBooking,
+        totalPages,
+        totalPatientsInWeek,
+        totalPatientsLastWeek,
+        totalBookingThisMonth,
+        totalBookingLastMonth
+      });
+      // if (paginatedBookings.length === 0) {
+      //   resolve({
+      //     status: 404,
+      //     message: "No bookings found",
+      //     totalBooking: 0,
+      //     totalPatients: 0,
+      //     totalPages: 0,
+      //     data: [],
+      //   });
+      // } else {
+      //   resolve({
+      //     status: 200,
+      //     message: "SUCCESS",
+      //     data: paginatedBookings,
+      //     totalPatients,
+      //     totalBooking,
+      //     totalPages,
+      //     totalPatientsInWeek,
+      //     totalPatientsLastWeek,
+      //     totalBookingThisMonth,
+      //     totalBookingLastMonth
+      //   });
+      // }
     } catch (e) {
       reject(e);
     }

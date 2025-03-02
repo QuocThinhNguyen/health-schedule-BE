@@ -4,6 +4,7 @@ import { authUserMiddleware, authAdminMiddleware, authDoctorMiddleware, authMidd
 import upload from "../utils/fileUpload.js";
 
 const router = express.Router();
+router.get("/patient", authMiddleware, bookingController.getBookingByPatientId)
 router.get("/confirmBooking",bookingController.confirmBooking)
 router.post("/book-appointment-online", authUserMiddleware, upload.array("images"),bookingController.patientBookingOnline);
 router.post("/book-appointment-direct", authUserMiddleware, upload.array("images"),bookingController.patientBookingDirect);

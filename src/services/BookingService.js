@@ -6,7 +6,8 @@ import clinic from "../models/clinic.js"
 import schedules from "../models/schedule.js"
 import user from "../models/users.js"
 import sendMail from "../utils/sendMail.js";
-
+import bookingMedia from "../models/booking_media.js";
+import BookingMedia from "../models/booking_media.js"
 
 const getAllBookingByUserId = (userId, startDate, endDate) => {
     return new Promise(async (resolve, reject) => {
@@ -393,7 +394,7 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 1000, search) =>
           model: "PatientRecords",
           localField: "patientRecordId",
           foreignField: "patientRecordId",
-          select: "fullname gender birthDate phoneNumber CCCD email job address"
+          select: "fullname gender birthDate phoneNumber CCCD email job address patientRecordId"
         })
         .populate({
           path: "status",
@@ -413,8 +414,8 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 1000, search) =>
         .lean(); // Sử dụng lean() để chuyển đổi kết quả sang đối tượng JavaScript thuần
 
         // console.log("Bookings", bookings);
-        // const totalPatients = new Set(bookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
-        const totalPatients = bookings.length;
+        const totalPatients = new Set(bookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
+        // const totalPatients = bookings.length;
 
         // Tính tổng số bệnh nhân trong 1 tuần
         const startOfWeek = new Date();
@@ -1038,6 +1039,65 @@ const confirmBooking= async({bookingId,doctorId,appointmentDate,timeType})=>{
 })
 }
 
+const getBookingByPatientId = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+     console.log("DATA: ",data)
+      const bookingFind = await booking.find({
+        patientRecordId: data.patientId,
+        doctorId: data.doctorId
+      })
+      .populate({
+        path:"timeType",
+        model:"AllCodes",
+        localField:"timeType",
+        foreignField:"keyMap",
+        select:"valueEn valueVi" 
+      })
+      .populate({
+        path:"status",
+        model:"AllCodes",
+        localField:"status",
+        foreignField:"keyMap",
+        select:"valueEn valueVi"
+      })
+      .sort({appointmentDate: -1})
+
+      // const feedbacksWithMedia = await Promise.all(feedBacks.map(async (feedback) => {
+      //   const media = await ReviewMedia.find({ feedBackId: feedback.feedBackId }).select("mediaName");
+      //   return {
+      //     ...feedback._doc,
+      //     mediaNames: media.map(m => m.mediaName)
+      //   };
+      // }));
+
+      const bookingWithMedia = await Promise.all(bookingFind.map(async(booking)=>{
+        const media = await BookingMedia.find({bookingId:booking.bookingId}).select("name");
+        return {
+          ...booking._doc,
+          mediaNames: media.map(m => m.name)
+        }
+      }))
+        
+      
+      if (bookingFind === null) {
+        resolve({
+          status: 404,
+          message: "The booking is not defined"
+        });
+      }
+      resolve({
+        status: 200,
+        message: "SUCCESS",
+        data: bookingWithMedia,
+      });
+    } catch (e) {
+      reject(e.message);
+    }
+  });
+        
+}
+
   export default {
     getAllBookingByUserId,
     getAllBooking,
@@ -1051,5 +1111,6 @@ const confirmBooking= async({bookingId,doctorId,appointmentDate,timeType})=>{
     updateBookingPaymentUrl,
     getEmailByBookingId,
     confirmBooking,
-    getBookingLatestByDoctorId
+    getBookingLatestByDoctorId,
+    getBookingByPatientId
   }

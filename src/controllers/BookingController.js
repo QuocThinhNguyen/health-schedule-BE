@@ -246,6 +246,18 @@ const confirmBooking = async (req, res) => {
   }
 }
 
+const getBookingByPatientId = async (req, res) => {
+  try{
+    // const {doctorId, patientId} = req.query;    
+    const response = await bookingService.getBookingByPatientId(req.query);
+    return res.status(200).json(response);
+  }catch (e){
+    return res.status(500).json({
+      status: 500,
+      message: e.message
+    });
+  }
+}
   export default {
     getAllBookingByUserId,
     getAllBooking,
@@ -258,5 +270,6 @@ const confirmBooking = async (req, res) => {
     handlePaymentReturn,
     getEmailByBookingId,
     confirmBooking,
-    getBookingLatestByDoctorId
+    getBookingLatestByDoctorId,
+    getBookingByPatientId
   }

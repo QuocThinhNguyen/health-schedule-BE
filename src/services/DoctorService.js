@@ -6,6 +6,7 @@ import allcodes from "../models/allcodes.js";
 import feedBacks from "../models/feedbacks.js";
 import booking from "../models/booking.js";
 import { elasticClient } from "../configs/connectElastic.js";
+import {syncDoctorsToElasticsearch} from "../utils/syncDoctorsToElasticsearch.js";
 
 const getDoctorInfor = (id) => {
   return new Promise(async (resolve, reject) => {
@@ -319,6 +320,7 @@ const updateDoctorInfor = (id, data) => {
         });
         return;
       }
+      syncDoctorsToElasticsearch();
 
       resolve({
         status: 200,
@@ -476,13 +478,6 @@ const searchDoctorByElasticeSearch = (
 ) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("---------------------------------------------------");
-      
-      console.log("Keyword:", keyword);
-      console.log("Filters:", filters);
-      console.log("SortOption:", sortOption);
-      console.log("Pagination:", pagination);
-
       let keywordQueries = [];
       let filterQueries = [];
       let sortQueries = [];

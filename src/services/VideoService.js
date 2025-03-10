@@ -81,6 +81,13 @@ const getDetailVideoByVideoId = (videoId)=>{
             const video = await videos.findOne({
                 videoId: videoId
             })
+            .populate({
+                path: 'doctorId',
+                model: 'Users',
+                localField: 'doctorId',
+                foreignField: 'userId',
+                select: 'fullname'
+            })
             if(!video){
                 resolve({
                     status: 404,

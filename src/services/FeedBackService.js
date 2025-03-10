@@ -1,6 +1,7 @@
 import feedBack from "../models/feedbacks.js";
 import doctorInfo from "../models/doctor_info.js";
 import ReviewMedia from "../models/review_media.js";
+import syncDoctorsToElasticsearch from "../utils/syncDoctorsToElasticsearch.js";
 
 const createFeedBack = (data) => {
   console.log("DATA: ", data);
@@ -27,6 +28,7 @@ const createFeedBack = (data) => {
           date: data.date,
           clinicId: data.clinicId,
         });
+        syncDoctorsToElasticsearch();
         resolve({
           status: 200,
           message: "Create feedback successfully",

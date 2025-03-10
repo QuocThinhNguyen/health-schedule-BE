@@ -5,17 +5,17 @@ import user from "../models/users.js";
 import feedBacks from "../models/feedbacks.js";
 import { elasticClient } from "../configs/connectElastic.js";
 
-async function syncDoctorsToElasticsearch() {
-  console.log(`🛑 Xóa index 'doctors' nếu đã tồn tại...`);
+async function syncSetupDoctorsToElasticsearch() {
+  console.log(`Xóa index 'doctors' nếu đã tồn tại...`);
 
   const indexExists = await elasticClient.indices.exists({ index: "doctors" });
 
   if (indexExists) {
     await elasticClient.indices.delete({ index: "doctors" });
-    console.log(`✅ Đã xóa index 'doctors'.`);
+    console.log(`Đã xóa index 'doctors'.`);
   }
 
-  console.log(`🚀 Tạo lại index 'doctors' với settings & mappings mới...`);
+  console.log(`Tạo lại index 'doctors' với settings & mappings mới...`);
 
   await elasticClient.indices.create({
     index: "doctors",
@@ -59,14 +59,20 @@ async function syncDoctorsToElasticsearch() {
           gender: { type: "keyword" },
           price: { type: "float" },
           avgRating: { type: "float" },
-          comments: { type: "text" },
+          comments: {
+            type: "text",
+            analyzer: "custom_vietnamese",
+            search_analyzer: "search_vietnamese",
+          },
         },
       },
     },
   });
 
-  console.log(`✅ Đã tạo lại index 'doctors' thành công!`);
+  console.log(`Đã tạo lại index 'doctors' thành công!`);
+}
 
+async function syncDoctorsToElasticsearch() {
   const doctors = await doctorInfo.find();
 
   for (let doctor of doctors) {

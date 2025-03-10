@@ -2,11 +2,14 @@ import express from "express";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import routers from "./routes/index.js";
-import connectDB from "./config/connectDB.js";
+import connectDB from "./configs/connectDB.js";
+import {connectElastic} from "./configs/connectElastic.js";
 import upload from "./utils/fileUpload.js";
 import dotenv from "dotenv";
 import multer from "multer";
 import cors from "cors";
+import syncDoctorsToElasticsearch from "./utils/syncDoctorsToElasticsearch.js";
+
 dotenv.config();
 
 let app = express();
@@ -25,7 +28,9 @@ app.use("/uploads", express.static("uploads"));
 
 routers(app);
 
-connectDB();
+await connectDB();
+await connectElastic();
+await syncDoctorsToElasticsearch();
 
 let port = process.env.PORT || 9000;
 

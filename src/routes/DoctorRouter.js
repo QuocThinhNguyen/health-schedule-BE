@@ -6,7 +6,7 @@ import {authDoctorMiddleware } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 router.get('/dropdown', doctorController.getDropdownDoctors);
-router.get('/search', doctorController.searchDoctor);
+router.get('/search', doctorController.searchDoctorByElasticeSearch);
 router.get('/academic-ranks-and-degrees', doctorController.getAcademicRanksAndDegrees);
 router.get('/price', doctorController.getPriceRange);
 router.get('/', doctorController.getAllDoctor);

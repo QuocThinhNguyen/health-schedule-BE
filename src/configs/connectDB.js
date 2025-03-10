@@ -10,5 +10,5 @@ async function connectMongoDB() {
 }
 
 
-export default connectMongoDB
+export default connectMongoDB;
 

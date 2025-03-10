@@ -447,7 +447,7 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 1000, search) =>
       // const totalPatientsInWeek = new Set(weeklyBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
       const totalPatientsInWeek = weeklyBookings.length;
 
-      console.log("Total patients in week", totalPatientsInWeek);
+      // console.log("Total patients in week", totalPatientsInWeek);
 
       // Tính tổng số bệnh nhân trong tuần trước
       const startOfLastWeek = new Date(startOfWeek);
@@ -478,7 +478,7 @@ const getBookingByDoctorId = (doctorId, date, page = 1, limit = 1000, search) =>
       // const totalPatientsLastWeek = new Set(lastWeekBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
       const totalPatientsLastWeek = lastWeekBookings.length;
 
-      console.log("Total patients last week", totalPatientsLastWeek);
+      // console.log("Total patients last week", totalPatientsLastWeek);
 
       // Tính tổng số booking trong tháng này
       const startOfMonth = new Date();

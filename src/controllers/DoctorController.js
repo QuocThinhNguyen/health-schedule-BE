@@ -96,6 +96,41 @@ const getAcademicRanksAndDegrees = async (req, res) => {
   }
 };
 
+const searchDoctorByElasticeSearch = async (req, res) => {
+  try {
+    const { keyword, clinicId, specialtyId,gender, minPrice, maxPrice, sort, page, limit } =
+      req.query;
+    console.log("query", req.query);
+
+    const filters = {
+      clinicId,
+      specialtyId,
+      gender,
+      minPrice,
+      maxPrice,
+    };
+
+    const sortOption = sort;
+
+    const pagination = {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10,
+    };
+    const result = await doctorInforService.searchDoctorByElasticeSearch(
+      keyword,
+      filters,
+      sortOption,
+      pagination
+    );
+    return res.status(200).json(result);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+};
+
 export default {
   getDoctorInfor,
   updateDoctorInfor,
@@ -104,4 +139,5 @@ export default {
   getAllDoctor,
   getDropdownDoctors,
   getAcademicRanksAndDegrees,
+  searchDoctorByElasticeSearch,
 };

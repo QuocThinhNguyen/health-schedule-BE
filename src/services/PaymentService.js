@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import axios from "axios";
-import momoConfig from "../config/momoConfig.js";
+import momoConfig from "../configs/momoConfig.js";
 import bookingService from "../services/BookingService.js";
 import Schedules from "../models/schedule.js";
 import Booking from "../models/booking.js";

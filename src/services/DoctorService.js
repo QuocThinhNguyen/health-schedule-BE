@@ -5,6 +5,8 @@ import clinics from "../models/clinic.js";
 import allcodes from "../models/allcodes.js";
 import feedBacks from "../models/feedbacks.js";
 import booking from "../models/booking.js";
+import { elasticClient } from "../configs/connectElastic.js";
+import {syncDoctorsToElasticsearch} from "../utils/syncDoctorsToElasticsearch.js";
 
 const getDoctorInfor = (id) => {
   return new Promise(async (resolve, reject) => {
@@ -318,6 +320,7 @@ const updateDoctorInfor = (id, data) => {
         });
         return;
       }
+      syncDoctorsToElasticsearch();
 
       resolve({
         status: 200,
@@ -467,6 +470,141 @@ const getAcademicRanksAndDegrees = () => {
   });
 };
 
+const searchDoctorByElasticeSearch = (
+  keyword,
+  filters,
+  sortOption,
+  pagination
+) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let keywordQueries = [];
+      let filterQueries = [];
+      let sortQueries = [];
+
+      if (keyword) {
+        const words = keyword.toLowerCase().split(" ");
+        console.log("Words:", words);
+
+        const fullnameQueries = words.map((word) => ({
+          match_phrase: {
+            fullname: word,
+          },
+        }));
+        const commentsQueries = words.map((word) => ({
+          fuzzy: {
+            comments: {
+              value: word,
+              fuzziness: 1,
+              prefix_length: 1,
+              max_expansions: 50,
+              transpositions: false,
+            },
+          },
+        }));
+
+        keywordQueries.push({
+          bool: {
+            should: [...fullnameQueries, ...commentsQueries],
+            minimum_should_match: 1,
+          },
+        });
+      }
+
+      if (filters.clinicId) {
+        filterQueries.push({
+          term: { clinicId: filters.clinicId },
+        });
+      }
+
+      if (filters.specialtyId) {
+        filterQueries.push({
+          term: { specialtyId: filters.specialtyId },
+        });
+      }
+
+      if (filters.gender) {
+        const genderArray = Array.isArray(filters.gender) 
+          ? filters.gender  
+          : filters.gender.split(",");
+      
+        filterQueries.push({
+          terms: { gender: genderArray },
+        });
+      }
+
+      if (filters.minPrice || filters.maxPrice) {
+        let priceRange = {};
+        if (filters.minPrice) {
+          priceRange.gte = filters.minPrice;
+        }
+        if (filters.maxPrice) {
+          priceRange.lte = filters.maxPrice;
+        }
+        filterQueries.push({
+          range: { price: priceRange },
+        });
+      }
+
+      if (sortOption) {
+        switch (sortOption) {
+          case "danh-gia-cao-den-thap":
+            sortQueries.push({ avgRating: "desc" });
+            break;
+          case "danh-gia-thap-den-cao":
+            sortQueries.push({ avgRating: "asc" });
+            break;
+          case "gia-cao-den-thap":
+            sortQueries.push({ price: "desc" });
+            break;
+          case "gia-thap-den-cao":
+            sortQueries.push({ price: "asc" });
+            break;
+        }
+      }
+
+      const results = await elasticClient.search({
+        index: "doctors",
+        body: {
+          query: {
+            bool: {
+              must:
+                keywordQueries.length > 0
+                  ? [...keywordQueries]
+                  : { match_all: {} },
+              filter: filterQueries,
+            },
+          },
+          sort: sortQueries,
+          from: (pagination.page - 1) * pagination.limit,
+          size: pagination.limit,
+          track_total_hits: true,
+          highlight: {
+            fields: {
+              fullname: {},
+              comments: {},
+            },
+          },
+        },
+      });
+
+      const totalDoctors = results.hits.total.value;
+
+      resolve({
+        status: 200,
+        message: "Success",
+        totalDoctors: totalDoctors,
+        data: results.hits.hits.map((hit) => ({
+          ...hit._source,
+          highlight: hit.highlight || {},
+        })),
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   getDoctorInfor,
   updateDoctorInfor,
@@ -475,4 +613,5 @@ export default {
   getAllDoctor,
   getDropdownDoctors,
   getAcademicRanksAndDegrees,
+  searchDoctorByElasticeSearch,
 };

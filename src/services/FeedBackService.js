@@ -1,6 +1,7 @@
 import feedBack from "../models/feedbacks.js";
 import doctorInfo from "../models/doctor_info.js";
 import ReviewMedia from "../models/review_media.js";
+import { syncDoctorsToElasticsearch } from "../utils/syncDoctorsToElasticsearch.js";
 
 const createFeedBack = (data) => {
   console.log("DATA: ", data);
@@ -18,8 +19,7 @@ const createFeedBack = (data) => {
           message: "Missing required fields",
         });
       } else {
-        const newFeedBack =
-        await feedBack.create({
+        const newFeedBack = await feedBack.create({
           patientId: data.patientId,
           doctorId: data.doctorId,
           rating: data.rating,
@@ -27,6 +27,7 @@ const createFeedBack = (data) => {
           date: data.date,
           clinicId: data.clinicId,
         });
+        syncDoctorsToElasticsearch();
         resolve({
           status: 200,
           message: "Create feedback successfully",
@@ -169,16 +170,21 @@ const getFeedBackByDoctorId = (query) => {
 
       // Tính tổng và trung bình rating
       const totalRating = feedBacks.reduce((sum, fb) => sum + fb.rating, 0);
-      const averageRating = totalFeedBacks > 0 ? (totalRating / totalFeedBacks).toFixed(1) : 0;
+      const averageRating =
+        totalFeedBacks > 0 ? (totalRating / totalFeedBacks).toFixed(1) : 0;
 
       // Lấy tất cả các mediaName từ ReviewMedia
-      const feedbacksWithMedia = await Promise.all(feedBacks.map(async (feedback) => {
-        const media = await ReviewMedia.find({ feedBackId: feedback.feedBackId }).select("mediaName");
-        return {
-          ...feedback._doc,
-          mediaNames: media.map(m => m.mediaName)
-        };
-      }));
+      const feedbacksWithMedia = await Promise.all(
+        feedBacks.map(async (feedback) => {
+          const media = await ReviewMedia.find({
+            feedBackId: feedback.feedBackId,
+          }).select("mediaName");
+          return {
+            ...feedback._doc,
+            mediaNames: media.map((m) => m.mediaName),
+          };
+        })
+      );
 
       resolve({
         status: 200,
@@ -186,7 +192,7 @@ const getFeedBackByDoctorId = (query) => {
         data: feedbacksWithMedia,
         totalPages,
         totalFeedBacks,
-        averageRating
+        averageRating,
       });
     } catch (e) {
       reject(e);
@@ -435,13 +441,17 @@ const getFeedBackByClinicId = (query) => {
               0
             ) / totalFeedbackCount
           : 0;
-          const feedbacksWithMedia = await Promise.all(feedBacks.map(async (feedback) => {
-            const media = await ReviewMedia.find({ feedBackId: feedback.feedBackId }).select("mediaName");
-            return {
-              ...feedback._doc,
-              mediaNames: media.map(m => m.mediaName)
-            };
-          }));
+      const feedbacksWithMedia = await Promise.all(
+        feedBacks.map(async (feedback) => {
+          const media = await ReviewMedia.find({
+            feedBackId: feedback.feedBackId,
+          }).select("mediaName");
+          return {
+            ...feedback._doc,
+            mediaNames: media.map((m) => m.mediaName),
+          };
+        })
+      );
       console.log("totalFeedbackCount", totalFeedbackCount);
       console.log("totalPages", totalPages);
 

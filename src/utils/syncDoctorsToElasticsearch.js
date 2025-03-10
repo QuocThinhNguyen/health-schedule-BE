@@ -131,4 +131,4 @@ async function syncDoctorsToElasticsearch() {
   console.log("Đồng bộ dữ liệu lên Elasticsearch hoàn tất!");
 }
 
-export default syncDoctorsToElasticsearch;
+export {syncSetupDoctorsToElasticsearch, syncDoctorsToElasticsearch};

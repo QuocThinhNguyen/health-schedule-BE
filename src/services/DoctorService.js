@@ -6,7 +6,7 @@ import allcodes from "../models/allcodes.js";
 import feedBacks from "../models/feedbacks.js";
 import booking from "../models/booking.js";
 import { elasticClient } from "../configs/connectElastic.js";
-import syncDoctorsToElasticsearch from "../utils/syncDoctorsToElasticsearch.js";
+import {syncDoctorsToElasticsearch} from "../utils/syncDoctorsToElasticsearch.js";
 
 const getDoctorInfor = (id) => {
   return new Promise(async (resolve, reject) => {

@@ -8,7 +8,7 @@ import upload from "./utils/fileUpload.js";
 import dotenv from "dotenv";
 import multer from "multer";
 import cors from "cors";
-import syncDoctorsToElasticsearch from "./utils/syncDoctorsToElasticsearch.js";
+import {syncSetupDoctorsToElasticsearch,syncDoctorsToElasticsearch} from "./utils/syncDoctorsToElasticsearch.js";
 
 dotenv.config();
 
@@ -30,6 +30,7 @@ routers(app);
 
 await connectDB();
 await connectElastic();
+await syncSetupDoctorsToElasticsearch();
 await syncDoctorsToElasticsearch();
 
 let port = process.env.PORT || 9000;

@@ -25,8 +25,8 @@ async function syncSetupDoctorsToElasticsearch() {
           filter: {
             edge_ngram_filter: {
               type: "edge_ngram",
-              min_gram: 1,
-              max_gram: 20,
+              min_gram: 3,
+              max_gram: 5,
               preserve_original: true,
             },
           },
@@ -61,7 +61,6 @@ async function syncSetupDoctorsToElasticsearch() {
           avgRating: { type: "float" },
           comments: {
             type: "text",
-            analyzer: "custom_vietnamese",
             search_analyzer: "search_vietnamese",
           },
         },
@@ -131,4 +130,4 @@ async function syncDoctorsToElasticsearch() {
   console.log("Đồng bộ dữ liệu lên Elasticsearch hoàn tất!");
 }
 
-export {syncSetupDoctorsToElasticsearch, syncDoctorsToElasticsearch};
+export { syncSetupDoctorsToElasticsearch, syncDoctorsToElasticsearch };

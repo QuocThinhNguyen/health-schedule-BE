@@ -6,7 +6,7 @@ import allcodes from "../models/allcodes.js";
 import feedBacks from "../models/feedbacks.js";
 import booking from "../models/booking.js";
 import { elasticClient } from "../configs/connectElastic.js";
-import {syncDoctorsToElasticsearch} from "../utils/syncDoctorsToElasticsearch.js";
+import { syncDoctorsToElasticsearch } from "../utils/syncDoctorsToElasticsearch.js";
 
 const getDoctorInfor = (id) => {
   return new Promise(async (resolve, reject) => {
@@ -524,10 +524,10 @@ const searchDoctorByElasticeSearch = (
       }
 
       if (filters.gender) {
-        const genderArray = Array.isArray(filters.gender) 
-          ? filters.gender  
+        const genderArray = Array.isArray(filters.gender)
+          ? filters.gender
           : filters.gender.split(",");
-      
+
         filterQueries.push({
           terms: { gender: genderArray },
         });
@@ -589,10 +589,12 @@ const searchDoctorByElasticeSearch = (
       });
 
       const totalDoctors = results.hits.total.value;
+      const totalPages = Math.ceil(totalDoctors / pagination.limit);
 
       resolve({
         status: 200,
         message: "Success",
+        totalPages: totalPages,
         totalDoctors: totalDoctors,
         data: results.hits.hits.map((hit) => ({
           ...hit._source,

@@ -12,6 +12,7 @@ import feedBackRouter from "./FeedBackRouter.js"
 import postRouter from "./PostRouter.js"
 import bookingMediaRouter from "./BookingMediaRouter.js";
 import videoRouter from "./VideoRouter.js";
+import bookMarkRouter from "./BookMarkRouter.js";
 import {handleError} from "../middlewares/authMiddleware.js"
 
 const routes = (app) => {
@@ -30,6 +31,7 @@ const routes = (app) => {
     app.use('/post',postRouter);
     app.use('/bookingImage',bookingMediaRouter);
     app.use('/video',videoRouter);
+    app.use('/bookmark',bookMarkRouter);
 
     app.use(handleError);
 }

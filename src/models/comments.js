@@ -32,7 +32,7 @@ const commentSchema = new Schema({
         type:Number
     },
     createdAt:{
-        type: String,
+        type: Date,
         required: true
     }
 })

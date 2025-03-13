@@ -1,6 +1,7 @@
 import { resolve } from 'path'
 import videos from '../models/videos.js'
 import { rejects } from 'assert'
+import videoLike from '../models/videolikes.js'
 
 const addVideo=(data,file)=>{
     return new Promise(async(resolve, reject)=>{
@@ -151,10 +152,80 @@ const deleteVideo = (id) => {
         }
     })
 }
+
+const checkUserLikeVideo = (userId, videoId) => {
+    return new Promise(async(resolve, reject) => {
+        try{
+            const like = await videoLike.findOne({
+                userId: userId,
+                videoId: videoId
+            })
+            // if(!like){
+            //     resolve({
+            //         status: 404,
+            //         message: "User not like this video"
+            //     })
+            // }
+            resolve({
+                status: 200,
+                data: !!like
+            })
+        }catch(e){
+            reject(e)
+        }
+    })
+}
+
+const likeVideo = (userId, videoId) => {
+    return new Promise(async(resolve, reject) => {
+        try{
+            const like = await videoLike.create({
+                userId: userId,
+                videoId: videoId,
+                createdAt: new Date()
+            })
+            resolve({
+                status: 200,
+                message: "Like video successfully",
+                data: like
+            })
+        }catch(e){
+            reject(e)
+        }
+    })
+}
+
+const dislikeVideo = (userId, videoId) => {
+    return new Promise(async(resolve, reject) => {
+        try{
+            const like = await videoLike.findOne({
+                userId: userId,
+                videoId: videoId
+            })
+            if(!like){
+                resolve({
+                    status: 404,
+                    message: "User not like this video"
+                })
+            }
+            await videoLike.deleteOne({userId: userId, videoId: videoId})
+            resolve({
+                status: 200,
+                message: "Dislike video successfully"
+            })
+        }catch(e){
+            reject(e)
+        }
+    })
+}
+
 export default{
     addVideo,
     getAllVideoByDoctorId,
     getDetailVideoByVideoId,
     updateVideo,
-    deleteVideo
+    deleteVideo,
+    checkUserLikeVideo,
+    likeVideo,
+    dislikeVideo
 }

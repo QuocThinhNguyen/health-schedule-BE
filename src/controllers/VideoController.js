@@ -72,11 +72,57 @@ const deleteVideo = async (req, res) => {
         })
     }
 }
+
+const checkUserLikeVideo = async (req, res) => {
+    try{
+        const userId = req.params.userId;
+        const videoId = req.params.videoId;
+        const data = await VideoService.checkUserLikeVideo(userId, videoId);
+        return res.status(200).json(data)
+    }catch(e){
+        return res.status(500).json({
+            status: 500,
+            message: e.message
+        })
+    }
+}
+
+const likeVideo = async (req, res) => {
+    try{
+        const userId = req.params.userId;
+        const videoId = req.params.videoId;
+        const data = await VideoService.likeVideo(userId, videoId);
+        return res.status(200).json(data)
+    }catch(e){
+        return res.status(500).json({
+            status: 500,
+            message: e.message
+        })
+    }
+}
+
+const dislikeVideo = async (req, res) => {
+    try{
+        const userId = req.params.userId;
+        const videoId = req.params.videoId;
+        const data = await VideoService.dislikeVideo(userId, videoId);
+        return res.status(200).json(data)
+    }catch(e){
+        return res.status(500).json({
+            status: 500,
+            message: e.message
+        })
+    }
+}
+
 export default {
     addVideo,
     getAllVideoByDoctorId,
     getDetailVideoByVideoId,
     updateVideo,
-    deleteVideo
+    deleteVideo,
+    checkUserLikeVideo,
+    likeVideo,
+    dislikeVideo
 }
 

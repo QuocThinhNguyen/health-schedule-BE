@@ -13,6 +13,7 @@ import postRouter from "./PostRouter.js"
 import bookingMediaRouter from "./BookingMediaRouter.js";
 import videoRouter from "./VideoRouter.js";
 import bookMarkRouter from "./BookMarkRouter.js";
+import commentRouter from "./CommentRouter.js";
 import {handleError} from "../middlewares/authMiddleware.js"
 
 const routes = (app) => {
@@ -32,6 +33,7 @@ const routes = (app) => {
     app.use('/bookingImage',bookingMediaRouter);
     app.use('/video',videoRouter);
     app.use('/bookmark',bookMarkRouter);
+    app.use('/comment',commentRouter);
 
     app.use(handleError);
 }

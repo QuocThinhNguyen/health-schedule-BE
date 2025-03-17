@@ -20,19 +20,15 @@ const commentSchema = new Schema({
         required: true,
         ref:'Users'
     },
-    content:{
+    comment:{
         type: String,
         required: true
-    },
-    likes:{
-        type: Number,
-        default: 0
     },
     parentId:{
         type:Number
     },
     createdAt:{
-        type: String,
+        type: Date,
         required: true
     }
 })

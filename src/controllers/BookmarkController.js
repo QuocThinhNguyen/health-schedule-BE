@@ -16,7 +16,7 @@ const getTotalBookmarkByVideoId = async (req, res) => {
 const getBookmarkByUserId = async (req, res) => {
     try{
         const userId = req.params.userId;
-        const data = await BookmarkService.getBookmarkByVideoId(videoId);
+        const data = await BookmarkService.getBookmarkByUserId(userId);
         return res.status(200).json(data)
     }catch(e){
         return res.status(500).json({

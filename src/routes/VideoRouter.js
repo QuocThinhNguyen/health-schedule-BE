@@ -12,5 +12,6 @@ router.delete('/:videoId',authDoctorMiddleware,videoController.deleteVideo);
 router.get('/like/:videoId/:userId',authMiddleware,videoController.checkUserLikeVideo);
 router.post('/like/:videoId/:userId',authMiddleware,videoController.likeVideo);
 router.delete('/like/:videoId/:userId',authMiddleware,videoController.dislikeVideo);
+router.put('/view/:videoId',videoController.updateViewVideo);
 
 export default router;

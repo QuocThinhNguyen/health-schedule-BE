@@ -219,6 +219,32 @@ const dislikeVideo = (userId, videoId) => {
     })
 }
 
+const updateViewVideo = (videoId)=>{
+    return new Promise(async(resolve, reject)=>{
+        try{
+            const video = await videos.findOne({
+                videoId: videoId
+            })
+            if(!video){
+                resolve({
+                    status: 404,
+                    message: "Video not found"
+                })
+            }
+
+            video.views += 1
+            await video.save()
+
+            resolve({
+                status: 200,
+                message: "Update view video successfully"
+            })
+        }catch(e){
+            reject(e)
+        }
+    })
+}
+
 export default{
     addVideo,
     getAllVideoByDoctorId,
@@ -227,5 +253,6 @@ export default{
     deleteVideo,
     checkUserLikeVideo,
     likeVideo,
-    dislikeVideo
+    dislikeVideo,
+    updateViewVideo
 }

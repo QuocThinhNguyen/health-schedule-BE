@@ -115,6 +115,19 @@ const dislikeVideo = async (req, res) => {
     }
 }
 
+const updateViewVideo = async (req, res) => {
+    try{
+        const videoId = req.params.videoId;
+        const data = await VideoService.updateViewVideo(videoId);
+        return res.status(200).json(data)
+    }catch(e){
+        return res.status(500).json({
+            status: 500,
+            message: e.message
+        })
+    }
+}
+
 export default {
     addVideo,
     getAllVideoByDoctorId,
@@ -123,6 +136,7 @@ export default {
     deleteVideo,
     checkUserLikeVideo,
     likeVideo,
-    dislikeVideo
+    dislikeVideo,
+    updateViewVideo
 }
 

@@ -15,8 +15,8 @@ const getTotalBookmarkByVideoId = async(videoId) => {
                 })
             }else{
                 resolve({
-                    status: 404,
-                    message: "Bookmark not found"
+                    status: 200,
+                    data: 0
                 })
             }
            

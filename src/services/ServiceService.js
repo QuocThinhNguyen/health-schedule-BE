@@ -138,6 +138,8 @@ const createService = (data) => {
         image: imageUrl,
         price: data.price,
         description: data.description,
+        preparationProcess: data.preparationProcess,
+        serviceDetail: data.serviceDetail,
         clinicId: data.clinicId,
         serviceCategoryId: data.serviceCategoryId,
       });
@@ -214,6 +216,8 @@ const updateService = (id, data) => {
         name: data.name,
         price: data.price,
         description: data.description,
+        preparationProcess: data.preparationProcess,
+        serviceDetail: data.serviceDetail,
         clinicId: data.clinicId,
         serviceCategoryId: data.serviceCategoryId,
       };

@@ -28,6 +28,14 @@ const serviceSchema = new Schema(
       type: String,
     },
 
+    preparationProcess: {
+      type: String,
+    },
+
+    serviceDetail:{
+      type: String,
+    },
+
     clinicId: {
       type: Number,
       ref: "Clinic",

@@ -5,10 +5,10 @@ const getServiceBySearchAndFilter = async (req, res) => {
   try {
     const keyword = req.query.keyword;
     const filter = {
-      serviceCategoryId: req.query.serviceCategoryId,
-      clinicId: req.query.clinicId,
-      minPrice: req.query.minPrice,
-      maxPrice: req.query.maxPrice,
+      serviceCategoryId: parseInt(req.query.serviceCategoryId),
+      clinicId: parseInt(req.query.clinicId),
+      minPrice: parseFloat(req.query.minPrice),
+      maxPrice: parseFloat(req.query.maxPrice),
     };
     const pageNo = parseInt(req.query.pageNo) || 1;
     const pageSize = parseInt(req.query.pageSize) || 20;

@@ -144,12 +144,12 @@ const filterClinics = (query) => {
         };
       }
 
-      console.log("Search",formatQuery);
+      console.log("Search", formatQuery);
       const clinics = await clinic
         .find(formatQuery)
         .skip((page - 1) * limit)
         .limit(limit);
-        
+
       const totalClinics = await clinic.countDocuments(formatQuery);
       const totalPages = Math.ceil(totalClinics / limit);
 

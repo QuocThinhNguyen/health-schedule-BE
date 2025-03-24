@@ -484,7 +484,6 @@ const searchDoctorByElasticeSearch = (
 
       if (keyword) {
         const words = keyword.toLowerCase().split(" ");
-        console.log("Words:", words);
 
         const fullnameQueries = words.map((word) => ({
           match_phrase: {

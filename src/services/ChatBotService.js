@@ -81,17 +81,122 @@ const checkHospitalOrDoctorQuery = async (message) => {
     return keywords.some(keyword => message.toLowerCase().includes(keyword));
 };
 
-const getHospitalOrDoctorInfo = async (message) => {
+const getAvailableTimeSlots = (timeTypes, currentNumbers) => {
+    const timeSlots = [
+        { label: "8:00 - 9:00", value: "T1" },
+        { label: "9:00 - 10:00", value: "T2" },
+        { label: "10:00 - 11:00", value: "T3" },
+        { label: "11:00 - 12:00", value: "T4" },
+        { label: "13:00 - 14:00", value: "T5" },
+        { label: "14:00 - 15:00", value: "T6" },
+        { label: "15:00 - 16:00", value: "T7" },
+        { label: "16:00 - 17:00", value: "T8" },
+    ];
+
+    return timeTypes
+        .map((time, index) => ({
+            label: timeSlots.find(slot => slot.value === time)?.label,
+            value: time,
+            booked: currentNumbers[index],
+        }))
+        .filter(slot => slot.booked < 3) // Chỉ giữ lại khung giờ có số lượt đặt < 3
+        .map(slot => `- ${slot.label}`)
+        .join("\n");
+};
+
+const userContext = new Map();
+
+const getHospitalOrDoctorInfo = async (userId, message) => {
     if (message.toLowerCase().includes("bác sĩ")) {
-        const doctors = await DoctorModel.find().limit(5);
-        return doctors.map(doc => `👨‍⚕️ Bác sĩ ${doc.name}, chuyên khoa: ${doc.specialty}, làm việc tại: ${doc.hospital}`).join("\n");
+        const response = await axios.get("http://localhost:9000/doctor/dropdown");
+        const doctors = response.data.data;
+
+        if (doctors.length === 0) return "Không tìm thấy thông tin bác sĩ phù hợp.";
+
+        // return doctors.map(doc => 
+        //     `*Bác sĩ ${doc.doctorId.fullname}*\n- Chuyên khoa: ${doc.specialtyId.name}\n- Làm việc tại: ${doc.clinicId.name}\n- Thông tin bác sĩ: ${doc.description}\n- Giá khám: ${doc.price}\n-Trung bình sao đánh giá: ${doc.avgRating}\n- Lượt khám: ${doc.bookingCount}\n-Lịch khám: Vui lòng kiểm tra trên hệ thống.`
+        // ).join("\n\n");
+
+        let result = doctors.map(doc => {
+            userContext.set(userId, { doctorId: doc.doctorId.userId, doctorName: doc.doctorId.fullname });
+            return `*Bác sĩ ${doc.doctorId.fullname}*\n- Chuyên khoa: ${doc.specialtyId.name}\n- Làm việc tại: ${doc.clinicId.name}\n- Thông tin bác sĩ: ${doc.description}\n- Giá khám: ${doc.price}\n-Trung bình sao đánh giá: ${doc.avgRating}\n- Lượt khám: ${doc.bookingCount}`
+        }).join("\n\n");
+
+        if (message.toLowerCase().includes("đặt lịch khám") || message.toLowerCase().includes("hẹn lịch khám")) {
+    
+            return `🔹 *Hướng dẫn đặt lịch khám với bác sĩ ${userSession.doctorName}:*\n
+            *Bước 1:* Truy cập vào đường dẫn: [Đặt lịch khám](http://localhost:5173/bac-si/get?id=${userSession.doctorId})\n
+            *Bước 2:* Ở mục *Tư vấn trực tiếp*, chọn ngày và khung giờ theo nhu cầu.\n
+            *Bước 3:* Chọn *người sử dụng dịch vụ*. Nếu chưa có hồ sơ bệnh nhân, bạn có thể tạo mới bằng cách nhấn *Thêm hồ sơ bệnh nhân*.\n
+            *Bước 4:* Nhập lý do khám bệnh hoặc mô tả chi tiết. Bạn cũng có thể gửi ảnh hoặc video về tình trạng sức khỏe tại mục *tệp đính kèm*.\n
+            *Bước 5:* Chọn phương thức thanh toán phù hợp.\n
+               - Nếu chọn *Thanh toán online*, hệ thống sẽ tự động xác nhận đặt lịch sau khi thanh toán thành công.\n
+               - Nếu chọn *Thanh toán trực tiếp*, bạn sẽ nhận được một email xác nhận đặt lịch. *Vui lòng mở email và click vào "Xác nhận" để hoàn thành đặt khám*.\n
+            *Bước 6:* Kiểm tra lại thông tin và xác nhận đặt lịch.\n\n
+            Sau khi đặt lịch thành công, bạn sẽ nhận được thông báo xác nhận.`;
+        }
+    
+        return result;
     }
 
     if (message.toLowerCase().includes("bệnh viện")) {
-        const hospitals = await HospitalModel.find().limit(5);
-        return hospitals.map(hosp => `🏥 Bệnh viện ${hosp.name}, địa chỉ: ${hosp.address}`).join("\n");
+        const response = await axios.get("http://localhost:9000/clinic/dropdown");
+        const hospitals = response.data.data;
+
+        if (hospitals.length === 0) return "Không tìm thấy thông tin bệnh viện phù hợp.";
+
+        return hospitals.map(hosp => 
+            `*Bệnh viện ${hosp.name}*\n- Địa chỉ: ${hosp.address}\n- Thông tin bệnh viện: ${hosp.description}\n- Chuyên khoa:\n${hosp.specialties.map(spec => `  + ${spec.name}: ${spec.description}`).join("\n")}`
+        ).join("\n\n");
     }
 
+    let userSession = userContext.get(userId) || {};
+
+// Nếu người dùng đang nhập ngày để xem lịch làm việc
+if (userSession.waitingForDate) {
+    const today = new Date().toISOString().split("T")[0];
+    const requestedDate = message.trim();
+
+    if (requestedDate < today) {
+        return "Bạn chỉ có thể xem lịch làm việc từ hôm nay trở đi. Vui lòng nhập lại.";
+    }
+
+    try {
+        const response = await axios.get(`http://localhost:9000/schedule/${userSession.doctorId}?date=${requestedDate}`);
+        console.log("Lịch làm việc:", response.data.data);
+        const schedule = response.data.data;
+
+        if (!schedule || schedule.length === 0) {
+            return `Bác sĩ ${userSession.doctorName} không có lịch làm việc vào ngày ${requestedDate}.`;
+        }
+
+        const availableTimeSlots = getAvailableTimeSlots(schedule[0].timeTypes, schedule[0].currentNumbers);
+
+        if (!availableTimeSlots) {
+            return `Bác sĩ ${userSession.doctorName} đã kín lịch vào ngày ${requestedDate}.`;
+        }
+
+        userContext.set(userId, { ...userSession, waitingForDate: false });
+
+        return `*Lịch làm việc của bác sĩ ${userSession.doctorName} ngày ${requestedDate}:*\n${availableTimeSlots}`;
+    } catch (error) {
+        console.error("Lỗi khi gọi API lấy lịch khám:", error);
+        return "Xin lỗi, có lỗi xảy ra khi lấy lịch làm việc. Vui lòng thử lại.";
+    }
+}
+
+// Kiểm tra nếu người dùng yêu cầu xem lịch làm việc
+if (message.toLowerCase().includes("lịch làm việc")) {
+    console.log("Người dùng yêu cầu xem lịch làm việc của bác sĩ");
+    if (!userSession.doctorId) {
+        return "Bạn muốn xem lịch làm việc của bác sĩ nào? Vui lòng cung cấp tên bác sĩ trước.";
+    }
+
+    userContext.set(userId, { ...userSession, waitingForDate: true });
+
+    return `Bạn muốn xem lịch làm việc của bác sĩ ${userSession.doctorName} vào ngày nào? (Chỉ xem được từ hôm nay trở đi)`;
+}
+    console.log("Usercontext:", userContext);
     return "Xin lỗi, tôi không tìm thấy thông tin phù hợp.";
 };
 
@@ -99,13 +204,14 @@ const getHospitalOrDoctorInfo = async (message) => {
 const chatWithGemini = async (userId, message, imageUrl, sessionId) => {
     try {
 
-        // const isHospitalOrDoctorQuery = await checkHospitalOrDoctorQuery(message);
+        let context = "";
+        const isHospitalOrDoctorQuery = await checkHospitalOrDoctorQuery(message);
 
-        // if (isHospitalOrDoctorQuery) {
-        //     // Nếu đúng, lấy dữ liệu từ MongoDB
-        //     const result = await getHospitalOrDoctorInfo(message);
-        //     return { status: 200, message: "Trả lời từ MongoDB", data: result };
-        // }
+        if (isHospitalOrDoctorQuery) {
+            context = await getHospitalOrDoctorInfo(userId, message);
+        }
+
+        console.log("context check:", context);
 
         const previousMessages = await chatbotMessage.findOne({ userId, sessionId });
         let messages = previousMessages?.messages || [];
@@ -118,7 +224,7 @@ const chatWithGemini = async (userId, message, imageUrl, sessionId) => {
 
         openRouterMessages.unshift({
             role: "system",
-            content: [{ type: "text", text: `Bạn là chatbot tư vấn y tế của EasyMed. ${PROMPT}` }]
+            content: [{ type: "text", text: `Bạn là chatbot tư vấn y tế của EasyMed. ${PROMPT} \n\nDữ liệu liên quan: ${context}` }]
         });
 
         // Thêm tin nhắn mới của người dùng
@@ -131,12 +237,12 @@ const chatWithGemini = async (userId, message, imageUrl, sessionId) => {
             openRouterMessages.push({ type: "image_url", image_url: { url: imageUrl } });
         }
 
-        // console.log("messages gửi đến OpenRouter:", JSON.stringify(openRouterMessages, null, 2));
+        console.log("messages gửi đến OpenRouter:", JSON.stringify(openRouterMessages, null, 2));
 
         // Gửi tin nhắn đến OpenRouter
         const response = await axios.post(
             "https://openrouter.ai/api/v1/chat/completions",
-            { model: "google/gemini-2.0-pro-exp-02-05:free", messages: openRouterMessages },
+            { model: "google/gemini-2.5-pro-exp-03-25:free", messages: openRouterMessages },
             {
                 headers: {
                     Authorization: `Bearer ${OPENROUTER_API_KEY}`,
@@ -145,7 +251,7 @@ const chatWithGemini = async (userId, message, imageUrl, sessionId) => {
             }
         );
 
-        // console.log("Phản hồi từ OpenRouter:", JSON.stringify(response.data, null, 2));
+        console.log("Phản hồi từ OpenRouter:", JSON.stringify(response.data, null, 2));
 
         // Lấy phản hồi từ chatbot
         const reply = response.data.choices[0].message.content || "Không có phản hồi.";

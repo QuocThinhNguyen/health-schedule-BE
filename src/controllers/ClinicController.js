@@ -97,7 +97,7 @@ const getDropdownClinics = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             status: 500,
-            message: "Error from server"
+            message: err.message
         })
     }
 }

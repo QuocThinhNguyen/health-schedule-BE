@@ -31,7 +31,7 @@ const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
           model: "Clinic",
           localField: "clinicId",
           foreignField: "clinicId",
-          select: "name address",
+          select: "name address ",
         })
         .skip((pageNo - 1) * pageSize)
         .limit(pageSize)
@@ -62,7 +62,7 @@ const getServiceById = (id) => {
           model: "Clinic",
           localField: "clinicId",
           foreignField: "clinicId",
-          select: "name",
+          select: "name image address",
         })
         .populate({
           path: "serviceCategoryId",

@@ -140,13 +140,25 @@ const getServiceScheduleBySerivceIdAndDate = (serviceId, scheduleDate) => {
       });
 
       // Chuyển đổi groupedSchedules thành mảng
-      const result = Object.values(groupedSchedules).map((item) => ({
-        serviceId: item.serviceId,
-        scheduleDate: item.scheduleDate.toISOString().split("T")[0],
-        timeTypes: item.timeTypes,
-        currentNumbers: item.currentNumbers,
-        maxNumbers: item.maxNumbers,
-      }));
+      const groupedValues = Object.values(groupedSchedules);
+      const result =
+        groupedValues.length === 1
+          ? {
+              serviceId: groupedValues[0].serviceId,
+              scheduleDate: groupedValues[0].scheduleDate
+                .toISOString()
+                .split("T")[0],
+              timeTypes: groupedValues[0].timeTypes,
+              currentNumbers: groupedValues[0].currentNumbers,
+              maxNumbers: groupedValues[0].maxNumbers,
+            }
+          : groupedValues.map((item) => ({
+              serviceId: item.serviceId,
+              scheduleDate: item.scheduleDate.toISOString().split("T")[0],
+              timeTypes: item.timeTypes,
+              currentNumbers: item.currentNumbers,
+              maxNumbers: item.maxNumbers,
+            }));
 
       resolve({
         status: 200,

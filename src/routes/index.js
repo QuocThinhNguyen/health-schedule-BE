@@ -14,6 +14,7 @@ import bookingMediaRouter from "./BookingMediaRouter.js";
 import videoRouter from "./VideoRouter.js";
 import bookMarkRouter from "./BookMarkRouter.js";
 import commentRouter from "./CommentRouter.js";
+import chatBotRouter from "./ChatBotRouter.js";
 import serviceCategoryRouter from "./ServiceCategoryRouter.js";
 import serviceController from "./ServiceRouter.js";
 import serviceScheduleRouter from "./ServiceScheduleRouter.js";
@@ -37,6 +38,7 @@ const routes = (app) => {
     app.use('/video',videoRouter);
     app.use('/bookmark',bookMarkRouter);
     app.use('/comment',commentRouter);
+    app.use('/chatbot',chatBotRouter);
     app.use('/service-category', serviceCategoryRouter);
     app.use('/service', serviceController);
     app.use('/service-schedule', serviceScheduleRouter);

@@ -54,33 +54,6 @@ const OPENROUTER_API_KEY=process.env.OPENROUTER_API_KEY
 //     });
 // };
 
-const convertMessagesToOpenRouter = (messages) => {
-    return messages.map(msg => ({
-        role: msg.sender === "user" ? "user" : "assistant",
-        content: [{ type: "text", text: msg.text }]
-    }));
-};
-
-const PROMPT = `
-Bạn là chatbot tư vấn y tế của hệ thống đặt lịch khám bệnh EasyMed. 
-Vai trò của bạn:
-- Cung cấp thông tin về các bệnh thường gặp và cách phòng tránh.
-- Khuyến nghị người dùng đến bệnh viện nếu có triệu chứng nghiêm trọng.
-- KHÔNG chẩn đoán bệnh, kê đơn thuốc hay thay thế bác sĩ.
-- KHÔNG trả lời các câu hỏi ngoài lĩnh vực y tế.
-
-Nếu câu hỏi liên quan đến bác sĩ hoặc bệnh viện, hãy phản hồi bằng:
-"Bạn có thể xem danh sách bác sĩ và bệnh viện trên hệ thống EasyMed." 
-(Tôi sẽ lấy dữ liệu từ hệ thống và cung cấp cho người dùng).
-
-Nếu câu hỏi thuộc lĩnh vực y tế, hãy giải thích một cách dễ hiểu nhưng KHÔNG đưa ra lời khuyên y tế chính thức.
-`;
-
-const checkHospitalOrDoctorQuery = async (message) => {
-    const keywords = ["bác sĩ", "bệnh viện", "khám bệnh", "giờ làm việc", "chuyên khoa", "đặt lịch"];
-    return keywords.some(keyword => message.toLowerCase().includes(keyword));
-};
-
 const getAvailableTimeSlots = (timeTypes, currentNumbers) => {
     const timeSlots = [
         { label: "8:00 - 9:00", value: "T1" },
@@ -106,8 +79,64 @@ const getAvailableTimeSlots = (timeTypes, currentNumbers) => {
 
 const userContext = new Map();
 
-const getHospitalOrDoctorInfo = async (userId, message) => {
+const convertMessagesToOpenRouter = (messages) => {
+    return messages.map(msg => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: [{ type: "text", text: msg.text }]
+    }));
+};
+
+const PROMPT = `
+Bạn là chatbot tư vấn y tế của hệ thống đặt lịch khám bệnh EasyMed.
+
+Vai trò của bạn:
+- Cung cấp thông tin tham khảo về các bệnh thường gặp và cách phòng tránh dựa trên nguồn y khoa uy tín.
+- Hướng dẫn người dùng cách đặt lịch khám bệnh trên hệ thống EasyMed.
+- Gợi ý bác sĩ và bệnh viện phù hợp theo nhu cầu của người dùng.
+- Khuyến nghị người dùng đến bệnh viện nếu có triệu chứng nghiêm trọng.
+- **KHÔNG** chẩn đoán bệnh, kê đơn thuốc hay thay thế bác sĩ.
+- **KHÔNG** trả lời các câu hỏi ngoài lĩnh vực y tế.
+
+Khi cung cấp thông tin về bác sĩ và bệnh viện:
+- Kiểm tra dữ liệu trong *Dữ liệu liên quan* để cung cấp câu trả lời chi tiết.
+- Nếu tìm thấy thông tin, hiển thị thông tin bác sĩ/bệnh viện một cách ngắn gọn, dễ hiểu.
+- Nếu không tìm thấy, phản hồi bằng: "Bạn có thể xem danh sách bác sĩ và bệnh viện trên hệ thống EasyMed hoặc nhập từ khóa (tên bác sĩ, chuyên khoa, khu vực) để tôi giúp bạn tìm kiếm dễ dàng hơn!"
+
+Khi cung cấp thông tin về bệnh lý:
+- Nếu người dùng hỏi về triệu chứng hoặc bệnh thường gặp, hãy giải thích một cách dễ hiểu dựa trên nguồn y khoa uy tín.
+- **KHÔNG** chẩn đoán bệnh hay đưa ra lời khuyên y tế chính thức.
+- Nếu triệu chứng có dấu hiệu nghiêm trọng, khuyến nghị người dùng đến bệnh viện.
+
+Khi hướng dẫn đặt lịch khám:
+Nếu câu hỏi liên quan đến đặt lịch khám, hãy hướng dẫn người dùng theo các bước sau:
+
+Bước 1: Truy cập hệ thống EasyMed và tìm kiếm bác sĩ, chuyên khoa hoặc dịch vụ y tế bạn cần.
+
+Bước 2: Ở mục *Tư vấn trực tiếp*, chọn ngày và khung giờ theo nhu cầu.
+
+Bước 3: Chọn *người sử dụng dịch vụ*. Nếu chưa có hồ sơ bệnh nhân, bạn có thể tạo mới bằng cách nhấn *Thêm hồ sơ bệnh nhân*.
+
+Bước 4: Nhập lý do khám bệnh hoặc mô tả chi tiết. Bạn cũng có thể gửi ảnh hoặc video về tình trạng sức khỏe tại mục *tệp đính kèm*.
+
+Bước 5: Chọn phương thức thanh toán phù hợp:
+- Nếu chọn *Thanh toán online*, hệ thống sẽ tự động xác nhận đặt lịch sau khi thanh toán thành công.
+- Nếu chọn *Thanh toán trực tiếp*, bạn sẽ nhận được một email xác nhận đặt lịch. *Vui lòng mở email và click vào "Xác nhận" để hoàn thành đặt khám*.
+
+Bước 6: Kiểm tra lại thông tin và xác nhận đặt lịch.
+
+Sau khi đặt lịch thành công, bạn sẽ nhận được thông báo xác nhận.
+
+Bạn đang gặp khó khăn ở bước nào? Tôi có thể hướng dẫn chi tiết hơn!`
+
+const checkHospitalOrDoctorQuery = async (message) => {
+    const keywords = ["bác sĩ", "bệnh viện", "khám bệnh", "giờ làm việc", "chuyên khoa", "đặt lịch"];
+    return keywords.some(keyword => message.toLowerCase().includes(keyword));
+};
+
+const getHospitalOrDoctorInfo = async (message) => {
+    console.log("Message check:", message);
     if (message.toLowerCase().includes("bác sĩ")) {
+        console.log("Người dùng yêu cầu xem thông tin bác sĩ");
         const response = await axios.get("http://localhost:9000/doctor/dropdown");
         const doctors = response.data.data;
 
@@ -117,86 +146,57 @@ const getHospitalOrDoctorInfo = async (userId, message) => {
         //     `*Bác sĩ ${doc.doctorId.fullname}*\n- Chuyên khoa: ${doc.specialtyId.name}\n- Làm việc tại: ${doc.clinicId.name}\n- Thông tin bác sĩ: ${doc.description}\n- Giá khám: ${doc.price}\n-Trung bình sao đánh giá: ${doc.avgRating}\n- Lượt khám: ${doc.bookingCount}\n-Lịch khám: Vui lòng kiểm tra trên hệ thống.`
         // ).join("\n\n");
 
-        let result = doctors.map(doc => {
-            userContext.set(userId, { doctorId: doc.doctorId.userId, doctorName: doc.doctorId.fullname });
-            return `*Bác sĩ ${doc.doctorId.fullname}*\n- Chuyên khoa: ${doc.specialtyId.name}\n- Làm việc tại: ${doc.clinicId.name}\n- Thông tin bác sĩ: ${doc.description}\n- Giá khám: ${doc.price}\n-Trung bình sao đánh giá: ${doc.avgRating}\n- Lượt khám: ${doc.bookingCount}`
-        }).join("\n\n");
+        return doctors.map(doc => 
+            `*Bác sĩ ${doc.doctorId.fullname}*\n- Chuyên khoa: ${doc.specialtyId.name}\n- Làm việc tại: ${doc.clinicId.name}\n- Thông tin bác sĩ: * [Xem chi tiết](http://localhost:5173/bac-si/get?id=${doc.doctorId.userId})*\n- Giá khám: ${doc.price}\n-Trung bình sao đánh giá: ${doc.avgRating}\n- Số lượt khám: ${doc.bookingCount}\n-Lịch khám: Vui lòng kiểm tra trên hệ thống.`
+        ).join("\n\n");
 
-        if (message.toLowerCase().includes("đặt lịch khám") || message.toLowerCase().includes("hẹn lịch khám")) {
-    
-            return `🔹 *Hướng dẫn đặt lịch khám với bác sĩ ${userSession.doctorName}:*\n
-            *Bước 1:* Truy cập vào đường dẫn: [Đặt lịch khám](http://localhost:5173/bac-si/get?id=${userSession.doctorId})\n
-            *Bước 2:* Ở mục *Tư vấn trực tiếp*, chọn ngày và khung giờ theo nhu cầu.\n
-            *Bước 3:* Chọn *người sử dụng dịch vụ*. Nếu chưa có hồ sơ bệnh nhân, bạn có thể tạo mới bằng cách nhấn *Thêm hồ sơ bệnh nhân*.\n
-            *Bước 4:* Nhập lý do khám bệnh hoặc mô tả chi tiết. Bạn cũng có thể gửi ảnh hoặc video về tình trạng sức khỏe tại mục *tệp đính kèm*.\n
-            *Bước 5:* Chọn phương thức thanh toán phù hợp.\n
-               - Nếu chọn *Thanh toán online*, hệ thống sẽ tự động xác nhận đặt lịch sau khi thanh toán thành công.\n
-               - Nếu chọn *Thanh toán trực tiếp*, bạn sẽ nhận được một email xác nhận đặt lịch. *Vui lòng mở email và click vào "Xác nhận" để hoàn thành đặt khám*.\n
-            *Bước 6:* Kiểm tra lại thông tin và xác nhận đặt lịch.\n\n
-            Sau khi đặt lịch thành công, bạn sẽ nhận được thông báo xác nhận.`;
-        }
-    
-        return result;
+        // let result = doctors.map(doc => {
+        //     // userContext.set(userId, { doctorId: doc.doctorId.userId, doctorName: doc.doctorId.fullname });
+        //     return `*Bác sĩ ${doc.doctorId.fullname}*\n- Chuyên khoa: ${doc.specialtyId.name}\n- Làm việc tại: ${doc.clinicId.name}\n- Thông tin bác sĩ: ${doc.description}\n- Giá khám: ${doc.price}\n-Trung bình sao đánh giá: ${doc.avgRating}\n- Lượt khám: ${doc.bookingCount}`
+        // }).join("\n\n");
+        // return result;
     }
 
     if (message.toLowerCase().includes("bệnh viện")) {
+        console.log("Người dùng yêu cầu xem thông tin bệnh viện");
         const response = await axios.get("http://localhost:9000/clinic/dropdown");
         const hospitals = response.data.data;
 
         if (hospitals.length === 0) return "Không tìm thấy thông tin bệnh viện phù hợp.";
 
+        // return hospitals.map(hosp => 
+        //     `*Bệnh viện ${hosp.name}*\n- Địa chỉ: ${hosp.address}\n- Thông tin bệnh viện: ${hosp.description}\n- Chuyên khoa:\n${hosp.specialties.map(spec => `  + ${spec.name}: ${spec.description}`).join("\n")}`
+        // ).join("\n\n");
         return hospitals.map(hosp => 
-            `*Bệnh viện ${hosp.name}*\n- Địa chỉ: ${hosp.address}\n- Thông tin bệnh viện: ${hosp.description}\n- Chuyên khoa:\n${hosp.specialties.map(spec => `  + ${spec.name}: ${spec.description}`).join("\n")}`
+            `*Bệnh viện ${hosp.name}*\n- Địa chỉ: ${hosp.address}\n- Thông tin bệnh viện: Truy cập trang web để xem thông tin chi tiết\n- Chuyên khoa:\n${hosp.specialties.map(spec => `  + ${spec.name}: ${spec.description}`).join("\n")}`
         ).join("\n\n");
     }
 
-    let userSession = userContext.get(userId) || {};
-
-// Nếu người dùng đang nhập ngày để xem lịch làm việc
-if (userSession.waitingForDate) {
-    const today = new Date().toISOString().split("T")[0];
-    const requestedDate = message.trim();
-
-    if (requestedDate < today) {
-        return "Bạn chỉ có thể xem lịch làm việc từ hôm nay trở đi. Vui lòng nhập lại.";
-    }
-
-    try {
-        const response = await axios.get(`http://localhost:9000/schedule/${userSession.doctorId}?date=${requestedDate}`);
-        console.log("Lịch làm việc:", response.data.data);
-        const schedule = response.data.data;
-
-        if (!schedule || schedule.length === 0) {
-            return `Bác sĩ ${userSession.doctorName} không có lịch làm việc vào ngày ${requestedDate}.`;
-        }
-
-        const availableTimeSlots = getAvailableTimeSlots(schedule[0].timeTypes, schedule[0].currentNumbers);
-
-        if (!availableTimeSlots) {
-            return `Bác sĩ ${userSession.doctorName} đã kín lịch vào ngày ${requestedDate}.`;
-        }
-
-        userContext.set(userId, { ...userSession, waitingForDate: false });
-
-        return `*Lịch làm việc của bác sĩ ${userSession.doctorName} ngày ${requestedDate}:*\n${availableTimeSlots}`;
-    } catch (error) {
-        console.error("Lỗi khi gọi API lấy lịch khám:", error);
-        return "Xin lỗi, có lỗi xảy ra khi lấy lịch làm việc. Vui lòng thử lại.";
-    }
-}
+    // if (message.toLowerCase().includes("đặt lịch khám") || message.toLowerCase().includes("hẹn lịch khám")) {
+    //     console.log("Người dùng yêu cầu đặt lịch khám với bác sĩ");
+    //     return `🔹 *Hướng dẫn đặt lịch khám với bác sĩ:*\n
+    //     *Bước 1:* Truy cập hệ thống EasyMed và tìm kiếm bác sĩ, chuyên khoa hoặc dịch vụ y tế bạn cần.\n
+    //     *Bước 2:* Ở mục *Tư vấn trực tiếp*, chọn ngày và khung giờ theo nhu cầu.\n
+    //     *Bước 3:* Chọn *người sử dụng dịch vụ*. Nếu chưa có hồ sơ bệnh nhân, bạn có thể tạo mới bằng cách nhấn *Thêm hồ sơ bệnh nhân*.\n
+    //     *Bước 4:* Nhập lý do khám bệnh hoặc mô tả chi tiết. Bạn cũng có thể gửi ảnh hoặc video về tình trạng sức khỏe tại mục *tệp đính kèm*.\n
+    //     *Bước 5:* Chọn phương thức thanh toán phù hợp.\n
+    //        - Nếu chọn *Thanh toán online*, hệ thống sẽ tự động xác nhận đặt lịch sau khi thanh toán thành công.\n
+    //        - Nếu chọn *Thanh toán trực tiếp*, bạn sẽ nhận được một email xác nhận đặt lịch. *Vui lòng mở email và click vào "Xác nhận" để hoàn thành đặt khám*.\n
+    //     *Bước 6:* Kiểm tra lại thông tin và xác nhận đặt lịch.\n\n
+    //     Sau khi đặt lịch thành công, bạn sẽ nhận được thông báo xác nhận.`;
+    // }
 
 // Kiểm tra nếu người dùng yêu cầu xem lịch làm việc
-if (message.toLowerCase().includes("lịch làm việc")) {
-    console.log("Người dùng yêu cầu xem lịch làm việc của bác sĩ");
-    if (!userSession.doctorId) {
-        return "Bạn muốn xem lịch làm việc của bác sĩ nào? Vui lòng cung cấp tên bác sĩ trước.";
-    }
+// if (message.toLowerCase().includes("lịch làm việc")) {
+//     console.log("Người dùng yêu cầu xem lịch làm việc của bác sĩ");
+//     if (!userSession.doctorId) {
+//         return "Bạn muốn xem lịch làm việc của bác sĩ nào? Vui lòng cung cấp tên bác sĩ trước.";
+//     }
 
-    userContext.set(userId, { ...userSession, waitingForDate: true });
+//     userContext.set(userId, { ...userSession, waitingForDate: true });
 
-    return `Bạn muốn xem lịch làm việc của bác sĩ ${userSession.doctorName} vào ngày nào? (Chỉ xem được từ hôm nay trở đi)`;
-}
-    console.log("Usercontext:", userContext);
+//     return `Bạn muốn xem lịch làm việc của bác sĩ ${userSession.doctorName} vào ngày nào? (Chỉ xem được từ hôm nay trở đi)`;
+// }
     return "Xin lỗi, tôi không tìm thấy thông tin phù hợp.";
 };
 
@@ -208,7 +208,7 @@ const chatWithGemini = async (userId, message, imageUrl, sessionId) => {
         const isHospitalOrDoctorQuery = await checkHospitalOrDoctorQuery(message);
 
         if (isHospitalOrDoctorQuery) {
-            context = await getHospitalOrDoctorInfo(userId, message);
+            context = await getHospitalOrDoctorInfo(message);
         }
 
         console.log("context check:", context);
@@ -237,12 +237,13 @@ const chatWithGemini = async (userId, message, imageUrl, sessionId) => {
             openRouterMessages.push({ type: "image_url", image_url: { url: imageUrl } });
         }
 
+        console.log("Check tin nhắn:", openRouterMessages);
         console.log("messages gửi đến OpenRouter:", JSON.stringify(openRouterMessages, null, 2));
 
         // Gửi tin nhắn đến OpenRouter
         const response = await axios.post(
             "https://openrouter.ai/api/v1/chat/completions",
-            { model: "google/gemini-2.5-pro-exp-03-25:free", messages: openRouterMessages },
+            { model: "google/gemini-2.0-flash-thinking-exp:free", messages: openRouterMessages },
             {
                 headers: {
                     Authorization: `Bearer ${OPENROUTER_API_KEY}`,

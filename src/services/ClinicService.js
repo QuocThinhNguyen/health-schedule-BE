@@ -1,5 +1,6 @@
 import { console } from "inspector";
 import clinic from "../models/clinic.js";
+import SpecialtyService from "./SpecialtyService.js";
 
 const createClinic = (data) => {
   return new Promise(async (resolve, reject) => {
@@ -168,12 +169,22 @@ const filterClinics = (query) => {
 const getDropdownClinics = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      const dropdownClinics = await clinic.find();
+      const clinics = await clinic.find();
+
+      const clinicsWithSpecialties = await Promise.all(
+        clinics.map(async (clinicItem) => {
+          const specialties = await SpecialtyService.getSpecialtyByClinicId(clinicItem.clinicId); // Lấy chuyên khoa theo clinicId
+          return {
+            ...clinicItem._doc, // Giữ nguyên thông tin clinic
+            specialties: specialties.data, // Gắn danh sách chuyên khoa vào clinic
+          };
+        })
+      );
 
       resolve({
         status: 200,
         message: "Get dropdown clinic successfully",
-        data: dropdownClinics,
+        data: clinicsWithSpecialties,
       });
     } catch (e) {
       reject(e);

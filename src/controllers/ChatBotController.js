@@ -3,10 +3,12 @@ import ChatBotService from "../services/ChatBotService.js";
 const chatWithGemini = async (req, res) => {
     try {
         const { message, imageUrl } = req.body;
-        console.log("Check", req.body);
+        const userId = req.params.userId;
+        const sessionId = req.params.sessionId;
+        // console.log("Check", req.body);
         if (!message) return res.status(400).json({ error: "Message không được để trống" });
 
-        const response = await ChatBotService.chatWithGemini(message, imageUrl);
+        const response = await ChatBotService.chatWithGemini(userId,message, imageUrl,sessionId);
         return res.status(200).json(response);
     } catch (e) {
       return res.status(500).json({

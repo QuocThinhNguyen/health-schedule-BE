@@ -11,10 +11,10 @@ const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
       if (keyword) {
         query.name = { $regex: keyword, $options: "i" };
       }
-      if(filter.serviceCategoryId) {
+      if (filter.serviceCategoryId) {
         query.serviceCategoryId = filter.serviceCategoryId;
       }
-      if(filter.clinicId) {
+      if (filter.clinicId) {
         query.clinicId = filter.clinicId;
       }
       if (filter.minPrice && filter.maxPrice) {
@@ -26,6 +26,13 @@ const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
 
       const services = await service
         .find(query)
+        .populate({
+          path: "clinicId",
+          model: "Clinic",
+          localField: "clinicId",
+          foreignField: "clinicId",
+          select: "name address ",
+        })
         .skip((pageNo - 1) * pageSize)
         .limit(pageSize)
         .sort({ createdAt: -1 });
@@ -55,7 +62,7 @@ const getServiceById = (id) => {
           model: "Clinic",
           localField: "clinicId",
           foreignField: "clinicId",
-          select: "name",
+          select: "name image address",
         })
         .populate({
           path: "serviceCategoryId",

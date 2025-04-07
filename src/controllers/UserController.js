@@ -4,7 +4,7 @@ import user from "../models/users.js";
 import { OAuth2Client } from "google-auth-library";
 import axios from "axios";
 
-const clinet_id=process.env.GOOGLE_CLIENT_ID;
+const clinet_id = process.env.GOOGLE_CLIENT_ID;
 const client = new OAuth2Client(clinet_id);
 const createUserController = async (req, res) => {
   try {
@@ -329,131 +329,143 @@ const getDropdownUsersController = async (req, res) => {
   }
 };
 
-const verifyToken=async(token)=>{
+const verifyToken = async (token) => {
   const ticket = await client.verifyIdToken({
     idToken: token,
     audience: clinet_id,
-  })
+  });
   const payload = ticket.getPayload();
   return payload;
-}
+};
 
-const googleLogin = async(req,res)=>{
-  try{
-    const {token}= req.body;
+const googleLogin = async (req, res) => {
+  try {
+    const { token } = req.body;
     const payload = await verifyToken(token);
-    const {email,name, picture}=payload;
+    const { email, name, picture } = payload;
 
     let account = await user.findOne({
-      email:email
-    })
+      email: email,
+    });
 
-  if (!account){
+    if (!account) {
       account = await user.create({
         fullname: name,
         email: email,
-        roleId:"R3",
-        isVerified: true
-      })
-  }
-  const access_token = await jwtService.generalAccessToken({
-          userId: account.userId,
-          roleId: account.roleId,
-        });
+        roleId: "R3",
+        isVerified: true,
+      });
+    }
+    const access_token = await jwtService.generalAccessToken({
+      userId: account.userId,
+      roleId: account.roleId,
+    });
 
-  const refresh_token = await jwtService.generalRefreshToken({
-    userId: account.userId,
-    roleId: account.roleId,
-        });
+    const refresh_token = await jwtService.generalRefreshToken({
+      userId: account.userId,
+      roleId: account.roleId,
+    });
 
-        res.cookie("refresh_token", refresh_token, {
-          HttpOnly: true,
-          Secure: false,
-          SameSite: "Strict",
-        });
+    res.cookie("refresh_token", refresh_token, {
+      HttpOnly: true,
+      Secure: false,
+      SameSite: "Strict",
+    });
 
-  return res.status(200).json({
-    status: 200,
-    message: "Login successfully",
-    data: account,
-    access_token:access_token
-  });
-  }
-  catch (e) {
+    return res.status(200).json({
+      status: 200,
+      message: "Login successfully",
+      data: account,
+      access_token: access_token,
+    });
+  } catch (e) {
     return res.status(404).json({
       status: 500,
       message: e.message,
     });
   }
-}
+};
 
-const facebookLogin = async(req,res)=>{
-  try{
-    const {accessToken}= req.body;
+const facebookLogin = async (req, res) => {
+  try {
+    const { accessToken } = req.body;
     // console.log("accesstoken: ",accessToken);
 
-    if (!accessToken){
+    if (!accessToken) {
       return res.status(404).json({
         status: 404,
-        message: "The token is required"
-    })
-  }
+        message: "The token is required",
+      });
+    }
 
-  let response = await axios.get(`https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email`,
-  )
-  const {id,email,name}= response.data;
+    let response = await axios.get(
+      `https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email`
+    );
+    const { id, email, name } = response.data;
 
-  console.log(response.data);
+    console.log(response.data);
 
-  if (!id){
-    return res.status(400).json({
-      status: 400,
-      message: "Đăng nhập thất bại"
-    })
-  }
-    
-  let account = await user.findOne({
-    email:email
-  })
+    if (!id) {
+      return res.status(400).json({
+        status: 400,
+        message: "Đăng nhập thất bại",
+      });
+    }
 
-if (!account){
-    account = await user.create({
-      fullname: name,
+    let account = await user.findOne({
       email: email,
-      roleId:"R3",
-      isVerified: true
-    })
-}
-const access_token = await jwtService.generalAccessToken({
-  userId: account.userId,
-  roleId: account.roleId,
-});
+    });
 
-const refresh_token = await jwtService.generalRefreshToken({
-userId: account.userId,
-roleId: account.roleId,
-});
+    if (!account) {
+      account = await user.create({
+        fullname: name,
+        email: email,
+        roleId: "R3",
+        isVerified: true,
+      });
+    }
+    const access_token = await jwtService.generalAccessToken({
+      userId: account.userId,
+      roleId: account.roleId,
+    });
 
-res.cookie("refresh_token", refresh_token, {
-  HttpOnly: true,
-  Secure: false,
-  SameSite: "Strict",
-});
+    const refresh_token = await jwtService.generalRefreshToken({
+      userId: account.userId,
+      roleId: account.roleId,
+    });
 
-return res.status(200).json({
-status: 200,
-message: "Login successfully",
-data: account,
-access_token:access_token
-});
-  }
-  catch (e) {
+    res.cookie("refresh_token", refresh_token, {
+      HttpOnly: true,
+      Secure: false,
+      SameSite: "Strict",
+    });
+
+    return res.status(200).json({
+      status: 200,
+      message: "Login successfully",
+      data: account,
+      access_token: access_token,
+    });
+  } catch (e) {
     return res.status(404).json({
       status: 500,
       message: e.message,
     });
   }
-}
+};
+
+const getPatientStatistics = async (req, res) => {
+  try {
+    const idUser = req.params.idUser;
+    const data = await userService.getPatientStatistics(idUser);
+    return res.status(200).json(data);
+  } catch (e) {
+    return res.status(404).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+};
 
 export default {
   createUserController,
@@ -472,5 +484,6 @@ export default {
   updatePasswordController,
   getDropdownUsersController,
   googleLogin,
-  facebookLogin
+  facebookLogin,
+  getPatientStatistics,
 };

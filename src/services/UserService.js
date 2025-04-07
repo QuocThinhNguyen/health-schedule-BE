@@ -4,6 +4,8 @@ import bcrypt from "bcrypt";
 import jwtService from "./JwtService.js";
 import dotenv from "dotenv";
 import sendMail from "../utils/sendMail.js";
+import patientRecord from "../models/patient_records.js";
+import booking from "../models/booking.js";
 dotenv.config();
 
 const createUserService = (newUser) => {
@@ -374,6 +376,106 @@ const getDropdownUsersService = () => {
   });
 };
 
+const getPatientStatistics = (idUser) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const patientProfile = await patientRecord.find({
+        patientId: idUser,
+      });
+
+      if (patientProfile === null) {
+        resolve({
+          status: 200,
+          data: [],
+          message: "Don't find patient profile",
+        });
+      }
+
+      const stats = [];
+
+      for (const profile of patientProfile) {
+        const bookings = await booking
+          .find({
+            patientRecordId: profile.patientRecordId,
+            status: { $in: ["S4", "S5"] },
+          })
+          .populate({
+            path: "doctorId",
+            model: "Users",
+            localField: "doctorId",
+            foreignField: "userId",
+            select: "fullname userId",
+          });
+
+        let totalVisits = 0;
+        let totalCost = 0;
+        let monthlyVisitsMap = new Map();
+        let monthlyCostMap = new Map();
+        let doctorStatsMap = new Map();
+        let success = 0;
+        let canceled = 0;
+
+        bookings.forEach((booking) => {
+          if (booking.status === "S4") {
+            totalVisits++;
+            const date = new Date(booking.appointmentDate);
+            // console.log(date);
+            const month = `${String(date.getMonth() + 1).padStart(
+              2,
+              "0"
+            )}/${date.getFullYear()}`;
+            // const month = new Date(booking.appointmentDate).toLocaleDateString(
+            //   "vi-VN",
+            //   { month: "2-digit", year: "numeric" }
+            // );
+            const cost = parseInt(booking.price || "0");
+
+            totalCost += cost;
+
+            // Thống kê theo tháng
+            monthlyVisitsMap.set(month, (monthlyVisitsMap.get(month) || 0) + 1);
+            monthlyCostMap.set(month, (monthlyCostMap.get(month) || 0) + cost);
+
+            // Thống kê theo bác sĩ
+            const doctorName = booking.doctorId?.fullname || "Unknown";
+            doctorStatsMap.set(
+              doctorName,
+              (doctorStatsMap.get(doctorName) || 0) + 1
+            );
+          }
+
+          // Thống kê trạng thái
+          if (booking.status === "S4") success++;
+          else if (booking.status === "S5") canceled++;
+        });
+        stats.push({
+          profileId: profile.patientRecordId,
+          fullName: profile.fullname,
+          totalVisits,
+          totalCost,
+          monthlyVisits: Array.from(monthlyVisitsMap.entries()).map(
+            ([month, visits]) => ({ month, visits })
+          ),
+          monthlyCost: Array.from(monthlyCostMap.entries()).map(
+            ([month, cost]) => ({ month, cost })
+          ),
+          doctorStats: Array.from(doctorStatsMap.entries()).map(
+            ([doctorName, count]) => ({ doctorName, count })
+          ),
+          successRate: { success, canceled },
+        });
+      }
+      resolve({
+        status: 200,
+        data: stats,
+        message: "Get patient profile successfully",
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   createUserService,
   loginUserService,
@@ -385,4 +487,5 @@ export default {
   getUserByNameOrEmailService,
   updatePassword,
   getDropdownUsersService,
+  getPatientStatistics,
 };

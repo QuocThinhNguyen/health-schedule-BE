@@ -452,6 +452,19 @@ const facebookLogin = async (req, res) => {
   }
 };
 
+const getPatientStatistics = async (req, res) => {
+  try {
+    const idUser = req.params.idUser;
+    const data = await userService.getPatientStatistics(idUser);
+    return res.status(200).json(data);
+  } catch (e) {
+    return res.status(404).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+};
+
 export default {
   createUserController,
   loginUserController,
@@ -470,4 +483,5 @@ export default {
   getDropdownUsersController,
   googleLogin,
   facebookLogin,
+  getPatientStatistics,
 };

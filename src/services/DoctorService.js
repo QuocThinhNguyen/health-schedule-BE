@@ -50,9 +50,8 @@ const getDoctorInfor = (id) => {
         price: doctorData.price,
         note: doctorData.note,
         description: doctorData.description,
-        position: allCodeData.valueVi,
+        position: allCodeData.keyMap,
       };
-
       resolve({
         status: 200,
         message: "Success",

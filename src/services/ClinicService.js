@@ -1,4 +1,3 @@
-import { console } from "inspector";
 import clinic from "../models/clinic.js";
 import SpecialtyService from "./SpecialtyService.js";
 
@@ -43,17 +42,14 @@ const updateClinic = (id, data) => {
       const checkClinic = await clinic.findOne({
         clinicId: id,
       });
-
       if (!checkClinic) {
-        resolve({
+        return resolve({
           status: 404,
           message: "Clinic not found",
         });
       }
-
       await clinic.updateOne({ clinicId: id }, data, { new: true });
-
-      resolve({
+      return resolve({
         status: 200,
         message: "Update clinic successfully",
       });
@@ -170,13 +166,14 @@ const getDropdownClinics = () => {
   return new Promise(async (resolve, reject) => {
     try {
       const clinics = await clinic.find();
-
       const clinicsWithSpecialties = await Promise.all(
         clinics.map(async (clinicItem) => {
-          const specialties = await SpecialtyService.getSpecialtyByClinicId(clinicItem.clinicId); // Lấy chuyên khoa theo clinicId
+          const specialties = await SpecialtyService.getSpecialtyByClinicId(
+            clinicItem.clinicId
+          ); 
           return {
-            ...clinicItem._doc, // Giữ nguyên thông tin clinic
-            specialties: specialties.data, // Gắn danh sách chuyên khoa vào clinic
+            ...clinicItem._doc, 
+            specialties: specialties.data, 
           };
         })
       );

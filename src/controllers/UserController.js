@@ -40,9 +40,7 @@ const createUserController = async (req, res) => {
         message: "The input is not email",
       });
     }
-
-    // Lấy đường dẫn ảnh từ `req.file`
-    const image = req.file ? `${req.file.filename}` : null; // Đường dẫn ảnh
+    const image = req.file ? `${req.file.filename}` : null;
 
     const userData = {
       ...req.body,

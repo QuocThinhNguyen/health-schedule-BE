@@ -157,6 +157,13 @@ const getAllBooking = (query) => {
           foreignField: "patientRecordId",
           select: "fullname gender phoneNumber birthDate address",
         })
+        .populate({
+          path: "patientRecordId",
+          model: "PatientRecords",
+          localField: "patientRecordId",
+          foreignField: "patientRecordId",
+          select: "fullname gender phoneNumber birthDate address",
+        })
         .lean();
       //Tính số lượng filter theo tên bác sĩ hoặc tên bệnh nhân
       const totalFilteredBookings = totalBookings.filter((doctor) => {
@@ -182,6 +189,20 @@ const getAllBooking = (query) => {
           appointmentDate: booking.appointmentDate.toISOString().split("T")[0], // Chỉ lấy ngày
         }))
         .slice((page - 1) * limit, page * limit);
+
+      const totalPages = Math.ceil(totalFilteredBookings / limit);
+
+      resolve({
+        status: 200,
+        message: "SUCCESS",
+        data: sortedResults,
+        totalPages,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
 
       const totalPages = Math.ceil(totalFilteredBookings / limit);
 
@@ -266,12 +287,12 @@ const updateBooking = (id, data) => {
         bookingId: id,
       });
       if (checkBooking === null) {
+        return resolve({
         resolve({
           status: 404,
           message: "The booking is not defined",
         });
       }
-
       if (data.status === "S5") {
         const schedule = await schedules.findOne({
           doctorId: checkBooking.doctorId,
@@ -280,13 +301,17 @@ const updateBooking = (id, data) => {
             .split("T")[0],
           timeType: checkBooking.timeType,
         });
-
         if (schedule) {
           schedule.currentNumber -= 1;
           await schedule.save();
         }
       }
       const updatedBooking = await booking.findOneAndUpdate(
+        { bookingId: id },
+        data,
+        { new: true }
+      );
+      return resolve({
         { bookingId: id }, // Điều kiện tìm kiếm
         data, // Giá trị cần cập nhật
         { new: true }

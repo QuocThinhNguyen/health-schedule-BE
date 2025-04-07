@@ -52,7 +52,7 @@ const createUserService = (newUser) => {
         }
         resolve({
           status: 200,
-          message: "SUCCESS",
+          message: "Create user successfully",
           data: createdUser,
         });
       }

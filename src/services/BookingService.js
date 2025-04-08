@@ -7,7 +7,6 @@ import schedules from "../models/schedule.js";
 import user from "../models/users.js";
 import sendMail from "../utils/sendMail.js";
 import bookingMedia from "../models/booking_media.js";
-import BookingMedia from "../models/booking_media.js";
 
 const getAllBookingByUserId = (userId, startDate, endDate) => {
   return new Promise(async (resolve, reject) => {
@@ -204,20 +203,6 @@ const getAllBooking = (query) => {
   });
 };
 
-      const totalPages = Math.ceil(totalFilteredBookings / limit);
-
-      resolve({
-        status: 200,
-        message: "SUCCESS",
-        data: sortedResults,
-        totalPages,
-      });
-    } catch (e) {
-      reject(e);
-    }
-  });
-};
-
 const getBooking = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -288,7 +273,6 @@ const updateBooking = (id, data) => {
       });
       if (checkBooking === null) {
         return resolve({
-        resolve({
           status: 404,
           message: "The booking is not defined",
         });
@@ -311,11 +295,6 @@ const updateBooking = (id, data) => {
         data,
         { new: true }
       );
-      return resolve({
-        { bookingId: id }, // Điều kiện tìm kiếm
-        data, // Giá trị cần cập nhật
-        { new: true }
-      );
       resolve({
         status: 200,
         message: "SUCCESS",
@@ -326,77 +305,6 @@ const updateBooking = (id, data) => {
     }
   });
 };
-
-// const getBookingByDoctorId = (doctorId, date) => {
-//   return new Promise(async (resolve, reject) => {
-//     try {
-//       const query = {
-//         doctorId: doctorId
-//       };
-
-//       if (date) {
-//         const startOfDay = new Date(date);
-//         startOfDay.setHours(0, 0, 0, 0);
-
-//         const endOfDay = new Date(date);
-//         endOfDay.setHours(23, 59, 59, 999);
-
-//         query.appointmentDate = {
-//           $gte: startOfDay,
-//           $lte: endOfDay
-//         };
-//       }
-//       const data = await booking.find(query)
-//         .populate({
-//           path: "doctorId",
-//           model: "Users",
-//           localField: "doctorId",
-//           foreignField: "userId",
-//           select: "fullname",
-//         })
-//         .populate({
-//           path: "patientRecordId",
-//           model: "PatientRecords",
-//           localField: "patientRecordId",
-//           foreignField: "patientRecordId",
-//           select: "fullname gender birthDate phoneNumber CCCD email job address"
-//         })
-//         .populate({
-//           path: "status",
-//           model: "AllCodes",
-//           localField: "status",
-//           foreignField: "keyMap",
-//           select: "valueEn valueVi"
-//         })
-//         .populate({
-//           path: "timeType",
-//           model: "AllCodes",
-//           localField: "timeType",
-//           foreignField: "keyMap",
-//           select: "valueEn valueVi"
-//         })
-//       if (data.length === 0) {
-//         resolve({
-//           status: 404,
-//           message: "The booking is not defined",
-//         });
-//       } else {
-//         const totalPatients = new Set(data.map(b => b.patientRecordId?.toString())).size;
-//         const totalBooking = data.length;
-
-//         resolve({
-//           status: 200,
-//           message: "SUCCESS",
-//           data: data,
-//           totalPatients,
-//           totalBooking
-//         });
-//       }
-//     } catch (e) {
-//       reject(e);
-//     }
-//   });
-// }
 
 const getBookingByDoctorId = (
   doctorId,
@@ -1231,9 +1139,11 @@ const getBookingByPatientId = (data) => {
 
       const bookingWithMedia = await Promise.all(
         bookingFind.map(async (booking) => {
-          const media = await BookingMedia.find({
-            bookingId: booking.bookingId,
-          }).select("name");
+          const media = await bookingMedia
+            .find({
+              bookingId: booking.bookingId,
+            })
+            .select("name");
           return {
             ...booking._doc,
             mediaNames: media.map((m) => m.name),

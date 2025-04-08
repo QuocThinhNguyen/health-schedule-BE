@@ -40,4 +40,6 @@ router.post(
   userController.updatePasswordController
 ); // Định nghĩa tuyến đường để cập nhật mật khẩu
 
+router.get("/statistics/:idUser",authMiddleware,userController.getPatientStatistics)
+
 export default router;

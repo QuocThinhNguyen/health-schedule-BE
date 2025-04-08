@@ -29,13 +29,12 @@ app.use("/uploads", express.static("uploads"));
 routers(app);
 
 await connectDB();
-await connectElastic();
-await syncSetupDoctorsToElasticsearch();
-await syncDoctorsToElasticsearch();
+// await connectElastic();
+// await syncSetupDoctorsToElasticsearch();
+// await syncDoctorsToElasticsearch();
 
 let port = process.env.PORT || 9000;
 
 app.listen(port, () => {
-  // callback
   console.log("Backend Nodejs is running on the port: " + port);
 });

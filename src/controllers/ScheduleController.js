@@ -39,7 +39,6 @@ const createSchedule = async (req, res) => {
     const doctorId = req.body.doctorId;
     const scheduleDate = req.body.scheduleDate;
     const timeTypes = req.body.timeTypes;
-
     if (
       !doctorId ||
       !scheduleDate ||
@@ -72,17 +71,17 @@ const updateSchedule = async (req, res) => {
     const scheduleDate = req.body.scheduleDate;
     const timeTypes = req.body.timeTypes;
 
-    // if (
-    //   !doctorId ||
-    //   !scheduleDate ||
-    //   !Array.isArray(timeTypes) ||
-    //   timeTypes.length === 0
-    // ) {
-    //   return res.status(200).json({
-    //     status: "ERR",
-    //     message: "The doctorId, scheduleDate and timeTypes are required",
-    //   });
-    // }
+    if (
+      !doctorId ||
+      !scheduleDate ||
+      !Array.isArray(timeTypes) ||
+      timeTypes.length === 0
+    ) {
+      return res.status(200).json({
+        status: "404",
+        message: "The doctorId, scheduleDate and timeTypes are required",
+      });
+    }
 
     const response = await scheduleService.updateSchedule(
       doctorId,

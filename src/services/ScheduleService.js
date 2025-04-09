@@ -10,10 +10,9 @@ const getAllScheduleByDate = (date, page, limit, query) => {
           $lt: new Date(date + "T23:59:59Z"),
         };
       }
-      // Truy vấn Schedule theo filter (có thể có hoặc không có scheduleDate)
-      const allScheduleByDate = await schedule.find(filter)
-        // .skip((page - 1) * limit)
-        // .limit(limit)
+
+      const allScheduleByDate = await schedule
+        .find(filter)
         .populate({
           path: "doctorId",
           model: "Users",
@@ -22,14 +21,12 @@ const getAllScheduleByDate = (date, page, limit, query) => {
           select: "fullname",
         });
 
-      // Nhóm các timeType theo doctorId
       const groupedSchedules = {};
 
       allScheduleByDate.forEach((schedule) => {
-        // Sử dụng combination của doctorId và scheduleDate làm khóa
-        const doctorId = schedule.doctorId._id.toString(); // Chuyển đổi ID thành chuỗi
-        const scheduleDate = schedule.scheduleDate.toISOString(); // Chuyển đổi ngày thành chuỗi
-        const key = `${doctorId}_${scheduleDate}`; // Tạo khóa duy nhất cho mỗi bác sĩ theo từng ngày
+        const doctorId = schedule.doctorId._id.toString(); 
+        const scheduleDate = schedule.scheduleDate.toISOString(); 
+        const key = `${doctorId}_${scheduleDate}`; 
         if (!groupedSchedules[key]) {
           groupedSchedules[key] = {
             doctorId: schedule.doctorId,
@@ -39,32 +36,29 @@ const getAllScheduleByDate = (date, page, limit, query) => {
         }
         groupedSchedules[key].timeTypes.push(schedule.timeType);
       });
-      // Bộ lọc
-      const regex = new RegExp(query.query, 'i');
 
-      // Chuyển đổi groupedSchedules thành mảng
+      const regex = new RegExp(query.query, "i");
+
       const result = Object.values(groupedSchedules).map((item) => ({
         doctorId: item.doctorId,
-        scheduleDate: item.scheduleDate.toISOString().split('T')[0],
+        scheduleDate: item.scheduleDate.toISOString().split("T")[0],
         timeTypes: item.timeTypes,
-      }))//.slice((page - 1) * limit, page * limit);
-      //Tính tổng số lượng kết quả phù hợp (không phân trang)
+      })); 
+
       const totalFilteredResults = result.filter((doctor) => {
-        return (
-          regex.test(doctor.doctorId?.fullname)
-        );
+        return regex.test(doctor.doctorId?.fullname);
       }).length;
-      //Áp dụng skip và limit cho danh sách đã filter
+
       const filteredResults = result.filter((doctor) => {
-        return (
-          regex.test(doctor.doctorId?.fullname)
-        );
+        return regex.test(doctor.doctorId?.fullname);
       });
-      const sortedResults = filteredResults.sort((a, b) => {
-        const dateA = new Date(a.scheduleDate);
-        const dateB = new Date(b.scheduleDate);
-        return dateA - dateB;
-      }).slice((page - 1) * limit, page * limit);
+      const sortedResults = filteredResults
+        .sort((a, b) => {
+          const dateA = new Date(a.scheduleDate);
+          const dateB = new Date(b.scheduleDate);
+          return dateA - dateB;
+        })
+        .slice((page - 1) * limit, page * limit);
       const totalPages = Math.ceil(totalFilteredResults / limit);
       resolve({
         status: 200,
@@ -108,32 +102,29 @@ const getScheduleByDate = (id, date) => {
           data: [],
         });
       }
-      // Nhóm các timeType theo doctorId
+
       const groupedSchedules = {};
 
       allScheduleByDate.forEach((schedule) => {
-        // Sử dụng combination của doctorId và scheduleDate làm khóa
-        const doctorId = schedule.doctorId._id.toString(); // Chuyển đổi ID thành chuỗi
-        const scheduleDate = schedule.scheduleDate.toISOString(); // Chuyển đổi ngày thành chuỗi
-        const key = `${doctorId}_${scheduleDate}`; // Tạo khóa duy nhất cho mỗi bác sĩ theo từng ngày
+        const doctorId = schedule.doctorId._id.toString();
+        const scheduleDate = schedule.scheduleDate.toISOString(); 
+        const key = `${doctorId}_${scheduleDate}`; 
 
         if (!groupedSchedules[key]) {
           groupedSchedules[key] = {
             doctorId: schedule.doctorId,
             scheduleDate: schedule.scheduleDate,
             timeTypes: [],
-            currentNumbers: []
+            currentNumbers: [],
           };
         }
         groupedSchedules[key].timeTypes.push(schedule.timeType);
         groupedSchedules[key].currentNumbers.push(schedule.currentNumber);
-
       });
 
-      // Chuyển đổi groupedSchedules thành mảng
       const result = Object.values(groupedSchedules).map((item) => ({
         doctorId: item.doctorId,
-        scheduleDate: item.scheduleDate.toISOString().split('T')[0],
+        scheduleDate: item.scheduleDate.toISOString().split("T")[0],
         timeTypes: item.timeTypes,
         currentNumbers: item.currentNumbers,
       }));
@@ -155,14 +146,14 @@ const createSchedule = (doctorId, scheduleDate, timeTypes) => {
       const checkSchedule = await schedule.find({
         doctorId,
         scheduleDate,
-        timeType: { $in: timeTypes },
       });
       if (checkSchedule.length > 0) {
-        return reject(new Error("Schedule already exists"));
+        return resolve({
+          status: 400,
+          message: "Schedule already exists",
+        });
       }
-
       const createdSchedules = [];
-
       for (const timeType of timeTypes) {
         const newSchedule = new schedule({
           doctorId,
@@ -171,7 +162,7 @@ const createSchedule = (doctorId, scheduleDate, timeTypes) => {
           maxNumber: process.env.MAX_NUMBER || 2,
           currentNumber: 0,
         });
-        const savedSchedule = await newSchedule.save(); // Dùng save để tạo schedule
+        const savedSchedule = await newSchedule.save(); 
         createdSchedules.push(savedSchedule);
       }
 
@@ -190,7 +181,6 @@ const updateSchedule = (doctorId, scheduleDate, timeTypes) => {
   return new Promise(async (resolve, reject) => {
     try {
       const updatedSchedules = [];
-
       await schedule.deleteMany({
         doctorId,
         scheduleDate,

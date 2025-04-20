@@ -1,7 +1,7 @@
 import express from 'express';
 import doctorController from '../controllers/DoctorController.js';
 import upload from "../utils/fileUpload.js";
-import {authDoctorMiddleware } from '../middlewares/authMiddleware.js';
+import {authDoctorMiddleware, authUserMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -12,5 +12,6 @@ router.get('/price', doctorController.getPriceRange);
 router.get('/', doctorController.getAllDoctor);
 router.get('/:id', doctorController.getDoctorInfor);
 router.put('/:id', authDoctorMiddleware, upload.single("image"), doctorController.updateDoctorInfor);
+router.post('/clicked',authUserMiddleware,doctorController.doctorClickLog);
 
 export default router;

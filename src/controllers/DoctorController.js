@@ -8,7 +8,7 @@ const getDoctorInfor = async (req, res) => {
   } catch (e) {
     return res.status(500).json({
       status: 500,
-      message: "Error from server",
+      message: e.message,
     });
   }
 };
@@ -98,8 +98,17 @@ const getAcademicRanksAndDegrees = async (req, res) => {
 
 const searchDoctorByElasticeSearch = async (req, res) => {
   try {
-    const { keyword, clinicId, specialtyId,gender, minPrice, maxPrice, sort, page, limit } =
-      req.query;
+    const {
+      keyword,
+      clinicId,
+      specialtyId,
+      gender,
+      minPrice,
+      maxPrice,
+      sort,
+      page,
+      limit,
+    } = req.query;
     console.log("query", req.query);
 
     const filters = {
@@ -131,6 +140,21 @@ const searchDoctorByElasticeSearch = async (req, res) => {
   }
 };
 
+const doctorClickLog = async (req,res)=>{
+  try {
+    const {doctorId, userId} = req.body;
+    console.log("doctorId",doctorId);
+    console.log("userId",userId);
+    const data = await doctorInforService.doctorClick(doctorId, userId);
+    return res.status(200).json(data);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+}
+
 export default {
   getDoctorInfor,
   updateDoctorInfor,
@@ -140,4 +164,5 @@ export default {
   getDropdownDoctors,
   getAcademicRanksAndDegrees,
   searchDoctorByElasticeSearch,
+  doctorClickLog
 };

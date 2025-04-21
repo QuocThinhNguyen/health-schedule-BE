@@ -8,6 +8,7 @@ import upload from "../utils/fileUpload.js";
 
 const router = express.Router();
 
+router.get("/suggestions",userController.getSuggest)
 //CRUD user
 router.get(
   "/dropdown",
@@ -41,5 +42,6 @@ router.post(
 ); // Định nghĩa tuyến đường để cập nhật mật khẩu
 
 router.get("/statistics/:idUser",authMiddleware,userController.getPatientStatistics)
+
 
 export default router;

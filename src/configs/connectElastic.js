@@ -4,7 +4,7 @@ const elasticClient = new Client({
   node: "https://127.0.0.1:9200",
   auth: {
     username: 'elastic',
-    password: 'E-uatO2h4bSkPr1sdDQ5'
+    password: '9gTB=ZnyFE2kCIYNy83H'
     },
   tls: {
     rejectUnauthorized: false,

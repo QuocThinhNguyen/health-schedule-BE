@@ -6,6 +6,9 @@ import dotenv from "dotenv";
 import sendMail from "../utils/sendMail.js";
 import patientRecord from "../models/patient_records.js";
 import booking from "../models/booking.js";
+import feedbackService from "./FeedBackService.js";
+import doctorClickLog from "../models/doctor_click_log.js";
+
 dotenv.config();
 
 const createUserService = (newUser) => {
@@ -476,6 +479,135 @@ const getPatientStatistics = (idUser) => {
   });
 };
 
+const getSuggestService = (limit) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const list = [];
+      const data = await user.find({
+        roleId: "R3",
+      });
+
+      const clickLogs = await doctorClickLog.aggregate([
+        {
+          $group: {
+            _id: { doctorId: "$doctorId", userId: "$userId" },
+            click_count: { $sum: 1 },
+          },
+        },
+      ]);
+
+      console.log("clickLogs: ", clickLogs);
+
+      const clickMap = {};
+      for (const item of clickLogs) {
+        const key = `${item._id.userId}_${item._id.doctorId}`;
+        clickMap[key] = item.click_count;
+      }
+
+      console.log("clickMap: ", clickMap);
+
+      for (const info of data) {
+        const patientProfile = await patientRecord.find({
+          patientId: info.userId,
+        });
+
+        for (const profile of patientProfile) {
+          const bookings = await booking.find({
+            patientRecordId: profile.patientRecordId,
+            status: "S4",
+          });
+
+          for (const booking of bookings) {
+            const doctorInfos = await doctorInfor.find({
+              doctorId: booking.doctorId,
+            });
+
+            const query = {
+              doctorId: booking.doctorId,
+            };
+
+            const rate = await feedbackService.getFeedBackByDoctorId(query);
+
+            // console.log("checkrate: ", rate);
+
+            for (const doctorInfo of doctorInfos) {
+              list.push({
+                patient_id: info.userId,
+                // profile_id: profile.patientRecordId,
+                doctor_id: booking.doctorId,
+                specialty_id: doctorInfo.specialtyId,
+                rating: rate.averageRating,
+                last_visit_date: booking.appointmentDate,
+              });
+            }
+          }
+        }
+      }
+
+      const result = {};
+      for (const item of list) {
+        const key = `${item.patient_id}_${item.doctor_id}`;
+        if (!result[key]) {
+          result[key] = {
+            patient_id: item.patient_id,
+            doctor_id: item.doctor_id,
+            specialty_id: item.specialty_id,
+            rating: item.rating,
+            visits: 1,
+            last_visit_date: item.last_visit_date,
+            click_count: clickMap[key] || 0,
+          };
+        } else {
+          result[key].visits += 1;
+
+          if (item.last_visit_date > result[key].last_visit_date) {
+            result[key].last_visit_date = item.last_visit_date;
+          }
+        }
+      }
+
+      for (const item of clickLogs) {
+        const key = `${item._id.userId}_${item._id.doctorId}`;
+        if (!result[key]) {
+          const doctorInfo = await doctorInfor.findOne({
+            doctorId: item._id.doctorId,
+          });
+          const rate = await feedbackService.getFeedBackByDoctorId({
+            doctorId: item._id.doctorId,
+          });
+          // console.log("checkrate: ", rate);
+          let rating = 0;
+          if (rate.averageRating === 0){
+            rating = "5.0"
+          }
+          result[key] = {
+            patient_id: item._id.userId,
+            doctor_id: item._id.doctorId,
+            specialty_id: doctorInfo?.specialtyId || null,
+            rating: rating || 0,
+            last_visit_date: null,
+            visits: 0,
+            click_count: item.click_count,
+          };
+        }
+      }
+
+      // console.log(result);
+      const convertResult = Object.values(result);
+
+      const resultFinal = convertResult.slice(0, limit); 
+
+      resolve({
+        status: 200,
+        message: "Get suggest successfully",
+        data: resultFinal,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   createUserService,
   loginUserService,
@@ -488,4 +620,5 @@ export default {
   updatePassword,
   getDropdownUsersService,
   getPatientStatistics,
+  getSuggestService,
 };

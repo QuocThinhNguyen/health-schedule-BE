@@ -5,7 +5,10 @@ import clinics from "../models/clinic.js";
 import allcodes from "../models/allcodes.js";
 import feedBacks from "../models/feedbacks.js";
 import booking from "../models/booking.js";
+import doctorClickLog from "../models/doctor_click_log.js";
 import { elasticClient } from "../configs/connectElastic.js";
+import feedbackService from "./FeedBackService.js";
+
 import { syncDoctorsToElasticsearch } from "../utils/syncDoctorsToElasticsearch.js";
 
 const getDoctorInfor = (id) => {
@@ -32,6 +35,16 @@ const getDoctorInfor = (id) => {
         keyMap: doctorData.position,
       });
 
+      const query = {
+        doctorId: doctorData.doctorId,
+      };
+
+      const rate = await feedbackService.getFeedBackByDoctorId(query);
+
+      const bookingCount = await booking.countDocuments({
+        doctorId: doctorData.doctorId,
+      });
+
       const combinedData = {
         doctorInforId: doctorData.doctorInforId,
         doctorId: doctorData.doctorId,
@@ -51,6 +64,8 @@ const getDoctorInfor = (id) => {
         note: doctorData.note,
         description: doctorData.description,
         position: allCodeData.keyMap,
+        avgRating: rate.averageRating,
+        bookingCount: bookingCount
       };
       resolve({
         status: 200,
@@ -605,6 +620,26 @@ const searchDoctorByElasticeSearch = (
   });
 };
 
+const doctorClick = (doctorId, userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const newDoctorClickLog = new doctorClickLog({
+        doctorId: doctorId,
+        userId: userId,
+        createdAt: new Date(),
+      });
+      await newDoctorClickLog.save();
+      resolve({
+        status: 200,
+        message: "success",
+        data: newDoctorClickLog,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   getDoctorInfor,
   updateDoctorInfor,
@@ -614,4 +649,5 @@ export default {
   getDropdownDoctors,
   getAcademicRanksAndDegrees,
   searchDoctorByElasticeSearch,
+  doctorClick,
 };

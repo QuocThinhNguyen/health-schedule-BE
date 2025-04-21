@@ -18,6 +18,8 @@ import chatBotRouter from "./ChatBotRouter.js";
 import serviceCategoryRouter from "./ServiceCategoryRouter.js";
 import serviceController from "./ServiceRouter.js";
 import serviceScheduleRouter from "./ServiceScheduleRouter.js";
+import chatRoomRouter from "./ChatRoomRouter.js";
+import chatMessageRouter from "./ChatMessageRouter.js";
 import {handleError} from "../middlewares/authMiddleware.js"
 
 const routes = (app) => {
@@ -42,6 +44,8 @@ const routes = (app) => {
     app.use('/service-category', serviceCategoryRouter);
     app.use('/service', serviceController);
     app.use('/service-schedule', serviceScheduleRouter);
+    app.use('/chat-room', chatRoomRouter);
+    app.use('/chat-message', chatMessageRouter);
 
     app.use(handleError);
 }

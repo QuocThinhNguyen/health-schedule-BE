@@ -132,23 +132,22 @@ const getAllFeedBackByFilter = async (req, res) => {
 };
 
 const getFeedBackByClinicId = async (req, res) => {
-  try {
-    const clinicId = req.params.clinicId;
-    const query = {
-      clinicId: clinicId,
-      page: req.query.page,
-      limit: req.query.limit,
-    };
-    console.log("TEST ", query);
-    const data = await feedBackService.getFeedBackByClinicId(query);
-    return res.status(200).json(data);
-  } catch (err) {
-    return res.status(500).json({
-      status: 500,
-      message: err.message,
-    });
-  }
-};
+    try {
+      const clinicId = req.params.clinicId;
+      const query = {
+        clinicId: clinicId,
+        page: req.query.page,
+        limit: req.query.limit,
+      };
+      const data = await feedBackService.getFeedBackByClinicId(query);
+      return res.status(200).json(data);
+    } catch (err) {
+      return res.status(500).json({
+        status: 500,
+        message: err.message,
+      });
+    }
+  };
 
 export default {
   createFeedBack,

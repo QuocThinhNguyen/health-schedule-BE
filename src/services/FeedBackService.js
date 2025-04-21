@@ -452,8 +452,6 @@ const getFeedBackByClinicId = (query) => {
           };
         })
       );
-      console.log("totalFeedbackCount", totalFeedbackCount);
-      console.log("totalPages", totalPages);
 
       resolve({
         status: 200,

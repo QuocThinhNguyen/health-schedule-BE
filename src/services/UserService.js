@@ -488,6 +488,7 @@ const getSuggestService = (limit) => {
       });
 
       const clickLogs = await doctorClickLog.aggregate([
+        { $sort: { createdAt: -1 } },
         {
           $group: {
             _id: { doctorId: "$doctorId", userId: "$userId" },
@@ -577,15 +578,15 @@ const getSuggestService = (limit) => {
           });
           // console.log("checkrate: ", rate);
           let rating = 0;
-          if (rate.averageRating === 0){
-            rating = "5.0"
+          if (rate.averageRating === 0) {
+            rating = "5.0";
           }
           result[key] = {
             patient_id: item._id.userId,
             doctor_id: item._id.doctorId,
-            specialty_id: doctorInfo?.specialtyId || null,
-            rating: rating || 0,
-            last_visit_date: null,
+            specialty_id: doctorInfo?.specialtyId,
+            rating: rate.averageRating,
+            last_visit_date: new Date(),
             visits: 0,
             click_count: item.click_count,
           };
@@ -595,7 +596,18 @@ const getSuggestService = (limit) => {
       // console.log(result);
       const convertResult = Object.values(result);
 
-      const resultFinal = convertResult.slice(0, limit); 
+      convertResult.sort((a, b) => {
+        const aDate = a.last_visit_date || null;
+        const bDate = b.last_visit_date || null;
+
+        if (!aDate && bDate) return 1;
+        if (aDate && !bDate) return -1;
+        if (!aDate && !bDate) return 0;
+
+        return new Date(bDate) - new Date(aDate);
+      });
+
+      const resultFinal = convertResult.slice(0, limit);
 
       resolve({
         status: 200,

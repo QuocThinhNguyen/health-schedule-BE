@@ -136,7 +136,6 @@ const getFeedBackByClinicId = async (req, res) => {
         page: req.query.page,
         limit: req.query.limit,
       };
-      console.log("TEST ",query);
       const data = await feedBackService.getFeedBackByClinicId(query);
       return res.status(200).json(data);
     } catch (err) {

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import pkg from 'mongoose-sequence';  // Import AutoIncrement
+import pkg from 'mongoose-sequence';  
 const AutoIncrement = pkg(mongoose);
 const { Schema } = mongoose;
 

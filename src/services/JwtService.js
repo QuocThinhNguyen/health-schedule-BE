@@ -24,7 +24,7 @@ const generalRefreshToken = async (payload) => {
       ...payload,
     },
     process.env.REFRESH_TOKEN,
-    { expiresIn: "365d" }
+    { expiresIn: "30d" }
   );
 
   return refresh_token;
@@ -49,7 +49,7 @@ const generalOTPToken = async (email) => {
       otp: Math.floor(100000 + Math.random() * 900000).toString(),
     },
     process.env.SECRET_KEY,
-    { expiresIn: "60s" }
+    { expiresIn: "5p" }
   );
 
   return otp_token;
@@ -83,8 +83,8 @@ const handleResetPasswordTokenService = async (token) => {
       const tempPassword = crypto.randomBytes(8).toString("hex").slice(0, 8);
       const hash = bcrypt.hashSync(tempPassword, 10);
       const updateUser = await user.findOneAndUpdate(
-        { email: decoded.email }, // Điều kiện tìm kiếm
-        { password: hash }, // Giá trị cần cập nhật
+        { email: decoded.email }, 
+        { password: hash }, 
         { new: true }
       );
 

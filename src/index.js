@@ -3,22 +3,37 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import routers from "./routes/index.js";
 import connectDB from "./configs/connectDB.js";
-import {connectElastic} from "./configs/connectElastic.js";
+import { connectElastic } from "./configs/connectElastic.js";
 import upload from "./utils/fileUpload.js";
 import dotenv from "dotenv";
 import multer from "multer";
 import cors from "cors";
-import {syncSetupDoctorsToElasticsearch,syncDoctorsToElasticsearch} from "./utils/syncDoctorsToElasticsearch.js";
+import {
+  syncSetupDoctorsToElasticsearch,
+  syncDoctorsToElasticsearch,
+} from "./utils/syncDoctorsToElasticsearch.js";
+import http from "http";
+import { Server } from "socket.io";
+import { initSocket } from "./socket/index.js";
 
 dotenv.config();
 
 let app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: `http://localhost:${process.env.FE_PORT}`,
+    credentials: true,
+  },
+});
+
+//Ket noi voi socket.io
+initSocket(io);
 
 const corsOptions = {
-  origin: `http://localhost:${process.env.FE_PORT}`, 
+  origin: `http://localhost:${process.env.FE_PORT}`,
   credentials: true,
 };
-
 // config app
 app.use(cors(corsOptions));
 app.use(cookieParser());
@@ -35,6 +50,6 @@ await connectDB();
 
 let port = process.env.PORT || 9000;
 
-app.listen(port, () => {
-  console.log("Backend Nodejs is running on the port: " + port);
+server.listen(port, () => {
+  console.log("Server Socket.io is running on port: " + port);
 });

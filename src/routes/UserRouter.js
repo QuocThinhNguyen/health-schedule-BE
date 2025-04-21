@@ -20,7 +20,7 @@ router.get(
   authAdminMiddleware,
   userController.getUserByNameOrEmailController
 ); //Tìm kiếm user theo tên, email
-router.get("/", authAdminMiddleware, userController.getAllUserController); //Lấy tất cả user
+router.get("/", authMiddleware, userController.getAllUserController); //Lấy tất cả user
 router.get("/:id", authMiddleware, userController.getDetailsUserController); //Lấy thông tin một user
 router.post(
   "/",

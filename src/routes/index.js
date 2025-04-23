@@ -12,7 +12,7 @@ import feedBackRouter from "./FeedBackRouter.js"
 import postRouter from "./PostRouter.js"
 import bookingMediaRouter from "./BookingMediaRouter.js";
 import videoRouter from "./VideoRouter.js";
-import bookMarkRouter from "./BookMarkRouter.js";
+import bookMarkRouter from "./BookmarkRouter.js";
 import commentRouter from "./CommentRouter.js";
 import chatBotRouter from "./ChatBotRouter.js";
 import serviceCategoryRouter from "./ServiceCategoryRouter.js";

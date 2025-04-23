@@ -3,7 +3,7 @@ import doctorInfor from "../models/doctor_info.js";
 import bcrypt from "bcrypt";
 import jwtService from "./JwtService.js";
 import dotenv from "dotenv";
-import sendMail from "../utils/sendMail.js";
+import sendMail from "../utils/SendMail.js";
 import patientRecord from "../models/patient_records.js";
 import booking from "../models/booking.js";
 import feedbackService from "./FeedBackService.js";

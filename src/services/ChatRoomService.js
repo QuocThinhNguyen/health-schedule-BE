@@ -7,25 +7,17 @@ const getRecentChatsByUserId = (userId) => {
   return new Promise(async (resolve, reject) => {
     try {
       const userRooms = await chatRoomMember.find({ userId: userId });
-      console.log("userRooms", userRooms);
-      
       const chatRoomIds = userRooms.map((room) => room.chatRoomId);
-
       const otherMembers = await chatRoomMember.find({
         chatRoomId: { $in: chatRoomIds },
         userId: { $ne: userId },
       });
-
       const uniquePartnerIds = [
         ...new Set(otherMembers.map((otherMenber) => otherMenber.userId)),
       ];
       const infoPartners = await user.find({
         userId: { $in: uniquePartnerIds },
       });
-      console.log("infoPartners", infoPartners);
-      console.log("chatRoomIds", chatRoomIds);
-      
-
       const latestMessages = await Promise.all(
         chatRoomIds.map(async (chatRoomId) => {
           const latestMessage = await chatMessage
@@ -35,9 +27,6 @@ const getRecentChatsByUserId = (userId) => {
           return { chatRoomId, latestMessage };
         })
       );
-      console.log("latestMessages", latestMessages);
-      
-
       const recentChats = chatRoomIds.map((chatRoomId) => {
         const partner = infoPartners.find((p) =>
           otherMembers.some(
@@ -53,7 +42,15 @@ const getRecentChatsByUserId = (userId) => {
           latestMessage: latestMessage,
         };
       });
-
+      recentChats.sort((a, b) => {
+        const timeA = a.latestMessage?.createdAt
+          ? new Date(a.latestMessage.createdAt)
+          : 0;
+        const timeB = b.latestMessage?.createdAt
+          ? new Date(b.latestMessage.createdAt)
+          : 0;
+        return timeB - timeA;
+      });
       return resolve({
         status: 200,
         message: "Get recent chats by userId successfully",

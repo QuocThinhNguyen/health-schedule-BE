@@ -1,4 +1,4 @@
-import post from "../models/Post.js";
+import post from "../models/post.js";
 
 const getAllPost = (query) => {
   return new Promise(async (resolve, reject) => {

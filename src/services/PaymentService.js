@@ -131,7 +131,7 @@ const handlePaymentReturn = async (req, res) => {
       schedule.currentNumber += 1;
       await schedule.save();
       await sendMail.sendMailSuccess([patientEmail, userEmail], data, "Đặt lịch khám thành công");
-      return res.redirect(`http://localhost:${process.env.FE_PORT}/`);
+      return res.redirect(`${process.env.URL_REACT}/`);
       // return res.status(200).json({
       //   status: "OK",
       //   message: "Payment successful",

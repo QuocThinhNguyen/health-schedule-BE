@@ -137,7 +137,7 @@ const getHospitalOrDoctorInfo = async (message) => {
     console.log("Message check:", message);
     if (message.toLowerCase().includes("bác sĩ")) {
         console.log("Người dùng yêu cầu xem thông tin bác sĩ");
-        const response = await axios.get("http://localhost:9000/doctor/dropdown");
+        const response = await axios.get(`${process.env.WEB_LINK}/doctor/dropdown`);
         const doctors = response.data.data;
 
         if (doctors.length === 0) return "Không tìm thấy thông tin bác sĩ phù hợp.";
@@ -146,8 +146,10 @@ const getHospitalOrDoctorInfo = async (message) => {
         //     `*Bác sĩ ${doc.doctorId.fullname}*\n- Chuyên khoa: ${doc.specialtyId.name}\n- Làm việc tại: ${doc.clinicId.name}\n- Thông tin bác sĩ: ${doc.description}\n- Giá khám: ${doc.price}\n-Trung bình sao đánh giá: ${doc.avgRating}\n- Lượt khám: ${doc.bookingCount}\n-Lịch khám: Vui lòng kiểm tra trên hệ thống.`
         // ).join("\n\n");
 
+        const reactUrl = process.env.URL_REACT; 
+
         return doctors.map(doc => 
-            `*Bác sĩ ${doc.doctorId.fullname}*\n- Chuyên khoa: ${doc.specialtyId.name}\n- Làm việc tại: ${doc.clinicId.name}\n- Thông tin bác sĩ: * [Xem chi tiết](http://localhost:5173/bac-si/get?id=${doc.doctorId.userId})*\n- Giá khám: ${doc.price}\n-Trung bình sao đánh giá: ${doc.avgRating}\n- Số lượt khám: ${doc.bookingCount}\n-Lịch khám: Vui lòng kiểm tra trên hệ thống.`
+            `*Bác sĩ ${doc.doctorId.fullname}*\n- Chuyên khoa: ${doc.specialtyId.name}\n- Làm việc tại: ${doc.clinicId.name}\n- Thông tin bác sĩ: * [Xem chi tiết](${reactUrl}/bac-si/get?id=${doc.doctorId.userId})*\n- Giá khám: ${doc.price}\n-Trung bình sao đánh giá: ${doc.avgRating}\n- Số lượt khám: ${doc.bookingCount}\n-Lịch khám: Vui lòng kiểm tra trên hệ thống.`
         ).join("\n\n");
 
         // let result = doctors.map(doc => {
@@ -159,7 +161,7 @@ const getHospitalOrDoctorInfo = async (message) => {
 
     if (message.toLowerCase().includes("bệnh viện")) {
         console.log("Người dùng yêu cầu xem thông tin bệnh viện");
-        const response = await axios.get("http://localhost:9000/clinic/dropdown");
+        const response = await axios.get(`${process.env.WEB_LINK}/clinic/dropdown`);
         const hospitals = response.data.data;
 
         if (hospitals.length === 0) return "Không tìm thấy thông tin bệnh viện phù hợp.";
@@ -243,7 +245,7 @@ const chatWithGemini = async (userId, message, imageUrl, sessionId) => {
         // Gửi tin nhắn đến OpenRouter
         const response = await axios.post(
             "https://openrouter.ai/api/v1/chat/completions",
-            { model: "google/gemini-2.0-flash-thinking-exp:free", messages: openRouterMessages },
+            { model: "google/gemini-2.0-flash-exp:free", messages: openRouterMessages },
             {
                 headers: {
                     Authorization: `Bearer ${OPENROUTER_API_KEY}`,

@@ -129,7 +129,7 @@ const handleResetPasswordTokenController = async (req, res) => {
     // Verify the token
     const response = await jwtService.handleResetPasswordTokenService(token);
     // return res.status(200).json(response);
-    return res.redirect(`http://localhost:${process.env.FE_PORT}/login`);
+    return res.redirect(`${process.env.URL_REACT}/login`);
   } catch (e) {
     return res.status(404).json({
       status: 500,

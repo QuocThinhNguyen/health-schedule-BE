@@ -1,76 +1,92 @@
-import nodemailer from 'nodemailer'
+import nodemailer from "nodemailer";
 
 const sendMail = async (email, text, subject) => {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, // true for port 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_NAME,
-            pass: process.env.EMAIL_APP_PASSWORD,
-        },
-    });
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for port 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_NAME,
+      pass: process.env.EMAIL_APP_PASSWORD,
+    },
+  });
 
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-        from: '"EasyMed" <no-reply@easymed.com>', // sender address
-        to: email, // list of receivers
-        subject, // Subject line
-        text
-    });
+  // send mail with defined transport object
+  const info = await transporter.sendMail({
+    from: '"EasyMed" <no-reply@easymed.com>', // sender address
+    to: email, // list of receivers
+    subject, // Subject line
+    text,
+  });
 
-    return info
-}
+  return info;
+};
 
 const sendMailResetPassword = async (email, resetLink, subject) => {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, // true for port 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_NAME,
-            pass: process.env.EMAIL_APP_PASSWORD,
-        },
-    });
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for port 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_NAME,
+      pass: process.env.EMAIL_APP_PASSWORD,
+    },
+  });
 
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-        from: '"EasyMed" <no-reply@easymed.com>', // sender address
-        to: email, // list of receivers
-        subject, // Subject line
-        html: `
+  // send mail with defined transport object
+  const info = await transporter.sendMail({
+    from: '"EasyMed" <no-reply@easymed.com>', // sender address
+    to: email, // list of receivers
+    subject, // Subject line
+    html: `
     <p>Để đặt lại mật khẩu của bạn, vui lòng nhấp vào liên kết dưới đây. Sau khi nhấp vào liên kết, chúng tôi sẽ gửi mật khẩu mới đến email này.</p>
     <a href="${resetLink}">Đặt lại mật khẩu của bạn</a>
   `,
-    });
+  });
 
-    return info
-}
+  return info;
+};
 
 const sendMailSuccess = async (emails, data, subject) => {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, // true for port 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_NAME,
-            pass: process.env.EMAIL_APP_PASSWORD,
-        },
-    });
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for port 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_NAME,
+      pass: process.env.EMAIL_APP_PASSWORD,
+    },
+  });
 
-    const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
-    let { namePatient, reason, appointment,appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,button }=data;
-    let priceInVND = Number(price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+  const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
+  let {
+    namePatient,
+    reason,
+    appointment,
+    appointmentDateString,
+    price,
+    time,
+    nameClinic,
+    nameSpecialty,
+    nameDoctor,
+    nameUser,
+    imageClinic,
+    button,
+  } = data;
+  let priceInVND = Number(price).toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  });
 
-    // console.log("Data:", data);
-    // console.log("VND", priceInVND);
+  // console.log("Data:", data);
+  // console.log("VND", priceInVND);
 
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-        from: '"EasyMed" <no-reply@easymed.com>', // sender address
-        to: recipientList, // list of receivers
-        subject, // Subject line
-        html:`
+  // send mail with defined transport object
+  const info = await transporter.sendMail({
+    from: '"EasyMed" <no-reply@easymed.com>', // sender address
+    to: recipientList, // list of receivers
+    subject, // Subject line
+    html: `
         <!DOCTYPE html>
 <html lang="vi">
 
@@ -223,40 +239,58 @@ const sendMailSuccess = async (emails, data, subject) => {
 
 </html>
 `,
-attachments: [
-    {
+    attachments: [
+      {
         filename: imageClinic, // Tên file
-        path: `http://localhost:9000/uploads/${imageClinic}`, // Đường dẫn ảnh trong máy cục bộ
-        cid: 'imageClinic', // Content ID để tham chiếu trong HTML
-    },
-],
-    });
+        path: `${process.env.WEB_LINK}/uploads/${imageClinic}`, // Đường dẫn ảnh trong máy cục bộ
+        cid: "imageClinic", // Content ID để tham chiếu trong HTML
+      },
+    ],
+  });
 
-    return info
-}
+  return info;
+};
 
 const sendMailVerify = async (emails, data, subject) => {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, // true for port 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_NAME,
-            pass: process.env.EMAIL_APP_PASSWORD,
-        },
-    });
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for port 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_NAME,
+      pass: process.env.EMAIL_APP_PASSWORD,
+    },
+  });
 
-    const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
-    let { namePatient, reason,appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,bookingId,doctorId,timeType }=data;
-    // console.log("Dataaaa:", data);
-    let priceInVND = Number(price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+  const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
+  let {
+    namePatient,
+    reason,
+    appointmentDateString,
+    price,
+    time,
+    nameClinic,
+    nameSpecialty,
+    nameDoctor,
+    nameUser,
+    imageClinic,
+    bookingId,
+    doctorId,
+    timeType,
+  } = data;
+  // console.log("Dataaaa:", data);
+  let priceInVND = Number(price).toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  });
 
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-        from: '"EasyMed" <no-reply@easymed.com>', // sender address
-        to: recipientList, // list of receivers
-        subject, // Subject line
-        html:`
+  // send mail with defined transport object
+  const webLink = process.env.WEB_LINK;
+  const info = await transporter.sendMail({
+    from: '"EasyMed" <no-reply@easymed.com>', // sender address
+    to: recipientList, // list of receivers
+    subject, // Subject line
+    html: `
        <!DOCTYPE html>
 <html lang="vi">
 
@@ -374,7 +408,7 @@ const sendMailVerify = async (emails, data, subject) => {
             <div class="barcode">
                 <img src="cid:imageClinic" alt="Barcode" width="100" height="100">
             </div>
-            <a href="http://localhost:9000/booking/confirmBooking?bookingId=${bookingId}&doctorId=${doctorId}&appointmentDate=${appointmentDateString}&timeType=${timeType}" style="text-decoration: none;">
+            <a href="${webLink}/booking/confirmBooking?bookingId=${bookingId}&doctorId=${doctorId}&appointmentDate=${appointmentDateString}&timeType=${timeType}" style="text-decoration: none;">
                 <button class="button button-verify">Xác nhận</button>
             </a>
             <div class="info">
@@ -413,21 +447,21 @@ const sendMailVerify = async (emails, data, subject) => {
 
 </html>
 `,
-attachments: [
-    {
+    attachments: [
+      {
         filename: imageClinic, // Tên file
-        path: `http://localhost:9000/uploads/${imageClinic}`, // Đường dẫn ảnh trong máy cục bộ
-        cid: 'imageClinic', // Content ID để tham chiếu trong HTML
-    },
-],
-    });
+        path: `${process.env.WEB_LINK}/uploads/${imageClinic}`, // Đường dẫn ảnh trong máy cục bộ
+        cid: "imageClinic", // Content ID để tham chiếu trong HTML
+      },
+    ],
+  });
 
-    return info
-}
+  return info;
+};
 
 export default {
-    sendMail,
-    sendMailSuccess,
-    sendMailVerify,
-    sendMailResetPassword
-}
+  sendMail,
+  sendMailSuccess,
+  sendMailVerify,
+  sendMailResetPassword,
+};

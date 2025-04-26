@@ -1,7 +1,7 @@
 import express from 'express';
 import specialtyController from '../controllers/SpecialtyController.js';
-import upload from "../utils/fileUpload.js";
 import {authAdminMiddleware} from "../middlewares/authMiddleware.js";
+import { upload } from '../utils/uploadCloudinary.js';
 
 const router = express.Router();
 

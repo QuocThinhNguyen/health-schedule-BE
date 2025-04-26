@@ -19,7 +19,6 @@ const chatMessageSchema = new Schema(
     senderId: {
       type: Number,
       ref: "Users",
-      required: true,
     },
     type: {
       type: String,

@@ -27,7 +27,7 @@ const getPostById = async (req, res) => {
 
 const createPost = async (req, res) => {
   try {
-    const image = req.file ? `${req.file.filename}` : null;
+    const image = req.file ? req.file.path : null;
     const data = {
       ...req.body,
       image,
@@ -35,7 +35,6 @@ const createPost = async (req, res) => {
     const response = await postService.createPost(data);
     return res.status(200).json(response);
   } catch (e) {
-    // console.log(e.message.toString());
 
     return res.status(500).json({
       status: 500,
@@ -47,7 +46,7 @@ const createPost = async (req, res) => {
 const updatePost = async (req, res) => {
   try {
     const id = req.params.id;
-    const image = req.file ? `${req.file.filename}` : null;
+    const image = req.file ? req.file.path : null;
     const data = {
       ...req.body,
     };
@@ -58,7 +57,6 @@ const updatePost = async (req, res) => {
     const response = await postService.updatePost(id, data);
     return res.status(200).json(response);
   } catch (e) {
-    // console.log(e.message.toString());
 
     return res.status(500).json({
       status: 500,
@@ -73,7 +71,6 @@ const deletePost = async (req, res) => {
     const response = await postService.deletePost(id);
     return res.status(200).json(response);
   } catch (e) {
-    // console.log(e.message.toString());
 
     return res.status(500).json({
       status: 500,

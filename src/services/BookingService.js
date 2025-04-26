@@ -13,10 +13,10 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
     try {
       const patientRecords = await patient_Records.find({ patientId: userId });
       if (patientRecords.length === 0) {
-        return {
+        return resolve({
           status: 404,
           message: "No patient records found for this user",
-        };
+        });
       }
 
       const bookings = await booking
@@ -56,10 +56,10 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
         });
 
       if (bookings.length === 0) {
-        return {
+        return resolve({
           status: 404,
           message: "No booking found for this user",
-        };
+        });
       }
 
       const detailedBookings = await Promise.all(
@@ -110,7 +110,7 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
         (a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate)
       );
 
-      resolve({
+      return resolve({
         status: 200,
         message: "SUCCESS",
         data: result,
@@ -370,7 +370,6 @@ const getBookingByDoctorId = (
         .sort({ appointmentDate: -1 }) // Sắp xếp giảm dần theo ngày đặt lịch
         .lean(); // Sử dụng lean() để chuyển đổi kết quả sang đối tượng JavaScript thuần
 
-      // console.log("Bookings", bookings);
       const totalPatients = new Set(
         bookings.map((b) => b.patientRecordId?.CCCD?.toString())
       ).size;
@@ -382,12 +381,10 @@ const getBookingByDoctorId = (
       const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Điều chỉnh để bắt đầu từ Thứ Hai
       startOfWeek.setDate(diff);
       startOfWeek.setHours(0, 0, 0, 0);
-      // console.log("Check 1:", startOfWeek);
 
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(endOfWeek.getDate() + 6);
       endOfWeek.setHours(23, 59, 59, 999);
-      // console.log("Check 2:", endOfWeek);
 
       const weeklyBookings = await booking
         .find({
@@ -409,17 +406,13 @@ const getBookingByDoctorId = (
       // const totalPatientsInWeek = new Set(weeklyBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
       const totalPatientsInWeek = weeklyBookings.length;
 
-      // console.log("Total patients in week", totalPatientsInWeek);
-
       // Tính tổng số bệnh nhân trong tuần trước
       const startOfLastWeek = new Date(startOfWeek);
       startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
-      // console.log("Start of last week", startOfLastWeek);
 
       const endOfLastWeek = new Date(startOfWeek);
       endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
       endOfLastWeek.setHours(23, 59, 59, 999);
-      // console.log("End of last week", endOfLastWeek);
 
       const lastWeekBookings = await booking
         .find({
@@ -438,24 +431,18 @@ const getBookingByDoctorId = (
         })
         .lean();
 
-      // console.log("Last week bookings", lastWeekBookings);
-
       // const totalPatientsLastWeek = new Set(lastWeekBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
       const totalPatientsLastWeek = lastWeekBookings.length;
-
-      // console.log("Total patients last week", totalPatientsLastWeek);
 
       // Tính tổng số booking trong tháng này
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
-      // console.log("Start of month", startOfMonth);
 
       const endOfMonth = new Date(startOfMonth);
       endOfMonth.setMonth(endOfMonth.getMonth() + 1);
       endOfMonth.setDate(0);
       endOfMonth.setHours(23, 59, 59, 999);
-      // console.log("End of month", endOfMonth);
 
       const monthlyBookings = await booking
         .find({
@@ -472,12 +459,10 @@ const getBookingByDoctorId = (
       // Tính tổng số booking trong tháng trước
       const startOfLastMonth = new Date(startOfMonth);
       startOfLastMonth.setMonth(startOfLastMonth.getMonth() - 1);
-      // console.log("Start of last month", startOfLastMonth);
 
       const endOfLastMonth = new Date(startOfMonth);
       endOfLastMonth.setDate(0);
       endOfLastMonth.setHours(23, 59, 59, 999);
-      // console.log("End of last month", endOfLastMonth);
 
       const lastMonthBookings = await booking
         .find({
@@ -495,8 +480,6 @@ const getBookingByDoctorId = (
       let filteredBookings = bookings;
       if (search) {
         const regex = new RegExp(search, "i");
-        // console.log("Regex", regex);
-        // console.log("FILTER:",filteredBookings)
         filteredBookings = bookings.filter((booking) => {
           return (
             regex.test(booking.patientRecordId?.fullname) ||
@@ -505,8 +488,6 @@ const getBookingByDoctorId = (
           );
         });
       }
-
-      console.log("Filered bookings", filteredBookings);
 
       // Phân trang kết quả
       const totalBooking = filteredBookings.length;
@@ -746,7 +727,7 @@ const patientBookingDirect = (data) => {
         !data.appointmentDate ||
         !data.timeType
       ) {
-        resolve({
+        return resolve({
           status: 400,
           message: "Data is not enough",
         });
@@ -756,10 +737,11 @@ const patientBookingDirect = (data) => {
           patientRecordId: data.patientRecordId,
           appointmentDate: data.appointmentDate,
           timeType: data.timeType,
-          status: "S2" || "S3",
+          // status: "S2" || "S3",
+          status: { $in: ["S2", "S3"] }
         });
         if (existingBooking) {
-          resolve({
+          return resolve({
             status: 409,
             message: "Bạn đã đặt khung giờ này !",
           });
@@ -784,10 +766,8 @@ const patientBookingDirect = (data) => {
                 status: "S1",
               });
               await newBooking.save();
-              // console.log("IDD", newBooking.bookingId);
               const bookingId = newBooking.bookingId;
               const emailResult = await getEmailByBookingId(bookingId);
-              // console.log("KQ", emailResult);
               const {
                 patientEmail,
                 userEmail,
@@ -801,7 +781,6 @@ const patientBookingDirect = (data) => {
                 nameUser,
                 imageClinic,
               } = emailResult.data;
-
               const bookingFind = await booking
                 .findOne({
                   bookingId: bookingId,
@@ -826,7 +805,7 @@ const patientBookingDirect = (data) => {
               const { appointmentDate } = bookingFind;
               const appointmentDateString = appointmentDate
                 .toISOString()
-                .split("T")[0]; // Chỉ lấy phần ngày
+                .split("T")[0];
               const datas = {
                 namePatient,
                 reason,
@@ -847,20 +826,19 @@ const patientBookingDirect = (data) => {
                 datas,
                 "Xác nhận đặt khám"
               );
-
-              resolve({
+              return resolve({
                 status: 200,
                 message: "SUCCESS",
                 data: newBooking,
               });
             } else {
-              resolve({
+              return resolve({
                 status: 409,
                 message: "This schedule is full",
               });
             }
           } else {
-            resolve({
+            return resolve({
               status: 404,
               message: "This schedule is not existed",
             });
@@ -960,10 +938,10 @@ const getEmailByBookingId = async (bookingId) => {
         });
 
       if (!bookingFind || !bookingFind.patientRecordId) {
-        return {
+        return resolve({
           status: 404,
           message: "The booking is not defined",
-        };
+        });
       }
 
       const patientRecordEmail = bookingFind.patientRecordId.email;
@@ -1067,7 +1045,6 @@ const confirmBooking = async ({
         imageClinic,
       } = emailResult.data;
       const appointmentDateString = appointmentDate;
-      // console.log("DATEEEE",appointmentDate)
       const button = "Đã xác nhận";
       const datas = {
         namePatient,
@@ -1082,7 +1059,6 @@ const confirmBooking = async ({
         imageClinic,
         button,
       };
-      // console.log("DATAS",datas)
 
       await sendMail.sendMailSuccess(
         [patientEmail, userEmail],
@@ -1107,7 +1083,6 @@ const confirmBooking = async ({
 const getBookingByPatientId = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("DATA: ", data);
       const bookingFind = await booking
         .find({
           patientRecordId: data.patientId,

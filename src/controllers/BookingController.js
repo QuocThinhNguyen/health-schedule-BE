@@ -75,8 +75,6 @@ const createBooking = async (req, res) => {
 
 const updateBooking = async (req, res) => {
   try {
-    console.log("Check request", req);
-
     const bookingId = req.params.id;
     const data = req.body;
     if (!bookingId) {
@@ -115,9 +113,6 @@ const getBookingByDoctorId = async (req, res) => {
   try {
     const { doctorId } = req.params;
     const { date, page, limit, search } = req.query; // Lấy tham số page, limit từ query
-
-    console.log("Check query", req.query);
-
     const result = await bookingService.getBookingByDoctorId(
       doctorId,
       date,
@@ -137,9 +132,6 @@ const getBookingLatestByDoctorId = async (req, res) => {
   try {
     const { doctorId } = req.params;
     const { date, page, limit, search } = req.query; // Lấy tham số page, limit từ query
-
-    console.log("Check query", req.query);
-
     const result = await bookingService.getBookingLatestByDoctorId(
       doctorId,
       date,
@@ -166,14 +158,13 @@ const patientBookingOnline = async (req, res) => {
     };
     const result = await bookingService.patientBookingOnline(data);
     if (result.status === 200) {
-      // console.log("IDDDD:", result.data.bookingId, typeof result.data.bookingId.toString());
       const bookingId = result.data.bookingId;
 
       // Lưu tất cả ảnh vào bảng BookingImages
       for (const file of files) {
         await BookingMedia.create({
           bookingId: bookingId,
-          name: file.filename,
+          name: file.path,
         });
       }
       const paymentUrl = await paymentService.createPaymentUrl(
@@ -190,7 +181,6 @@ const patientBookingOnline = async (req, res) => {
       return res.status(400).json(result);
     }
   } catch (e) {
-    // console.log(e);
     return res.status(500).json({
       status: 500,
       message: e.message,
@@ -200,12 +190,7 @@ const patientBookingOnline = async (req, res) => {
 
 const patientBookingDirect = async (req, res) => {
   try {
-    // console.log(req.body);
-    // console.log("FILES",req.files);
-    // console.log(req)
-    // const images = req.files ? req.files.map(file => file.filename) : [];
     const files = req.files || [];
-    // const data = req.body;
     const data = {
       ...req.body,
       // images
@@ -214,12 +199,11 @@ const patientBookingDirect = async (req, res) => {
     const result = await bookingService.patientBookingDirect(data);
     if (result.status === 200) {
       const bookingId = result.data.bookingId;
-
       // Lưu tất cả ảnh vào bảng BookingImages
       for (const file of files) {
         await BookingMedia.create({
           bookingId: bookingId,
-          name: file.filename,
+          name: file.path,
         });
       }
       return res.status(200).json({

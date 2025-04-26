@@ -2,7 +2,11 @@ import clinicService from "../services/ClinicService.js";
 
 const createClinic = async (req, res) => {
   try {
-    const image = req.file ? `${req.file.filename}` : null;
+    const imageArray = Object.values(req.files["image"] || {});
+    const image =
+      imageArray.length > 0
+        ? imageArray[0].path
+        : "https://res.cloudinary.com/dv9yzzjgg/image/upload/v1745632787/clinic_default_sbbquh.png";
     const clinicData = {
       ...req.body,
       image,
@@ -21,7 +25,8 @@ const createClinic = async (req, res) => {
 const updateClinic = async (req, res) => {
   try {
     const id = req.params.id;
-    const image = req.file ? `${req.file.filename}` : null;
+    const imageArray = Object.values(req.files["image"] || {});
+    const image = imageArray.length > 0 ? imageArray[0].path : null;
     const clinicData = {
       ...req.body,
     };
@@ -29,10 +34,7 @@ const updateClinic = async (req, res) => {
     if (image) {
       clinicData.image = image;
     }
-    console.log("update clinic controller", clinicData);
-
     const info = await clinicService.updateClinic(id, clinicData);
-    console.log("Service returned info:", info); 
     return res.status(200).json(info);
   } catch (err) {
     return res.status(500).json({

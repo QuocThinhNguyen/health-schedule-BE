@@ -62,9 +62,6 @@ const sendMailSuccess = async (emails, data, subject) => {
     let { namePatient, reason, appointment,appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,button }=data;
     let priceInVND = Number(price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
-    // console.log("Data:", data);
-    // console.log("VND", priceInVND);
-
     // send mail with defined transport object
     const info = await transporter.sendMail({
         from: '"EasyMed" <no-reply@easymed.com>', // sender address
@@ -182,7 +179,7 @@ const sendMailSuccess = async (emails, data, subject) => {
             </div>
             <div class="title">PHIẾU KHÁM BỆNH</div>
             <div class="barcode">
-                <img src="cid:imageClinic" alt="Barcode" width="100" height="100">
+                <img src="${imageClinic}" alt="Barcode" width="100" height="100">
             </div>
             <div class="buttons">
                 <button class="button button-verify">${button}</button>
@@ -226,7 +223,7 @@ const sendMailSuccess = async (emails, data, subject) => {
 attachments: [
     {
         filename: imageClinic, // Tên file
-        path: `http://localhost:9000/uploads/${imageClinic}`, // Đường dẫn ảnh trong máy cục bộ
+        path: imageClinic, // Đường dẫn ảnh trong máy cục bộ
         cid: 'imageClinic', // Content ID để tham chiếu trong HTML
     },
 ],
@@ -248,14 +245,13 @@ const sendMailVerify = async (emails, data, subject) => {
 
     const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
     let { namePatient, reason,appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,bookingId,doctorId,timeType }=data;
-    // console.log("Dataaaa:", data);
     let priceInVND = Number(price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
     // send mail with defined transport object
     const info = await transporter.sendMail({
-        from: '"EasyMed" <no-reply@easymed.com>', // sender address
-        to: recipientList, // list of receivers
-        subject, // Subject line
+        from: '"EasyMed" <no-reply@easymed.com>', 
+        to: recipientList, 
+        subject, 
         html:`
        <!DOCTYPE html>
 <html lang="vi">
@@ -372,7 +368,7 @@ const sendMailVerify = async (emails, data, subject) => {
             </div>
             <div class="title">PHIẾU KHÁM BỆNH</div>
             <div class="barcode">
-                <img src="cid:imageClinic" alt="Barcode" width="100" height="100">
+                <img src=${imageClinic} alt="Barcode" width="100" height="100">
             </div>
             <a href="http://localhost:9000/booking/confirmBooking?bookingId=${bookingId}&doctorId=${doctorId}&appointmentDate=${appointmentDateString}&timeType=${timeType}" style="text-decoration: none;">
                 <button class="button button-verify">Xác nhận</button>
@@ -416,12 +412,11 @@ const sendMailVerify = async (emails, data, subject) => {
 attachments: [
     {
         filename: imageClinic, // Tên file
-        path: `http://localhost:9000/uploads/${imageClinic}`, // Đường dẫn ảnh trong máy cục bộ
+        path: imageClinic, // Đường dẫn ảnh trong máy cục bộ
         cid: 'imageClinic', // Content ID để tham chiếu trong HTML
     },
 ],
     });
-
     return info
 }
 

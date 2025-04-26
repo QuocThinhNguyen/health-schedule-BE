@@ -6,7 +6,6 @@ const createClinic = (data) => {
     try {
       if (
         !data.address ||
-        !data.description ||
         !data.image ||
         !data.name ||
         !data.email ||
@@ -140,8 +139,6 @@ const filterClinics = (query) => {
           ],
         };
       }
-
-      console.log("Search", formatQuery);
       const clinics = await clinic
         .find(formatQuery)
         .skip((page - 1) * limit)
@@ -170,10 +167,10 @@ const getDropdownClinics = () => {
         clinics.map(async (clinicItem) => {
           const specialties = await SpecialtyService.getSpecialtyByClinicId(
             clinicItem.clinicId
-          ); 
+          );
           return {
-            ...clinicItem._doc, 
-            specialties: specialties.data, 
+            ...clinicItem._doc,
+            specialties: specialties.data,
           };
         })
       );

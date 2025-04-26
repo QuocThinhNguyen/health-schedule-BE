@@ -3,7 +3,7 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import user from "../models/users.js";
 import dotenv from "dotenv";
-import sendMail from "../utils/sendMail.js";
+import sendMail from "../utils/SendMail.js";
 dotenv.config();
 
 const generalAccessToken = async (payload) => {

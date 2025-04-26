@@ -247,7 +247,7 @@ const confirmBooking = async (req, res) => {
       appointmentDate,
       timeType,
     });
-    return res.redirect(`http://localhost:${process.env.FE_PORT}/`);
+    return res.redirect(`${process.env.URL_REACT}/`);
   } catch (e) {
     return res.status(500).json({
       status: 500,

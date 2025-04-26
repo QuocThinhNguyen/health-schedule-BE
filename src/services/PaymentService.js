@@ -4,7 +4,7 @@ import momoConfig from "../configs/momoConfig.js";
 import bookingService from "../services/BookingService.js";
 import Schedules from "../models/schedule.js";
 import Booking from "../models/booking.js";
-import sendMail from "../utils/sendMail.js";
+import sendMail from "../utils/SendMail.js";
 
 const createPaymentUrl = async (bookingId, amount, orderInfo) => {
   const requestId = bookingId + "_" + new Date().getTime();
@@ -131,7 +131,7 @@ const handlePaymentReturn = async (req, res) => {
       schedule.currentNumber += 1;
       await schedule.save();
       await sendMail.sendMailSuccess([patientEmail, userEmail], data, "Đặt lịch khám thành công");
-      return res.redirect(`http://localhost:${process.env.FE_PORT}/`);
+      return res.redirect(`${process.env.URL_REACT}/`);
       // return res.status(200).json({
       //   status: "OK",
       //   message: "Payment successful",

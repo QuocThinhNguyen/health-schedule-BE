@@ -22,7 +22,7 @@ let app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: `http://localhost:${process.env.FE_PORT}`,
+    origin: process.env.URL_REACT,
     credentials: true,
   },
 });
@@ -31,7 +31,7 @@ const io = new Server(server, {
 initSocket(io);
 
 const corsOptions = {
-  origin: `http://localhost:${process.env.FE_PORT}`,
+  origin: process.env.URL_REACT,
   credentials: true,
 };
 // config app

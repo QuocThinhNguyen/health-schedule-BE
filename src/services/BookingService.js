@@ -5,7 +5,7 @@ import specialty from "../models/specialty.js";
 import clinic from "../models/clinic.js";
 import schedules from "../models/schedule.js";
 import user from "../models/users.js";
-import sendMail from "../utils/sendMail.js";
+import sendMail from "../utils/SendMail.js";
 import bookingMedia from "../models/booking_media.js";
 
 const getAllBookingByUserId = (userId, startDate, endDate) => {

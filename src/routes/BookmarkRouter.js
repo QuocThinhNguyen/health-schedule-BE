@@ -1,5 +1,5 @@
 import express from "express";
-import bookMarkController from "../controllers/BookMarkController.js";
+import bookMarkController from "../controllers/BookmarkController.js";
 import { authUserMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();

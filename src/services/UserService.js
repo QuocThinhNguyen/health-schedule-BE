@@ -3,7 +3,7 @@ import doctorInfor from "../models/doctor_info.js";
 import bcrypt from "bcrypt";
 import jwtService from "./JwtService.js";
 import dotenv from "dotenv";
-import sendMail from "../utils/sendMail.js";
+import sendMail from "../utils/SendMail.js";
 import patientRecord from "../models/patient_records.js";
 import booking from "../models/booking.js";
 import feedbackService from "./FeedBackService.js";
@@ -586,7 +586,8 @@ const getSuggestService = (limit) => {
             doctor_id: item._id.doctorId,
             specialty_id: doctorInfo?.specialtyId,
             rating: rate.averageRating,
-            last_visit_date: new Date(),
+            // last_visit_date: new Date(),
+            last_visit_date: null,
             visits: 0,
             click_count: item.click_count,
           };

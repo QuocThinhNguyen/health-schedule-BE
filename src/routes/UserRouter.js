@@ -4,7 +4,7 @@ import {
   authAdminMiddleware,
   authMiddleware,
 } from "../middlewares/authMiddleware.js";
-import upload from "../utils/fileUpload.js";
+import { upload } from "../utils/uploadCloudinary.js";
 
 const router = express.Router();
 

@@ -2,7 +2,7 @@ import specialtyService from "../services/SpecialtyService.js";
 
 const createSpecialty = async (req, res) => {
     try {
-        const image = req.file ? `${req.file.filename}` : null;
+        const image = req.file ? req.file.path : null;
         const specialtyData = {
             ...req.body,
             image
@@ -20,11 +20,10 @@ const createSpecialty = async (req, res) => {
 const updateSpecialty = async (req, res) => {
     try {
         const id = req.params.id;
-        const image = req.file ? `${req.file.filename}` : null;
+        const image = req.file ? req.file.path : null;
         const specialtyData = {
             ...req.body,
         }
-
         if (image) {
             specialtyData.image = image;
         }

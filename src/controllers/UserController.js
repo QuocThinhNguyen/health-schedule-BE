@@ -40,7 +40,9 @@ const createUserController = async (req, res) => {
         message: "The input is not email",
       });
     }
-    const image = req.file ? `${req.file.filename}` : null;
+    const image = req.file
+      ? req.file.path
+      : "https://res.cloudinary.com/dv9yzzjgg/image/upload/v1745633104/user_default_zzwsco.png";
 
     const userData = {
       ...req.body,
@@ -171,8 +173,7 @@ const verifyUserController = async (req, res) => {
 const updateUserController = async (req, res) => {
   try {
     const userId = req.params.id;
-    // Lấy đường dẫn ảnh từ `req.file`
-    const image = req.file ? `${req.file.filename}` : null; // Đường dẫn ảnh
+    const image = req.file ? req.file.path : null;
     const data = {
       ...req.body,
     };
@@ -387,8 +388,6 @@ const googleLogin = async (req, res) => {
 const facebookLogin = async (req, res) => {
   try {
     const { accessToken } = req.body;
-    // console.log("accesstoken: ",accessToken);
-
     if (!accessToken) {
       return res.status(404).json({
         status: 404,
@@ -400,9 +399,6 @@ const facebookLogin = async (req, res) => {
       `https://graph.facebook.com/me?access_token=${accessToken}&fields=id,name,email`
     );
     const { id, email, name } = response.data;
-
-    console.log(response.data);
-
     if (!id) {
       return res.status(400).json({
         status: 400,
@@ -466,17 +462,17 @@ const getPatientStatistics = async (req, res) => {
 };
 
 const getSuggest = async (req, res) => {
-  try{
+  try {
     const limit = req.query.limit;
     const data = await userService.getSuggestService(limit);
     return res.status(200).json(data);
-  }catch(e){
+  } catch (e) {
     return res.status(404).json({
       status: 500,
       message: e.message,
     });
   }
-}
+};
 
 export default {
   createUserController,
@@ -497,5 +493,5 @@ export default {
   googleLogin,
   facebookLogin,
   getPatientStatistics,
-  getSuggest
+  getSuggest,
 };

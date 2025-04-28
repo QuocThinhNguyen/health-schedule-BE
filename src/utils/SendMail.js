@@ -246,6 +246,7 @@ const sendMailVerify = async (emails, data, subject) => {
     let { namePatient, reason,appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,bookingId,doctorId,timeType }=data;
     let priceInVND = Number(price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 
+    // const webLink = process.env.WEB_LINK;
     // send mail with defined transport object
     const info = await transporter.sendMail({
         from: '"EasyMed" <no-reply@easymed.com>', 

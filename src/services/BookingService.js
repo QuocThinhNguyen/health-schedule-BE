@@ -379,16 +379,20 @@ const getBookingByDoctorId = (
       const startOfWeek = new Date();
       const day = startOfWeek.getDay();
       const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Điều chỉnh để bắt đầu từ Thứ Hai
+      // console.log("diff", diff);
       startOfWeek.setDate(diff);
       startOfWeek.setHours(0, 0, 0, 0);
+      // console.log("startOfWeek", startOfWeek);
 
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(endOfWeek.getDate() + 6);
       endOfWeek.setHours(23, 59, 59, 999);
+      // console.log("endOfWeek", endOfWeek);
 
       const weeklyBookings = await booking
         .find({
           doctorId,
+          status:"S4",
           appointmentDate: {
             $gt: startOfWeek,
             $lte: endOfWeek,
@@ -402,6 +406,8 @@ const getBookingByDoctorId = (
           select: "CCCD",
         })
         .lean();
+
+      // console.log("weeklyBookings", weeklyBookings);
 
       // const totalPatientsInWeek = new Set(weeklyBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
       const totalPatientsInWeek = weeklyBookings.length;
@@ -417,6 +423,7 @@ const getBookingByDoctorId = (
       const lastWeekBookings = await booking
         .find({
           doctorId,
+          status:"S4",
           appointmentDate: {
             $gt: startOfLastWeek,
             $lte: endOfLastWeek,
@@ -431,6 +438,8 @@ const getBookingByDoctorId = (
         })
         .lean();
 
+      // console.log("lastWeekBookings", lastWeekBookings);
+
       // const totalPatientsLastWeek = new Set(lastWeekBookings.map(b => b.patientRecordId?.CCCD?.toString())).size;
       const totalPatientsLastWeek = lastWeekBookings.length;
 
@@ -438,21 +447,26 @@ const getBookingByDoctorId = (
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
+      // console.log("startOfMonth", startOfMonth);
 
       const endOfMonth = new Date(startOfMonth);
       endOfMonth.setMonth(endOfMonth.getMonth() + 1);
       endOfMonth.setDate(0);
       endOfMonth.setHours(23, 59, 59, 999);
+      // console.log("endOfMonth", endOfMonth);
 
       const monthlyBookings = await booking
         .find({
           doctorId,
+          status:"S4",
           appointmentDate: {
             $gt: startOfMonth,
             $lte: endOfMonth,
           },
         })
         .lean();
+      
+      // console.log("monthlyBookings", monthlyBookings);
 
       const totalBookingThisMonth = monthlyBookings.length;
 
@@ -473,6 +487,8 @@ const getBookingByDoctorId = (
           },
         })
         .lean();
+
+      console.log("lastMonthBookings", lastMonthBookings);
 
       const totalBookingLastMonth = lastMonthBookings.length;
 
@@ -738,7 +754,7 @@ const patientBookingDirect = (data) => {
           appointmentDate: data.appointmentDate,
           timeType: data.timeType,
           // status: "S2" || "S3",
-          status: { $in: ["S2", "S3"] }
+          status: { $in: ["S2", "S3"] },
         });
         if (existingBooking) {
           return resolve({

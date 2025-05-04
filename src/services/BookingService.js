@@ -19,6 +19,8 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
         });
       }
 
+      // console.log("patientRecords", patientRecords);
+
       const bookings = await booking
         .find({
           patientRecordId: {
@@ -82,7 +84,8 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
               localField: "clinicId",
               foreignField: "clinicId",
               select: "name address",
-            });
+            })
+            .sort({ createdAt: -1 })
 
           return {
             ...booking._doc,
@@ -93,6 +96,8 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
           };
         })
       );
+
+      // console.log("detailedBookings", detailedBookings);
 
       let result = [];
       if (startDate && endDate) {

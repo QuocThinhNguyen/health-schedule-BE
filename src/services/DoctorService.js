@@ -65,7 +65,7 @@ const getDoctorInfor = (id) => {
         description: doctorData.description,
         position: allCodeData.keyMap,
         avgRating: rate.averageRating,
-        bookingCount: bookingCount
+        bookingCount: bookingCount,
       };
       resolve({
         status: 200,
@@ -430,7 +430,7 @@ const getDropdownDoctors = () => {
 
       // Đếm số lượt được đặt khám của từng bác sĩ trong bảng Booking
       const bookingCounts = await booking.aggregate([
-        { $match: { doctorId: { $in: doctorIds } } },
+        { $match: { doctorId: { $in: doctorIds }, status: "S4" } },
         { $group: { _id: "$doctorId", count: { $sum: 1 } } },
       ]);
 

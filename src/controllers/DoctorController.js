@@ -133,6 +133,8 @@ const searchDoctorByElasticeSearch = async (req, res) => {
     );
     return res.status(200).json(result);
   } catch (e) {
+    console.error("Error in searchDoctorByElasticeSearch", e);
+    
     return res.status(500).json({
       status: 500,
       message: e.message,

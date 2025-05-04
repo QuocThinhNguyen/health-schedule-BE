@@ -11,7 +11,9 @@ const getRecentChatsByUserId = async (req, res) => {
         message: "Missing userId",
       });
     }
-    const listRecentChats = await ChatRoomService.getRecentChatsByUserId(userId);
+    const listRecentChats = await ChatRoomService.getRecentChatsByUserId(
+      userId
+    );
     return res.status(200).json(listRecentChats);
   } catch (err) {
     console.log("Error:", err);
@@ -20,7 +22,7 @@ const getRecentChatsByUserId = async (req, res) => {
       message: "Error from server",
     });
   }
-}
+};
 
 const getOrCreateRoom = async (req, res) => {
   try {
@@ -36,6 +38,7 @@ const getOrCreateRoom = async (req, res) => {
       });
     }
     const result = await ChatRoomService.getOrCreateRoom(userId, partnerId);
+    console.log("Result:", result);
     return res.status(200).json(result);
   } catch (err) {
     console.log("Error:", err);

@@ -65,7 +65,7 @@ const getDoctorInfor = (id) => {
         description: doctorData.description,
         position: allCodeData.keyMap,
         avgRating: rate.averageRating,
-        bookingCount: bookingCount
+        bookingCount: bookingCount,
       };
       resolve({
         status: 200,
@@ -601,15 +601,22 @@ const searchDoctorByElasticeSearch = (
         },
       });
 
-      const totalDoctors = results.hits.total.value;
+      const totalDoctors = results.body?.hits?.total.value;
       const totalPages = Math.ceil(totalDoctors / pagination.limit);
+      console.log(
+        "-------> abc:",
+        results.body?.hits?.hits.map((hit) => ({
+          ...hit._source,
+          highlight: hit.highlight || {},
+        }))
+      );
 
       resolve({
         status: 200,
         message: "Success",
         totalPages: totalPages,
         totalDoctors: totalDoctors,
-        data: results.hits.hits.map((hit) => ({
+        data: results.body?.hits?.hits.map((hit) => ({
           ...hit._source,
           highlight: hit.highlight || {},
         })),

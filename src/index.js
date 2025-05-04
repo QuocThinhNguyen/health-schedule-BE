@@ -44,9 +44,9 @@ app.use("/uploads", express.static("uploads"));
 routers(app);
 
 await connectDB();
-// await connectElastic();
-// await syncSetupDoctorsToElasticsearch();
-// await syncDoctorsToElasticsearch();
+await connectElastic();
+await syncSetupDoctorsToElasticsearch();
+await syncDoctorsToElasticsearch();
 
 let port = process.env.PORT || 9000;
 

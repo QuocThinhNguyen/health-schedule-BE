@@ -9,10 +9,10 @@ const elasticClient = new Client({
   // tls: {
   //   rejectUnauthorized: false,
   // },
-  node: "https://we6swpdt99:b58tzuft3h@elastic-search-9583152657.ap-southeast-2.bonsaisearch.net:443",
+  node: process.env.ELESTICSTICSEARCH_HOST,
   auth: {
-    username: "we6swpdt99",
-    password: "b58tzuft3h",
+    username: process.env.ELESTICSTICSEARCH_USERNAME,
+    password: process.env.ELESTICSTICSEARCH_PASSWORD,
   },
   tls: {
     rejectUnauthorized: false,

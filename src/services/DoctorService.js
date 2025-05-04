@@ -430,7 +430,7 @@ const getDropdownDoctors = () => {
 
       // Đếm số lượt được đặt khám của từng bác sĩ trong bảng Booking
       const bookingCounts = await booking.aggregate([
-        { $match: { doctorId: { $in: doctorIds } } },
+        { $match: { doctorId: { $in: doctorIds }, status: "S4" } },
         { $group: { _id: "$doctorId", count: { $sum: 1 } } },
       ]);
 

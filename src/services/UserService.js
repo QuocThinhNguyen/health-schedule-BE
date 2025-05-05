@@ -8,6 +8,7 @@ import patientRecord from "../models/patient_records.js";
 import booking from "../models/booking.js";
 import feedbackService from "./FeedBackService.js";
 import doctorClickLog from "../models/doctor_click_log.js";
+import feedBack from "../models/feedbacks.js";
 
 dotenv.config();
 
@@ -479,6 +480,34 @@ const getPatientStatistics = (idUser) => {
   });
 };
 
+const getRatingByUserAndDoctor = async (userId, doctorId) => {
+  const patientProfile = await patientRecord.find({ patientId: userId });
+  console.log("patientProfile: ", patientProfile);
+
+  const patientRecordIds = patientProfile.map((p) => p.patientRecordId);
+  console.log("patientRecordIds: ", patientRecordIds);
+
+  console.log("doctorId: ", doctorId);
+
+  const feedBacks = await feedBack.find({
+    doctorId: doctorId,
+    patientId: { $in: patientRecordIds },
+  });
+
+  console.log("feedBacks: ", feedBacks);
+
+  // if (feedBacks.length > 0) return 0;
+
+  const totalRating = feedBacks.reduce((sum, fb) => sum + fb.rating, 0);
+  console.log("totalRating: ", totalRating);
+  console.log("feedBacks.length: ", feedBacks.length);
+  const average = totalRating / feedBacks.length;
+
+  console.log("average: ", average);
+
+  return average.toFixed(1);
+};
+
 const getSuggestService = (limit) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -531,6 +560,15 @@ const getSuggestService = (limit) => {
 
             // console.log("checkrate: ", rate);
 
+            console.log("DoctorId: ", booking.doctorId);
+
+            // const rating = await getRatingByUserAndDoctor(
+            //   info.userId,
+            //   booking.doctorId
+            // );
+
+            // console.log("rating: ", rating);
+
             for (const doctorInfo of doctorInfos) {
               list.push({
                 patient_id: info.userId,
@@ -577,10 +615,15 @@ const getSuggestService = (limit) => {
             doctorId: item._id.doctorId,
           });
           // console.log("checkrate: ", rate);
-          let rating = 0;
-          if (rate.averageRating === 0) {
-            rating = "5.0";
-          }
+          // let rating = 0;
+          // if (rate.averageRating === 0) {
+          //   rating = "5.0";
+          // }
+
+          // const rating = await getRatingByUserAndDoctor(
+          //   item._id.userId,
+          //   item._id.doctorId
+          // );
           result[key] = {
             patient_id: item._id.userId,
             doctor_id: item._id.doctorId,
@@ -634,4 +677,5 @@ export default {
   getDropdownUsersService,
   getPatientStatistics,
   getSuggestService,
+  getRatingByUserAndDoctor,
 };

@@ -49,9 +49,8 @@ const generalOTPToken = async (email) => {
       otp: Math.floor(100000 + Math.random() * 900000).toString(),
     },
     process.env.SECRET_KEY,
-    { expiresIn: "5p" }
+    { expiresIn: "5m" }
   );
-
   return otp_token;
 };
 

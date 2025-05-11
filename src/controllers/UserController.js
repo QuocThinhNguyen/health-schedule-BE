@@ -17,6 +17,7 @@ const createUserController = async (req, res) => {
       address,
       phoneNumber,
       roleId,
+      clinicId,
     } = req.body;
     const reg = /^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/;
     const isCheckEmail = reg.test(email);

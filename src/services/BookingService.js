@@ -85,7 +85,7 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
               foreignField: "clinicId",
               select: "name address",
             })
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: -1 });
 
           return {
             ...booking._doc,
@@ -397,7 +397,7 @@ const getBookingByDoctorId = (
       const weeklyBookings = await booking
         .find({
           doctorId,
-          status:"S4",
+          status: "S4",
           appointmentDate: {
             $gt: startOfWeek,
             $lte: endOfWeek,
@@ -428,7 +428,7 @@ const getBookingByDoctorId = (
       const lastWeekBookings = await booking
         .find({
           doctorId,
-          status:"S4",
+          status: "S4",
           appointmentDate: {
             $gt: startOfLastWeek,
             $lte: endOfLastWeek,
@@ -463,14 +463,14 @@ const getBookingByDoctorId = (
       const monthlyBookings = await booking
         .find({
           doctorId,
-          status:"S4",
+          status: "S4",
           appointmentDate: {
             $gt: startOfMonth,
             $lte: endOfMonth,
           },
         })
         .lean();
-      
+
       // console.log("monthlyBookings", monthlyBookings);
 
       const totalBookingThisMonth = monthlyBookings.length;
@@ -1164,6 +1164,95 @@ const getBookingByPatientId = (data) => {
   });
 };
 
+const getAllBookingByClinic = (query) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 6;
+      let formatQuery = {};
+      if (query.date) {
+        formatQuery.appointmentDate = {
+          $gte: new Date(query.date + "T00:00:00Z"),
+          $lt: new Date(query.date + "T23:59:59Z"),
+        };
+      }
+      if (query.status) {
+        formatQuery.status = query.status;
+      }
+      const doctors = await doctor_Info
+        .find({ clinicId: query.clinicId })
+        .select("doctorId");
+      const doctorIds = doctors.map((doc) => doc.doctorId);
+      console.log("doctorIds", doctorIds);
+      // const getBooking = await booking.find({ doctorId: { $in: doctorIds } })
+      // Bộ lọc
+      const regex = new RegExp(query.query, "i");
+      //Theo ngày hoặc không
+      const totalBookings = await booking
+        .find({
+          doctorId: { $in: doctorIds },
+          ...formatQuery})
+        .populate({
+          path: "doctorId",
+          model: "Users",
+          localField: "doctorId",
+          foreignField: "userId",
+          select: "fullname email",
+        })
+        .populate({
+          path: "patientRecordId",
+          model: "PatientRecords",
+          localField: "patientRecordId",
+          foreignField: "patientRecordId",
+          select: "fullname gender phoneNumber birthDate address",
+        })
+        .populate({
+          path: "patientRecordId",
+          model: "PatientRecords",
+          localField: "patientRecordId",
+          foreignField: "patientRecordId",
+          select: "fullname gender phoneNumber birthDate address",
+        })
+        .lean();
+      //Tính số lượng filter theo tên bác sĩ hoặc tên bệnh nhân
+      const totalFilteredBookings = totalBookings.filter((doctor) => {
+        return (
+          regex.test(doctor.doctorId?.fullname) ||
+          regex.test(doctor.patientRecordId?.fullname)
+        );
+      }).length;
+      //Lấy mảng filter theo tên bác sĩ hoặc tên bệnh nhân
+      const filteredBookings = totalBookings.filter((doctor) => {
+        return (
+          regex.test(doctor.doctorId?.fullname) ||
+          regex.test(doctor.patientRecordId?.fullname)
+        );
+      });
+      //sắp xếp tăng dần theo ngày rồi mới phân trang
+      const sortedResults = filteredBookings
+        .sort((a, b) => {
+          return new Date(a.appointmentDate) - new Date(b.appointmentDate); // Sắp xếp
+        })
+        .map((booking) => ({
+          ...booking,
+          appointmentDate: booking.appointmentDate.toISOString().split("T")[0], // Chỉ lấy ngày
+        }))
+        .slice((page - 1) * limit, page * limit);
+
+      const totalPages = Math.ceil(totalFilteredBookings / limit);
+
+      resolve({
+        status: 200,
+        message: "SUCCESS",
+        data: sortedResults,
+        totalPages,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   getAllBookingByUserId,
   getAllBooking,
@@ -1179,4 +1268,5 @@ export default {
   confirmBooking,
   getBookingLatestByDoctorId,
   getBookingByPatientId,
+  getAllBookingByClinic
 };

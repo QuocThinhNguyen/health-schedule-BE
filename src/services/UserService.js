@@ -9,7 +9,7 @@ import booking from "../models/booking.js";
 import feedbackService from "./FeedBackService.js";
 import doctorClickLog from "../models/doctor_click_log.js";
 import feedBack from "../models/feedbacks.js";
-
+import clinicManager from "../models/clinicmanager.js"
 dotenv.config();
 
 const createUserService = (newUser) => {
@@ -24,6 +24,7 @@ const createUserService = (newUser) => {
       phoneNumber,
       image,
       roleId,
+      clinicId
     } = newUser;
     try {
       const checkUser = await user.findOne({
@@ -53,6 +54,12 @@ const createUserService = (newUser) => {
           const a = await doctorInfor.create({
             doctorId: createdUser.userId,
           });
+        }
+        if (createdUser.roleId === "R4"){
+          await clinicManager.create({
+            userId: createdUser.userId,
+            clinicId: clinicId
+          })
         }
         resolve({
           status: 200,
@@ -482,32 +489,187 @@ const getPatientStatistics = (idUser) => {
 
 const getRatingByUserAndDoctor = async (userId, doctorId) => {
   const patientProfile = await patientRecord.find({ patientId: userId });
-  console.log("patientProfile: ", patientProfile);
+  // console.log("patientProfile: ", patientProfile);
 
   const patientRecordIds = patientProfile.map((p) => p.patientRecordId);
-  console.log("patientRecordIds: ", patientRecordIds);
+  // console.log("patientRecordIds: ", patientRecordIds);
 
-  console.log("doctorId: ", doctorId);
+  // console.log("doctorId: ", doctorId);
 
   const feedBacks = await feedBack.find({
     doctorId: doctorId,
     patientId: { $in: patientRecordIds },
   });
 
-  console.log("feedBacks: ", feedBacks);
+  // console.log("feedBacks: ", feedBacks);
 
-  // if (feedBacks.length > 0) return 0;
+  // if (feedBacks.length === 0) return 2;
 
   const totalRating = feedBacks.reduce((sum, fb) => sum + fb.rating, 0);
-  console.log("totalRating: ", totalRating);
-  console.log("feedBacks.length: ", feedBacks.length);
+  // console.log("totalRating: ", totalRating);
+  // console.log("feedBacks.length: ", feedBacks.length);
   const average = totalRating / feedBacks.length;
 
-  console.log("average: ", average);
+  // console.log("average: ", average);
 
   return average.toFixed(1);
 };
 
+// const getSuggestService = (limit) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const list = [];
+//       const data = await user.find({
+//         roleId: "R3",
+//       });
+
+//       const clickLogs = await doctorClickLog.aggregate([
+//         { $sort: { createdAt: -1 } },
+//         {
+//           $group: {
+//             _id: { doctorId: "$doctorId", userId: "$userId" },
+//             click_count: { $sum: 1 },
+//           },
+//         },
+//       ]);
+
+//       console.log("clickLogs: ", clickLogs);
+
+//       const clickMap = {};
+//       for (const item of clickLogs) {
+//         const key = `${item._id.userId}_${item._id.doctorId}`;
+//         clickMap[key] = item.click_count;
+//       }
+
+//       console.log("clickMap: ", clickMap);
+
+//       for (const info of data) {
+//         const patientProfile = await patientRecord.find({
+//           patientId: info.userId,
+//         });
+
+//         for (const profile of patientProfile) {
+//           const bookings = await booking.find({
+//             patientRecordId: profile.patientRecordId,
+//             status: "S4",
+//           });
+
+//           for (const booking of bookings) {
+//             const doctorInfos = await doctorInfor.find({
+//               doctorId: booking.doctorId,
+//             });
+
+//             const query = {
+//               doctorId: booking.doctorId,
+//             };
+
+//             const rate = await feedbackService.getFeedBackByDoctorId(query);
+
+//             // console.log("checkrate: ", rate);
+
+//             console.log("DoctorId: ", booking.doctorId);
+
+//             // const rating = await getRatingByUserAndDoctor(
+//             //   info.userId,
+//             //   booking.doctorId
+//             // );
+
+//             // console.log("rating: ", rating);
+
+//             for (const doctorInfo of doctorInfos) {
+//               list.push({
+//                 patient_id: info.userId,
+//                 // profile_id: profile.patientRecordId,
+//                 doctor_id: booking.doctorId,
+//                 specialty_id: doctorInfo.specialtyId,
+//                 rating: rate.averageRating,
+//                 last_visit_date: booking.appointmentDate,
+//               });
+//             }
+//           }
+//         }
+//       }
+
+//       const result = {};
+//       for (const item of list) {
+//         const key = `${item.patient_id}_${item.doctor_id}`;
+//         if (!result[key]) {
+//           result[key] = {
+//             patient_id: item.patient_id,
+//             doctor_id: item.doctor_id,
+//             specialty_id: item.specialty_id,
+//             rating: item.rating,
+//             visits: 1,
+//             last_visit_date: item.last_visit_date,
+//             click_count: clickMap[key] || 0,
+//           };
+//         } else {
+//           result[key].visits += 1;
+
+//           if (item.last_visit_date > result[key].last_visit_date) {
+//             result[key].last_visit_date = item.last_visit_date;
+//           }
+//         }
+//       }
+
+//       for (const item of clickLogs) {
+//         const key = `${item._id.userId}_${item._id.doctorId}`;
+//         if (!result[key]) {
+//           const doctorInfo = await doctorInfor.findOne({
+//             doctorId: item._id.doctorId,
+//           });
+//           const rate = await feedbackService.getFeedBackByDoctorId({
+//             doctorId: item._id.doctorId,
+//           });
+//           // console.log("checkrate: ", rate);
+//           // let rating = 0;
+//           // if (rate.averageRating === 0) {
+//           //   rating = "5.0";
+//           // }
+
+//           // const rating = await getRatingByUserAndDoctor(
+//           //   item._id.userId,
+//           //   item._id.doctorId
+//           // );
+//           result[key] = {
+//             patient_id: item._id.userId,
+//             doctor_id: item._id.doctorId,
+//             specialty_id: doctorInfo?.specialtyId,
+//             rating: rate.averageRating,
+//             // last_visit_date: new Date(),
+//             last_visit_date: null,
+//             visits: 0,
+//             click_count: item.click_count,
+//           };
+//         }
+//       }
+
+//       // console.log(result);
+//       const convertResult = Object.values(result);
+
+//       convertResult.sort((a, b) => {
+//         const aDate = a.last_visit_date || null;
+//         const bDate = b.last_visit_date || null;
+
+//         if (!aDate && bDate) return 1;
+//         if (aDate && !bDate) return -1;
+//         if (!aDate && !bDate) return 0;
+
+//         return new Date(bDate) - new Date(aDate);
+//       });
+
+//       const resultFinal = convertResult.slice(0, limit);
+
+//       resolve({
+//         status: 200,
+//         message: "Get suggest successfully",
+//         data: resultFinal,
+//       });
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
 const getSuggestService = (limit) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -556,18 +718,18 @@ const getSuggestService = (limit) => {
               doctorId: booking.doctorId,
             };
 
-            const rate = await feedbackService.getFeedBackByDoctorId(query);
+            // const rate = await feedbackService.getFeedBackByDoctorId(query);
 
             // console.log("checkrate: ", rate);
 
             console.log("DoctorId: ", booking.doctorId);
 
-            // const rating = await getRatingByUserAndDoctor(
-            //   info.userId,
-            //   booking.doctorId
-            // );
+            const rating = await getRatingByUserAndDoctor(
+              info.userId,
+              booking.doctorId
+            );
 
-            // console.log("rating: ", rating);
+            console.log("rating: ", rating);
 
             for (const doctorInfo of doctorInfos) {
               list.push({
@@ -575,7 +737,7 @@ const getSuggestService = (limit) => {
                 // profile_id: profile.patientRecordId,
                 doctor_id: booking.doctorId,
                 specialty_id: doctorInfo.specialtyId,
-                rating: rate.averageRating,
+                rating: rating,
                 last_visit_date: booking.appointmentDate,
               });
             }
@@ -620,15 +782,20 @@ const getSuggestService = (limit) => {
           //   rating = "5.0";
           // }
 
-          // const rating = await getRatingByUserAndDoctor(
-          //   item._id.userId,
-          //   item._id.doctorId
-          // );
+          const rating = await getRatingByUserAndDoctor(
+            item._id.userId,
+            item._id.doctorId
+          );
+
+          // const rawRating = 1.0 + Math.log(item.click_count + 1);
+          // const cappedRating = Math.min(rawRating, 4.0);
+          // const rating = Math.round(cappedRating * 100) / 100;
+
           result[key] = {
             patient_id: item._id.userId,
             doctor_id: item._id.doctorId,
             specialty_id: doctorInfo?.specialtyId,
-            rating: rate.averageRating,
+            rating: null,
             // last_visit_date: new Date(),
             last_visit_date: null,
             visits: 0,

@@ -9,6 +9,7 @@ import {
 import { upload } from "../utils/uploadCloudinary.js";
 
 const router = express.Router();
+router.get("/getBookingByClinicId",authMiddleware,bookingController.getAllBookingByClinic)
 router.get("/patient", authMiddleware, bookingController.getBookingByPatientId);
 router.get("/confirmBooking", bookingController.confirmBooking);
 router.post(

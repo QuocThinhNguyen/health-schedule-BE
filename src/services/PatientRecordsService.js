@@ -1,4 +1,5 @@
 import patientRecords from "../models/patient_records.js";
+import booking from "../models/booking.js";
 
 const getAllPatientRecords = () => {
   return new Promise(async (resolve, reject) => {
@@ -121,14 +122,27 @@ const deletePatientRecord = (id) => {
         });
       }
 
-      await patientRecords.deleteOne({
+      const checkBooking = await booking.find({
         patientRecordId: id,
+        status: { $in: ["S1", "S2", "S3"] },
       });
 
-      resolve({
-        status: 200,
-        message: "Delete patient record successfully",
-      });
+      if (checkBooking.length > 0) {
+        resolve({
+          status: 400,
+          message:
+            "Không thể xóa hồ sơ bệnh nhân này vì có lịch hẹn đang chờ xác nhận",
+        });
+      } else {
+        await patientRecords.deleteOne({
+          patientRecordId: id,
+        });
+
+        resolve({
+          status: 200,
+          message: "Xóa hồ sơ bệnh nhân thành công",
+        });
+      }
     } catch (e) {
       reject(e);
     }

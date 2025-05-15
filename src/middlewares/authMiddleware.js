@@ -78,7 +78,8 @@ export const authMiddleware = (req, res, next) => {
     if (
       user?.roleId === "R1" ||
       user?.roleId === "R2" ||
-      user?.roleId === "R3"
+      user?.roleId === "R3" ||
+      user?.roleId === "R4"
     ) {
       req.user = user;
       next();
@@ -108,6 +109,34 @@ export const authDoctorMiddleware = (req, res, next) => {
       });
     }
     if (user?.roleId === "R2" || user?.roleId === "R1") {
+      req.user = user;
+      next();
+    } else {
+      return next({
+        status: 401,
+        message: "Unauthorized",
+      });
+    }
+  });
+};
+
+export const authClinicMiddleware = (req, res, next) => {
+  if (!req.headers.access_token) {
+    return next({
+      status: 401,
+      message: "The token is empty",
+    });
+  }
+  const token = req.headers.access_token.split(" ")[1];
+  const userId = parseInt(req.params.id, 10);
+  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, user) {
+    if (err) {
+      return next({
+        status: 401,
+        message: "Unauthorized",
+      });
+    }
+    if (user?.roleId === "R4" || user?.roleId === "R1") {
       req.user = user;
       next();
     } else {

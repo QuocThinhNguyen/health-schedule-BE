@@ -22,6 +22,7 @@ router.get(
 ); //Tìm kiếm user theo tên, email
 router.get("/", authMiddleware, userController.getAllUserController); //Lấy tất cả user
 router.get("/:id", authMiddleware, userController.getDetailsUserController); //Lấy thông tin một user
+router.get("/:userId/clinic", userController.getClinicIdByUserId)
 router.post(
   "/",
   authAdminMiddleware,

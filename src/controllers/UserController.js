@@ -475,6 +475,19 @@ const getSuggest = async (req, res) => {
   }
 };
 
+const getClinicIdByUserId = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const result = await userService.getClinicIdByUserId(userId);
+    return res.status(200).json(result);
+  } catch (e) {
+    return res.status(404).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+};
+
 export default {
   createUserController,
   loginUserController,
@@ -495,4 +508,5 @@ export default {
   facebookLogin,
   getPatientStatistics,
   getSuggest,
+  getClinicIdByUserId,
 };

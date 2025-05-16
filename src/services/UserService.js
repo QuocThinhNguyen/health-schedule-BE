@@ -9,7 +9,7 @@ import booking from "../models/booking.js";
 import feedbackService from "./FeedBackService.js";
 import doctorClickLog from "../models/doctor_click_log.js";
 import feedBack from "../models/feedbacks.js";
-import clinicManager from "../models/clinicmanager.js"
+import clinicManager from "../models/clinicmanager.js";
 dotenv.config();
 
 const createUserService = (newUser) => {
@@ -24,7 +24,7 @@ const createUserService = (newUser) => {
       phoneNumber,
       image,
       roleId,
-      clinicId
+      clinicId,
     } = newUser;
     try {
       const checkUser = await user.findOne({
@@ -55,11 +55,11 @@ const createUserService = (newUser) => {
             doctorId: createdUser.userId,
           });
         }
-        if (createdUser.roleId === "R4"){
+        if (createdUser.roleId === "R4") {
           await clinicManager.create({
             userId: createdUser.userId,
-            clinicId: clinicId
-          })
+            clinicId: clinicId,
+          });
         }
         resolve({
           status: 200,
@@ -376,7 +376,7 @@ const getDropdownUsersService = () => {
     try {
       const dropdowUsers = await user.find();
 
-      resolve({
+      return resolve({
         status: 200,
         message: "Get dropdown user successfully",
         data: dropdowUsers,
@@ -831,6 +831,31 @@ const getSuggestService = (limit) => {
   });
 };
 
+const getClinicIdByUserId = (userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log("userId", userId);
+
+      const clinic = await clinicManager.findOne({ userId:userId });
+      if (!clinic) {
+        return resolve({
+          status: 404,
+          message: "clinicid not found",
+        });
+      }
+      return resolve({
+        status: 200,
+        message: "Get clinicId by userId susscessfully",
+        data: {
+          clinicId: clinic.clinicId,
+        },
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   createUserService,
   loginUserService,
@@ -845,4 +870,5 @@ export default {
   getPatientStatistics,
   getSuggestService,
   getRatingByUserAndDoctor,
+  getClinicIdByUserId,
 };

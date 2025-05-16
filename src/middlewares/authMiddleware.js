@@ -108,7 +108,7 @@ export const authDoctorMiddleware = (req, res, next) => {
         message: "Unauthorized",
       });
     }
-    if (user?.roleId === "R2" || user?.roleId === "R1") {
+    if (user?.roleId === "R2" || user?.roleId === "R1" || user?.roleId === "R4") {
       req.user = user;
       next();
     } else {

@@ -1,5 +1,5 @@
 import post from "../models/post.js";
-
+import clinicManager from "../models/clinicmanager.js";
 const getAllPost = (query) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -166,10 +166,68 @@ const deletePost = (id) => {
   });
 };
 
+const getPostInClinic = (clinicId, query, page, limit) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log("clinicId", clinicId);
+      const listUser = await clinicManager.find({ clinicId });
+      console.log("listUser", listUser);
+
+      const listUserIds = listUser.map((user) => user.userId);
+      console.log("listUserIds", listUserIds);
+
+      const formatQuery = {
+        userId: { $in: listUserIds },
+      };
+      if (query) {
+        formatQuery.title = {
+          $regex: query,
+          $options: "i",
+        };
+      }
+      console.log("formatQuery", formatQuery);
+
+      const listPosts = await post
+        .find(formatQuery)
+        .populate({
+          path: "userId",
+          model: "Users",
+          localField: "userId",
+          foreignField: "userId",
+          select: "fullname",
+        })
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+      console.log("listPosts", listPosts);
+
+      if (!listPosts || listPosts.length === 0) {
+        return resolve({
+          status: 404,
+          message: "No posts found for this clinic",
+        });
+      }
+
+      const totalPosts = await post.countDocuments(formatQuery);
+      const totalPages = Math.ceil(totalPosts / limit);
+
+      return resolve({
+        status: 200,
+        message: "Get posts in clinic successfully",
+        data: listPosts,
+        totalPages: totalPages,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   getAllPost,
   getPostById,
   createPost,
   updatePost,
   deletePost,
+  getPostInClinic,
 };

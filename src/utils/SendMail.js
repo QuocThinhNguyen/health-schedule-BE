@@ -48,26 +48,42 @@ const sendMailResetPassword = async (email, resetLink, subject) => {
 };
 
 const sendMailSuccess = async (emails, data, subject) => {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, // true for port 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_NAME,
-            pass: process.env.EMAIL_APP_PASSWORD,
-        },
-    });
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for port 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_NAME,
+      pass: process.env.EMAIL_APP_PASSWORD,
+    },
+  });
 
-    const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
-    let { namePatient, reason, appointment,appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,button }=data;
-    let priceInVND = Number(price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+  const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
+  let {
+    namePatient,
+    reason,
+    appointment,
+    appointmentDateString,
+    price,
+    time,
+    nameClinic,
+    nameSpecialty,
+    nameDoctor,
+    nameUser,
+    imageClinic,
+    button,
+  } = data;
+  let priceInVND = Number(price).toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  });
 
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-        from: '"EasyMed" <no-reply@easymed.com>', // sender address
-        to: recipientList, // list of receivers
-        subject, // Subject line
-        html:`
+  // send mail with defined transport object
+  const info = await transporter.sendMail({
+    from: '"EasyMed" <no-reply@easymed.com>', // sender address
+    to: recipientList, // list of receivers
+    subject, // Subject line
+    html: `
         <!DOCTYPE html>
 <html lang="vi">
 
@@ -224,35 +240,52 @@ const sendMailSuccess = async (emails, data, subject) => {
       {
         filename: imageClinic, // Tên file
         path: imageClinic, // Đường dẫn ảnh trong máy cục bộ
-        cid: 'imageClinic', // Content ID để tham chiếu trong HTML
-    },
-],
-    });
+        cid: "imageClinic", // Content ID để tham chiếu trong HTML
+      },
+    ],
+  });
   return info;
 };
 
 const sendMailVerify = async (emails, data, subject) => {
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, // true for port 465, false for other ports
-        auth: {
-            user: process.env.EMAIL_NAME,
-            pass: process.env.EMAIL_APP_PASSWORD,
-        },
-    });
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for port 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_NAME,
+      pass: process.env.EMAIL_APP_PASSWORD,
+    },
+  });
 
-    const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
-    let { namePatient, reason,appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,bookingId,doctorId,timeType }=data;
-    let priceInVND = Number(price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+  const recipientList = Array.isArray(emails) ? emails.join(",") : emails;
+  let {
+    namePatient,
+    reason,
+    appointmentDateString,
+    price,
+    time,
+    nameClinic,
+    nameSpecialty,
+    nameDoctor,
+    nameUser,
+    imageClinic,
+    bookingId,
+    doctorId,
+    timeType,
+  } = data;
+  let priceInVND = Number(price).toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  });
 
-    const webLink = process.env.WEB_LINK;
-    // send mail with defined transport object
-    const info = await transporter.sendMail({
-        from: '"EasyMed" <no-reply@easymed.com>', 
-        to: recipientList, 
-        subject, 
-        html:`
+  const webLink = process.env.WEB_LINK;
+  // send mail with defined transport object
+  const info = await transporter.sendMail({
+    from: '"EasyMed" <no-reply@easymed.com>',
+    to: recipientList,
+    subject,
+    html: `
        <!DOCTYPE html>
 <html lang="vi">
 
@@ -409,16 +442,16 @@ const sendMailVerify = async (emails, data, subject) => {
 
 </html>
 `,
-attachments: [
-    {
+    attachments: [
+      {
         filename: imageClinic, // Tên file
         path: imageClinic, // Đường dẫn ảnh trong máy cục bộ
-        cid: 'imageClinic', // Content ID để tham chiếu trong HTML
-    },
-],
-    });
-    return info
-}
+        cid: "imageClinic", // Content ID để tham chiếu trong HTML
+      },
+    ],
+  });
+  return info;
+};
 
 export default {
   sendMail,

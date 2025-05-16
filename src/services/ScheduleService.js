@@ -1,4 +1,5 @@
 import schedule from "../models/schedule.js";
+import booking from "../models/booking.js";
 
 const getAllScheduleByDate = (date, page, limit, query) => {
   return new Promise(async (resolve, reject) => {
@@ -11,22 +12,20 @@ const getAllScheduleByDate = (date, page, limit, query) => {
         };
       }
 
-      const allScheduleByDate = await schedule
-        .find(filter)
-        .populate({
-          path: "doctorId",
-          model: "Users",
-          localField: "doctorId",
-          foreignField: "userId",
-          select: "fullname",
-        });
+      const allScheduleByDate = await schedule.find(filter).populate({
+        path: "doctorId",
+        model: "Users",
+        localField: "doctorId",
+        foreignField: "userId",
+        select: "fullname",
+      });
 
       const groupedSchedules = {};
 
       allScheduleByDate.forEach((schedule) => {
-        const doctorId = schedule.doctorId._id.toString(); 
-        const scheduleDate = schedule.scheduleDate.toISOString(); 
-        const key = `${doctorId}_${scheduleDate}`; 
+        const doctorId = schedule.doctorId._id.toString();
+        const scheduleDate = schedule.scheduleDate.toISOString();
+        const key = `${doctorId}_${scheduleDate}`;
         if (!groupedSchedules[key]) {
           groupedSchedules[key] = {
             doctorId: schedule.doctorId,
@@ -43,7 +42,7 @@ const getAllScheduleByDate = (date, page, limit, query) => {
         doctorId: item.doctorId,
         scheduleDate: item.scheduleDate.toISOString().split("T")[0],
         timeTypes: item.timeTypes,
-      })); 
+      }));
 
       const totalFilteredResults = result.filter((doctor) => {
         return regex.test(doctor.doctorId?.fullname);
@@ -107,8 +106,8 @@ const getScheduleByDate = (id, date) => {
 
       allScheduleByDate.forEach((schedule) => {
         const doctorId = schedule.doctorId._id.toString();
-        const scheduleDate = schedule.scheduleDate.toISOString(); 
-        const key = `${doctorId}_${scheduleDate}`; 
+        const scheduleDate = schedule.scheduleDate.toISOString();
+        const key = `${doctorId}_${scheduleDate}`;
 
         if (!groupedSchedules[key]) {
           groupedSchedules[key] = {
@@ -162,7 +161,7 @@ const createSchedule = (doctorId, scheduleDate, timeTypes) => {
           maxNumber: process.env.MAX_NUMBER || 2,
           currentNumber: 0,
         });
-        const savedSchedule = await newSchedule.save(); 
+        const savedSchedule = await newSchedule.save();
         createdSchedules.push(savedSchedule);
       }
 
@@ -181,28 +180,43 @@ const updateSchedule = (doctorId, scheduleDate, timeTypes) => {
   return new Promise(async (resolve, reject) => {
     try {
       const updatedSchedules = [];
-      await schedule.deleteMany({
-        doctorId,
-        scheduleDate,
+
+      const checkBooking = await booking.find({
+        doctorId: doctorId,
+        appointmentDate: scheduleDate,
+        status: { $in: ["S2", "S3"] }
       });
 
-      for (const timeType of timeTypes) {
-        const updatedSchedule = new schedule({
+      if (checkBooking.length > 0) {
+        return resolve({
+          status: 400,
+          message: "Không thể cập nhật lịch hẹn đã có người đặt",
+          data: checkBooking,
+        });
+      } else {
+        await schedule.deleteMany({
           doctorId,
           scheduleDate,
-          currentNumber: 0,
-          maxNumber: process.env.MAX_NUMBER || 2,
-          timeType,
         });
-        const savedSchedule = await updatedSchedule.save();
-        updatedSchedules.push(savedSchedule);
-      }
 
-      resolve({
-        status: 200,
-        message: "SUCCESS",
-        data: updatedSchedules,
-      });
+        for (const timeType of timeTypes) {
+          const updatedSchedule = new schedule({
+            doctorId,
+            scheduleDate,
+            currentNumber: 0,
+            maxNumber: process.env.MAX_NUMBER || 2,
+            timeType,
+          });
+          const savedSchedule = await updatedSchedule.save();
+          updatedSchedules.push(savedSchedule);
+        }
+
+        resolve({
+          status: 200,
+          message: "SUCCESS",
+          data: updatedSchedules,
+        });
+      }
     } catch (e) {
       reject(e.message);
     }

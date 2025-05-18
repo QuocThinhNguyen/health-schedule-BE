@@ -14,8 +14,8 @@ const getAllPost = async (req, res) => {
 
 const getPostById = async (req, res) => {
   try {
-    const id = req.params.id;
-    const response = await postService.getPostById(id);
+    const userId = req.params.id;
+    const response = await postService.getPostById(userId);
     return res.status(200).json(response);
   } catch (e) {
     return res.status(500).json({
@@ -35,7 +35,6 @@ const createPost = async (req, res) => {
     const response = await postService.createPost(data);
     return res.status(200).json(response);
   } catch (e) {
-
     return res.status(500).json({
       status: 500,
       message: "Error from server",
@@ -57,7 +56,6 @@ const updatePost = async (req, res) => {
     const response = await postService.updatePost(id, data);
     return res.status(200).json(response);
   } catch (e) {
-
     return res.status(500).json({
       status: 500,
       message: "Error from server",
@@ -71,6 +69,29 @@ const deletePost = async (req, res) => {
     const response = await postService.deletePost(id);
     return res.status(200).json(response);
   } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+};
+
+const getPostInClinic = async (req, res) => {
+  try {
+    const query = req.query.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const clinicId = req.params.clinicId;
+    const response = await postService.getPostInClinic(
+      clinicId,
+      query,
+      page,
+      limit
+    );
+    return res.status(200).json(response);
+  } catch (e) {
+    console.log("erorr", e);
 
     return res.status(500).json({
       status: 500,
@@ -85,4 +106,5 @@ export default {
   createPost,
   updatePost,
   deletePost,
+  getPostInClinic,
 };

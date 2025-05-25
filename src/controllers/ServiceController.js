@@ -28,6 +28,20 @@ const getServiceBySearchAndFilter = async (req, res) => {
   }
 };
 
+const getServiceByClinic = async (req, res) => {
+  try {
+    const userId = parseInt(req.user.userId);
+    const result = await serviceService.getServiceByClinic(userId);
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log("Error from getDropdownServices controller:", err.message);
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+};
+
 const getServiceById = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -95,6 +109,7 @@ const deleteService = async (req, res) => {
 
 export default {
   getServiceBySearchAndFilter,
+  getServiceByClinic,
   getServiceById,
   createService,
   updateService,

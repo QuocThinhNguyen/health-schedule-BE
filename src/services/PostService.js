@@ -81,8 +81,6 @@ const getPostById = (id) => {
 const createPost = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log(data);
-
       if (!data.userId || !data.title || !data.image || !data.content) {
         resolve({
           status: 404,

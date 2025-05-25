@@ -10,6 +10,7 @@ import {
 const router = express.Router();
 
 router.get("/dropdown", doctorController.getDropdownDoctors);
+router.get("/clinic", authClinicMiddleware, doctorController.getDoctorByClinic);
 router.get("/search", doctorController.searchDoctorByElasticeSearch);
 router.get(
   "/academic-ranks-and-degrees",

@@ -1,3 +1,4 @@
+import { parse } from "path";
 import scheduleService from "../services/ScheduleService.js";
 
 const getAllScheduleByDate = async (req, res) => {
@@ -14,7 +15,31 @@ const getAllScheduleByDate = async (req, res) => {
     return res.status(200).json(response);
   } catch (e) {
     return res.status(500).json({
-      status:500,
+      status: 500,
+      message: e.message,
+    });
+  }
+};
+
+const getScheduleByClinicAndDate = async (req, res) => {
+  try {
+    const userId = parseInt(req.user.userId);
+    const keyword = req.query.keyword;
+    const date = req.query.date;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const response = await scheduleService.getScheduleByClinicAndDate(
+      userId,
+      keyword,
+      date,
+      page,
+      limit
+    );
+    return res.status(200).json(response);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
       message: e.message,
     });
   }
@@ -28,7 +53,7 @@ const getScheduleByDate = async (req, res) => {
     return res.status(200).json(response);
   } catch (e) {
     return res.status(500).json({
-      status:500,
+      status: 500,
       message: e.message,
     });
   }
@@ -59,7 +84,7 @@ const createSchedule = async (req, res) => {
     return res.status(200).json(response);
   } catch (e) {
     return res.status(500).json({
-      status:500,
+      status: 500,
       message: e.message,
     });
   }
@@ -92,7 +117,7 @@ const updateSchedule = async (req, res) => {
     return res.status(200).json(response);
   } catch (e) {
     return res.status(500).json({
-      status:500,
+      status: 500,
       message: e.message,
     });
   }
@@ -112,7 +137,7 @@ const deleteSchedule = async (req, res) => {
     return res.status(200).json(response);
   } catch (e) {
     return res.status(500).json({
-      status:500,
+      status: 500,
       message: e.message,
     });
   }
@@ -120,6 +145,7 @@ const deleteSchedule = async (req, res) => {
 
 export default {
   getAllScheduleByDate,
+  getScheduleByClinicAndDate,
   getScheduleByDate,
   createSchedule,
   updateSchedule,

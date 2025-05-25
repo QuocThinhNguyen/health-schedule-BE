@@ -7,6 +7,7 @@ import schedules from "../models/schedule.js";
 import user from "../models/users.js";
 import sendMail from "../utils/SendMail.js";
 import bookingMedia from "../models/booking_media.js";
+import { resolve } from "path";
 
 const getAllBookingByUserId = (userId, startDate, endDate) => {
   return new Promise(async (resolve, reject) => {
@@ -1191,7 +1192,8 @@ const getAllBookingByClinic = (query) => {
       const totalBookings = await booking
         .find({
           doctorId: { $in: doctorIds },
-          ...formatQuery})
+          ...formatQuery,
+        })
         .populate({
           path: "doctorId",
           model: "Users",
@@ -1253,6 +1255,81 @@ const getAllBookingByClinic = (query) => {
   });
 };
 
+const getBookingByTimeType = (query) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const doctorId = query.doctorId;
+      const timeType = query.timeType;
+      const date = query.date;
+
+      const bookingFind = await booking
+        .find({
+          doctorId: doctorId,
+          appointmentDate: date,
+          timeType: timeType,
+          status: { $in: ["S2", "S3"] },
+        })
+        .populate({
+          path: "patientRecordId",
+          model: "PatientRecords",
+          localField: "patientRecordId",
+          foreignField: "patientRecordId",
+          select:
+            "fullname gender phoneNumber birthDate address patientId patientRecordId",
+        })
+        .populate({
+          path: "status",
+          model: "AllCodes",
+          localField: "status",
+          foreignField: "keyMap",
+        });
+
+      if (bookingFind === null) {
+        resolve({
+          status: 404,
+          message: "The booking is not defined",
+        });
+      }
+
+      // lấy email và tên của bệnh nhân
+      const userIds = bookingFind.map(
+        (booking) => booking.patientRecordId.patientId
+      );
+      const users = await user.find({ userId: { $in: userIds } });
+      const emailMap = {};
+      const nameMap = {};
+
+      users.forEach((user) => {
+        emailMap[user.userId] = user.email;
+        nameMap[user.userId] = user.fullname;
+      });
+
+      console.log("emailMap", emailMap);
+      console.log("nameMap", nameMap);
+      // thêm email vào bookingFind
+      // bookingFind.forEach((booking) => {
+      //   const patientId = booking.patientRecordId.patientId;
+      //   booking.patientRecordId.email = emailMap[patientId];
+      //   booking.patientRecordId.name = nameMap[patientId];
+      // });
+
+      bookingFind.forEach((booking) => {
+        const patientId = booking.patientRecordId.patientId;
+        booking._doc.email = emailMap[patientId];
+        booking._doc.name = nameMap[patientId];
+      });
+
+      resolve({
+        status: 200,
+        message: "SUCCESS",
+        data: bookingFind,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   getAllBookingByUserId,
   getAllBooking,
@@ -1268,5 +1345,6 @@ export default {
   confirmBooking,
   getBookingLatestByDoctorId,
   getBookingByPatientId,
-  getAllBookingByClinic
+  getAllBookingByClinic,
+  getBookingByTimeType,
 };

@@ -283,6 +283,19 @@ const getAllBookingByClinic = async (req, res) => {
   }
 };
 
+const getBookingByTimeType = async (req, res) => {
+  try {
+    // console.log("Check query:",req.query);
+    const data = await bookingService.getBookingByTimeType(req.query);
+    return res.status(200).json(data);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+};
+
 export default {
   getAllBookingByUserId,
   getAllBooking,
@@ -298,4 +311,5 @@ export default {
   getBookingLatestByDoctorId,
   getBookingByPatientId,
   getAllBookingByClinic,
+  getBookingByTimeType,
 };

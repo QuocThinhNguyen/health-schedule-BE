@@ -1,6 +1,8 @@
 import clinicManager from "../models/clinicmanager.js";
 import schedule from "../models/schedule.js";
 import doctorinfo from "../models/doctor_info.js"
+import booking from "../models/booking.js";
+
 
 const getAllScheduleByDate = (date, page, limit, query) => {
   return new Promise(async (resolve, reject) => {
@@ -261,28 +263,43 @@ const updateSchedule = (doctorId, scheduleDate, timeTypes) => {
   return new Promise(async (resolve, reject) => {
     try {
       const updatedSchedules = [];
-      await schedule.deleteMany({
-        doctorId,
-        scheduleDate,
+
+      const checkBooking = await booking.find({
+        doctorId: doctorId,
+        appointmentDate: scheduleDate,
+        status: { $in: ["S2", "S3"] }
       });
 
-      for (const timeType of timeTypes) {
-        const updatedSchedule = new schedule({
+      if (checkBooking.length > 0) {
+        return resolve({
+          status: 400,
+          message: "Không thể cập nhật lịch hẹn đã có người đặt",
+          data: checkBooking,
+        });
+      } else {
+        await schedule.deleteMany({
           doctorId,
           scheduleDate,
-          currentNumber: 0,
-          maxNumber: process.env.MAX_NUMBER || 2,
-          timeType,
         });
-        const savedSchedule = await updatedSchedule.save();
-        updatedSchedules.push(savedSchedule);
-      }
 
-      resolve({
-        status: 200,
-        message: "SUCCESS",
-        data: updatedSchedules,
-      });
+        for (const timeType of timeTypes) {
+          const updatedSchedule = new schedule({
+            doctorId,
+            scheduleDate,
+            currentNumber: 0,
+            maxNumber: process.env.MAX_NUMBER || 2,
+            timeType,
+          });
+          const savedSchedule = await updatedSchedule.save();
+          updatedSchedules.push(savedSchedule);
+        }
+
+        resolve({
+          status: 200,
+          message: "SUCCESS",
+          data: updatedSchedules,
+        });
+      }
     } catch (e) {
       reject(e.message);
     }

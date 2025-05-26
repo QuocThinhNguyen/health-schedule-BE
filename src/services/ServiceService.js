@@ -33,6 +33,14 @@ const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
           foreignField: "clinicId",
           select: "name address ",
         })
+        .populate({
+          path: "serviceCategoryId",
+          model: "ServiceCategory",
+          localField: "serviceCategoryId",
+          foreignField: "serviceCategoryId",
+          select: "name ",
+        })
+
         .skip((pageNo - 1) * pageSize)
         .limit(pageSize)
         .sort({ createdAt: -1 });
@@ -42,7 +50,7 @@ const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
         status: 200,
         message: "Get service by search successfully",
         currentPage: pageNo,
-        totalPage: Math.ceil(totalServices / pageSize),
+        totalPages: Math.ceil(totalServices / pageSize),
         totalElement: totalServices,
         data: services,
       });
@@ -57,22 +65,22 @@ const getServiceByClinic = (userId) => {
     try {
       const clinicId = await scheduleService.getClinicIdByUserId(userId);
 
-      const services = await service.find({ clinicId: clinicId })
-      .populate({
-        path: "clinicId",
-        model: "Clinic",
-        localField: "clinicId",
-        foreignField: "clinicId",
-        select: "name address ",
-      })
-      .populate({
-        path: "serviceCategoryId",
-        model: "ServiceCategory",
-        localField: "serviceCategoryId",
-        foreignField: "serviceCategoryId",
-        select: "name",
-      })
-      ;
+      const services = await service
+        .find({ clinicId: clinicId })
+        .populate({
+          path: "clinicId",
+          model: "Clinic",
+          localField: "clinicId",
+          foreignField: "clinicId",
+          select: "name address ",
+        })
+        .populate({
+          path: "serviceCategoryId",
+          model: "ServiceCategory",
+          localField: "serviceCategoryId",
+          foreignField: "serviceCategoryId",
+          select: "name",
+        });
       return resolve({
         status: 200,
         message: "Get services by clinic successfully",

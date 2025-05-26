@@ -8,7 +8,7 @@ import booking from "../models/booking.js";
 import doctorClickLog from "../models/doctor_click_log.js";
 import { elasticClient } from "../configs/connectElastic.js";
 import feedbackService from "./FeedBackService.js";
-
+import scheduleService from "./ScheduleService.js";
 import { syncDoctorsToElasticsearch } from "../utils/syncDoctorsToElasticsearch.js";
 
 const getDoctorInfor = (id) => {
@@ -647,6 +647,49 @@ const doctorClick = (doctorId, userId) => {
   });
 };
 
+const getDoctorByClinic = (userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const clinicId = await scheduleService.getClinicIdByUserId(userId);
+      const listDoctorInfos = await doctorInfor
+        .find({ clinicId: clinicId })
+        .populate({
+          path: "doctorId",
+          model: "Users",
+          localField: "doctorId",
+          foreignField: "userId",
+          select:
+            "email fullname address gender birthDate phoneNumber image userId",
+        })
+        .populate({
+          path: "specialtyId",
+          model: "Specialty",
+          localField: "specialtyId",
+          foreignField: "specialtyId",
+          select: "name image",
+        })
+        .populate({
+          path: "clinicId",
+          model: "Clinic",
+          localField: "clinicId",
+          foreignField: "clinicId",
+          select: "name image address",
+        });
+      const sortedDoctorInfos = listDoctorInfos.sort((a, b) => {
+        return a.doctorId.fullname.localeCompare(b.doctorId.fullname);
+      });
+
+      return resolve({
+        status: 200,
+        message: "Get doctor by clinic successfully",
+        data: sortedDoctorInfos,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 export default {
   getDoctorInfor,
   updateDoctorInfor,
@@ -657,4 +700,5 @@ export default {
   getAcademicRanksAndDegrees,
   searchDoctorByElasticeSearch,
   doctorClick,
+  getDoctorByClinic,
 };

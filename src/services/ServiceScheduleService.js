@@ -63,7 +63,7 @@ const getServiceBySearchAndFilter = (keyword, date, pageNo, pageSize) => {
         .sort((a, b) => {
           const dateA = new Date(a.scheduleDate);
           const dateB = new Date(b.scheduleDate);
-          return dateA - dateB;
+          return dateB - dateA;
         })
         .slice((pageNo - 1) * pageSize, pageNo * pageSize);
       const totalPages = Math.ceil(totalFilteredResults / pageSize);

@@ -1,5 +1,8 @@
+import clinicManager from "../models/clinicmanager.js";
 import schedule from "../models/schedule.js";
+import doctorinfo from "../models/doctor_info.js"
 import booking from "../models/booking.js";
+
 
 const getAllScheduleByDate = (date, page, limit, query) => {
   return new Promise(async (resolve, reject) => {
@@ -56,6 +59,86 @@ const getAllScheduleByDate = (date, page, limit, query) => {
           const dateA = new Date(a.scheduleDate);
           const dateB = new Date(b.scheduleDate);
           return dateA - dateB;
+        })
+        .slice((page - 1) * limit, page * limit);
+      const totalPages = Math.ceil(totalFilteredResults / limit);
+      resolve({
+        status: 200,
+        message: "SUCCESS",
+        data: sortedResults,
+        totalPages,
+      });
+    } catch (e) {
+      reject(e.message);
+    }
+  });
+};
+
+const getScheduleByClinicAndDate = (userId, keyword, date, page, limit) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const clinicId = await getClinicIdByUserId(userId);
+
+      const filter = {};
+      filter.clinicId
+      if (date) {
+        filter.scheduleDate = {
+          $gte: new Date(date + "T00:00:00Z"),
+          $lt: new Date(date + "T23:59:59Z"),
+        };
+      }
+
+      const listDoctorInfos = await doctorinfo.find({clinicId: clinicId})
+      const listDoctorIds = listDoctorInfos.map(doctorInfo => doctorInfo.doctorId)
+      console.log("listDoctorIds", listDoctorIds);
+      if(listDoctorIds){
+         filter.doctorId = { $in: listDoctorIds };
+      }
+
+      const allScheduleByDate = await schedule.find(filter).populate({
+        path: "doctorId",
+        model: "Users",
+        localField: "doctorId",
+        foreignField: "userId",
+        select: "fullname",
+      });
+
+      const groupedSchedules = {};
+
+      allScheduleByDate.forEach((schedule) => {
+        const doctorId = schedule.doctorId._id.toString();
+        const scheduleDate = schedule.scheduleDate.toISOString();
+        const key = `${doctorId}_${scheduleDate}`;
+        if (!groupedSchedules[key]) {
+          groupedSchedules[key] = {
+            doctorId: schedule.doctorId,
+            scheduleDate: schedule.scheduleDate,
+            timeTypes: [],
+          };
+        }
+        groupedSchedules[key].timeTypes.push(schedule.timeType);
+      });
+
+      const regex = new RegExp(keyword, "i");
+
+      const result = Object.values(groupedSchedules).map((item) => ({
+        doctorId: item.doctorId,
+        scheduleDate: item.scheduleDate.toISOString().split("T")[0],
+        timeTypes: item.timeTypes,
+      }));
+
+      const totalFilteredResults = result.filter((doctor) => {
+        return regex.test(doctor.doctorId?.fullname);
+      }).length;
+
+      const filteredResults = result.filter((doctor) => {
+        return regex.test(doctor.doctorId?.fullname);
+      });
+      const sortedResults = filteredResults
+        .sort((a, b) => {
+          const dateA = new Date(a.scheduleDate);
+          const dateB = new Date(b.scheduleDate);
+          return dateB - dateA;
         })
         .slice((page - 1) * limit, page * limit);
       const totalPages = Math.ceil(totalFilteredResults / limit);
@@ -248,10 +331,20 @@ const deleteSchedule = (id, date) => {
   });
 };
 
+const getClinicIdByUserId = async (userId) => {
+  const clinic = await clinicManager.findOne({ userId: userId });
+  if (!clinic) {
+    return null;
+  }
+  return clinic.clinicId;
+};
+
 export default {
   getAllScheduleByDate,
+  getScheduleByClinicAndDate,
   getScheduleByDate,
   createSchedule,
   updateSchedule,
   deleteSchedule,
+  getClinicIdByUserId
 };

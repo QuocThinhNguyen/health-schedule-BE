@@ -133,8 +133,6 @@ const searchDoctorByElasticeSearch = async (req, res) => {
     );
     return res.status(200).json(result);
   } catch (e) {
-    console.error("Error in searchDoctorByElasticeSearch", e);
-    
     return res.status(500).json({
       status: 500,
       message: e.message,
@@ -142,11 +140,9 @@ const searchDoctorByElasticeSearch = async (req, res) => {
   }
 };
 
-const doctorClickLog = async (req,res)=>{
+const doctorClickLog = async (req, res) => {
   try {
-    const {doctorId, userId} = req.body;
-    console.log("doctorId",doctorId);
-    console.log("userId",userId);
+    const { doctorId, userId } = req.body;
     const data = await doctorInforService.doctorClick(doctorId, userId);
     return res.status(200).json(data);
   } catch (e) {
@@ -155,7 +151,20 @@ const doctorClickLog = async (req,res)=>{
       message: e.message,
     });
   }
-}
+};
+
+const getDoctorByClinic = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const data = await doctorInforService.getDoctorByClinic(userId);
+    return res.status(200).json(data);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+};
 
 export default {
   getDoctorInfor,
@@ -166,5 +175,6 @@ export default {
   getDropdownDoctors,
   getAcademicRanksAndDegrees,
   searchDoctorByElasticeSearch,
-  doctorClickLog
+  doctorClickLog,
+  getDoctorByClinic
 };

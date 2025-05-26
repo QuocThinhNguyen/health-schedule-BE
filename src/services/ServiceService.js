@@ -3,7 +3,7 @@ import clinic from "../models/clinic.js";
 import serviceCategory from "../models/service_category.js";
 import uploadFile from "../utils/uploadFile.js";
 import cloudinary from "../configs/cloudinaryConfig.js";
-
+import scheduleService from "./ScheduleService.js";
 const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -44,6 +44,38 @@ const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
         currentPage: pageNo,
         totalPage: Math.ceil(totalServices / pageSize),
         totalElement: totalServices,
+        data: services,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+const getServiceByClinic = (userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const clinicId = await scheduleService.getClinicIdByUserId(userId);
+
+      const services = await service.find({ clinicId: clinicId })
+      .populate({
+        path: "clinicId",
+        model: "Clinic",
+        localField: "clinicId",
+        foreignField: "clinicId",
+        select: "name address ",
+      })
+      .populate({
+        path: "serviceCategoryId",
+        model: "ServiceCategory",
+        localField: "serviceCategoryId",
+        foreignField: "serviceCategoryId",
+        select: "name",
+      })
+      ;
+      return resolve({
+        status: 200,
+        message: "Get services by clinic successfully",
         data: services,
       });
     } catch (e) {
@@ -272,6 +304,7 @@ const deleteService = (id) => {
 
 export default {
   getServiceBySearchAndFilter,
+  getServiceByClinic,
   getServiceById,
   createService,
   updateService,

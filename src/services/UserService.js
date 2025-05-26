@@ -834,7 +834,6 @@ const getSuggestService = (limit) => {
 const getClinicIdByUserId = (userId) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("userId", userId);
 
       const clinic = await clinicManager.findOne({ userId:userId });
       if (!clinic) {

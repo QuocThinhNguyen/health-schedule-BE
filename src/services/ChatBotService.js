@@ -245,7 +245,7 @@ const chatWithGemini = async (userId, message, imageUrl, sessionId) => {
         // Gửi tin nhắn đến OpenRouter
         const response = await axios.post(
             "https://openrouter.ai/api/v1/chat/completions",
-            { model: "google/gemini-2.0-flash-exp:free", messages: openRouterMessages },
+            { model: "google/gemma-3-27b-it:free", messages: openRouterMessages },
             {
                 headers: {
                     Authorization: `Bearer ${OPENROUTER_API_KEY}`,

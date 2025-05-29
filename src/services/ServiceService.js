@@ -24,6 +24,13 @@ const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
         };
       }
 
+      let sortOption = { createdAt: -1 }; // mặc định: mới nhất
+      if (filter.sort === "gia-thap-den-cao") {
+        sortOption = { price: 1 };
+      } else if (filter.sort === "gia-cao-den-thap") {
+        sortOption = { price: -1 };
+      }
+
       const services = await service
         .find(query)
         .populate({
@@ -43,7 +50,7 @@ const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
 
         .skip((pageNo - 1) * pageSize)
         .limit(pageSize)
-        .sort({ createdAt: -1 });
+        .sort(sortOption);
       const totalServices = await service.countDocuments(query);
 
       return resolve({

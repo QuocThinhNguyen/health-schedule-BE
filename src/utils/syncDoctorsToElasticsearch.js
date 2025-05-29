@@ -8,12 +8,22 @@ import { elasticClient } from "../configs/connectElastic.js";
 async function syncSetupDoctorsToElasticsearch() {
   console.log(`Xóa index 'doctors' nếu đã tồn tại...`);
 
-  const indexExists = await elasticClient.indices.exists({ index: "doctors" });
+  // const indexExists = await elasticClient.indices.exists({ index: "doctors" });
 
-  if (indexExists) {
-    await elasticClient.indices.delete({ index: "doctors" });
-    console.log(`Đã xóa index 'doctors'.`);
-  }
+  // if (indexExists) {
+  //   await elasticClient.indices.delete({ index: "doctors" });
+  //   console.log(`Đã xóa index 'doctors'.`);
+  // }
+
+  const { body: indexExists } = await elasticClient.indices.exists({ index: "doctors" });
+
+if (indexExists) {
+  await elasticClient.indices.delete({ index: "doctors" });
+  console.log(`Đã xóa index 'doctors'.`);
+} else {
+  console.log(`Index 'doctors' chưa tồn tại, bỏ qua bước xóa.`);
+}
+
 
   console.log(`Tạo lại index 'doctors' với settings & mappings mới...`);
 

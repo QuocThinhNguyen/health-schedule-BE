@@ -39,6 +39,42 @@ const getServiceCategoryBySearch = async (req, res) => {
   }
 };
 
+const getDropdownServiceCategoryByClinic = async (req, res) => {
+  try {
+    const userId = parseInt(req.user.userId);
+    const result =
+      await serviceCategoryService.getDropdownServiceCategoryByClinic(
+        userId
+      );
+    return res.status(200).json(result);
+  } catch (e) {
+    console.log(
+      "Error from getDropdownServiceCategoryByClinic controller: ",
+      e.message
+    );
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+}
+
+const getDetailServiceCategory = async (req, res) => {
+  try {
+    const serviceCategoryId = req.params.id;
+    const result = await serviceCategoryService.getDetailServiceCategory(
+      serviceCategoryId
+    );
+    return res.status(200).json(result);
+  } catch (err) {
+    console.log("Error from getDetailServiceCategory controller: ", err.message);
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+};
+
 const createServiceCategory = async (req, res) => {
   try {
     const serviceCategoryData = req.body;
@@ -92,6 +128,8 @@ const deleteServiceCategory = async (req, res) => {
 export default {
   getDropdownServiceCategory,
   getServiceCategoryBySearch,
+  getDropdownServiceCategoryByClinic,
+  getDetailServiceCategory,
   createServiceCategory,
   updateServiceCategory,
   deleteServiceCategory,

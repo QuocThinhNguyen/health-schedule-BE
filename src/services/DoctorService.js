@@ -603,14 +603,7 @@ const searchDoctorByElasticeSearch = (
 
       const totalDoctors = results.body?.hits?.total.value;
       const totalPages = Math.ceil(totalDoctors / pagination.limit);
-      console.log(
-        "-------> abc:",
-        results.body?.hits?.hits.map((hit) => ({
-          ...hit._source,
-          highlight: hit.highlight || {},
-        }))
-      );
-
+    
       resolve({
         status: 200,
         message: "Success",

@@ -30,6 +30,34 @@ const clinicSchema = new Schema({
   email: {
     type: String,
   },
+  provinceCode: {
+    type: String,
+    required: true, 
+  },
+  provinceName: {
+    type: String,
+    required: true, 
+  },
+  districtCode: {
+    type: String,
+    required: true,
+  },
+  districtName: {
+    type: String,
+    required: true,
+  },
+  wardCode: {
+    type: String,
+    required: true,
+  },
+  wardName: {
+    type: String,
+    required: true,
+  },
+  street: {
+    type: String,
+    required: true,
+  },
 });
 
 clinicSchema.plugin(AutoIncrement, { inc_field: "clinicId", start_seq: 1 });

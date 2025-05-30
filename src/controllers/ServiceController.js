@@ -4,11 +4,13 @@ import serviceService from "../services/ServiceService.js";
 const getServiceBySearchAndFilter = async (req, res) => {
   try {
     const keyword = req.query.keyword;
+    // console.log("Check query", req.query);
     const filter = {
       serviceCategoryId: parseInt(req.query.serviceCategoryId),
       clinicId: parseInt(req.query.clinicId),
       minPrice: parseFloat(req.query.minPrice),
       maxPrice: parseFloat(req.query.maxPrice),
+      sort: req.query.sort,
     };
     const pageNo = parseInt(req.query.pageNo) || 1;
     const pageSize = parseInt(req.query.pageSize) || 20;

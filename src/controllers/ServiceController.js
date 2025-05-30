@@ -4,7 +4,7 @@ import serviceService from "../services/ServiceService.js";
 const getServiceBySearchAndFilter = async (req, res) => {
   try {
     const keyword = req.query.keyword;
-    console.log("Check query", req.query);
+    // console.log("Check query", req.query);
     const filter = {
       serviceCategoryId: parseInt(req.query.serviceCategoryId),
       clinicId: parseInt(req.query.clinicId),

@@ -3,6 +3,7 @@ import userController from "../controllers/UserController.js";
 
 const router = express.Router();
 
+router.get("/statistics-homepage",userController.getStatisticsHomePage)
 router.post("/sign-up", userController.createAndSendOTPController);
 router.post("/verify-account/:token", userController.verifyUserController);
 router.post("/sign-in", userController.loginUserController);

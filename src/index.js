@@ -14,7 +14,8 @@ import {
 } from "./utils/syncDoctorsToElasticsearch.js";
 import http from "http";
 import { Server } from "socket.io";
-import { initSocket } from "./socket/index.js";
+import { initSocket } from "./integrations/socket/index.js";
+import { initializeElasticsearch } from "./integrations/elasticsearch/index.js";
 
 dotenv.config();
 
@@ -45,8 +46,9 @@ routers(app);
 
 await connectDB();
 await connectElastic();
-await syncSetupDoctorsToElasticsearch();
-await syncDoctorsToElasticsearch();
+await initializeElasticsearch();
+// await syncSetupDoctorsToElasticsearch();
+// await syncDoctorsToElasticsearch();
 
 let port = process.env.PORT || 9000;
 

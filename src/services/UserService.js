@@ -10,6 +10,7 @@ import feedbackService from "./FeedBackService.js";
 import doctorClickLog from "../models/doctor_click_log.js";
 import feedBack from "../models/feedbacks.js";
 import clinicManager from "../models/clinicmanager.js";
+import clinic from "../models/clinic.js";
 dotenv.config();
 
 const createUserService = (newUser) => {
@@ -834,8 +835,7 @@ const getSuggestService = (limit) => {
 const getClinicIdByUserId = (userId) => {
   return new Promise(async (resolve, reject) => {
     try {
-
-      const clinic = await clinicManager.findOne({ userId:userId });
+      const clinic = await clinicManager.findOne({ userId: userId });
       if (!clinic) {
         return resolve({
           status: 404,
@@ -847,6 +847,30 @@ const getClinicIdByUserId = (userId) => {
         message: "Get clinicId by userId susscessfully",
         data: {
           clinicId: clinic.clinicId,
+        },
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+const getStatisticsHomePage = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const totalBookings = await booking.countDocuments();
+      const totalClinics = await clinic.countDocuments();
+      const totalDoctors = await user.countDocuments({ roleId: "R2" });
+      const totalUsers = await user.countDocuments({ roleId: "R3" });
+
+      resolve({
+        status: 200,
+        message: "Get statistics home page successfully",
+        data: {
+          totalBookings,
+          totalClinics,
+          totalDoctors,
+          totalUsers,
         },
       });
     } catch (e) {
@@ -870,4 +894,5 @@ export default {
   getSuggestService,
   getRatingByUserAndDoctor,
   getClinicIdByUserId,
+  getStatisticsHomePage,
 };

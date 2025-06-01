@@ -1,20 +1,23 @@
-import Clinic from "../models/clinic.js";
 import serviceService from "../services/ServiceService.js";
 
 const getServiceBySearchAndFilter = async (req, res) => {
   try {
     const keyword = req.query.keyword;
-    const filter = {
-      serviceCategoryId: parseInt(req.query.serviceCategoryId),
-      clinicId: parseInt(req.query.clinicId),
-      minPrice: parseFloat(req.query.minPrice),
-      maxPrice: parseFloat(req.query.maxPrice),
-    };
+    const serviceCategoryId = parseInt(req.query.serviceCategoryId);
+    const clinicId = parseInt(req.query.clinicId);
+    const minPrice=  parseFloat(req.query.minPrice);
+    const maxPrice= parseFloat(req.query.maxPrice);
+    const sort = req.query.sort;
     const pageNo = parseInt(req.query.pageNo) || 1;
     const pageSize = parseInt(req.query.pageSize) || 20;
+
     const result = await serviceService.getServiceBySearchAndFilter(
       keyword,
-      filter,
+      serviceCategoryId,
+      clinicId,
+      minPrice,
+      maxPrice,
+      sort,
       pageNo,
       pageSize
     );

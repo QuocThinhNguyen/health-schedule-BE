@@ -9,7 +9,7 @@ import doctorClickLog from "../models/doctor_click_log.js";
 import { elasticClient } from "../configs/connectElastic.js";
 import feedbackService from "./FeedBackService.js";
 import scheduleService from "./ScheduleService.js";
-import { syncDoctorsToElasticsearch } from "../utils/syncDoctorsToElasticsearch.js";
+import { syncDoctorsToElasticsearch } from "../integrations/elasticsearch/syncDoctors.js";
 
 const getDoctorInfor = (id) => {
   return new Promise(async (resolve, reject) => {
@@ -606,7 +606,7 @@ const searchDoctorByElasticeSearch = (
     
       resolve({
         status: 200,
-        message: "Success",
+        message: "get doctors by elasticsearch successfully",
         totalPages: totalPages,
         totalDoctors: totalDoctors,
         data: results.body?.hits?.hits.map((hit) => ({

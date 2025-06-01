@@ -1,5 +1,5 @@
-import chatMessage from "../models/chat_message.js";
-import ChatRoomMember from "../models/chat_room_member.js";
+import chatMessage from "../../models/chat_message.js";
+import ChatRoomMember from "../../models/chat_room_member.js";
 
 export const initSocket = (io) => {
   io.on("connection", (socket) => {

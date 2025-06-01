@@ -111,11 +111,9 @@ const getServiceBySearchAndFilter = (
             break;
         }
       }
-
       console.log("keywordQueries", keywordQueries);
       console.log("filterQueries", filterQueries);
       console.log("sortQueries",sortQueries);
-      
       const results = await elasticClient.search({
         index: "services",
         body: {
@@ -139,10 +137,8 @@ const getServiceBySearchAndFilter = (
           },
         },
       });
-
       const totalServices = results.body?.hits?.total.value;
       const totalPages = Math.ceil(totalServices / pageSize);
-
       return resolve({
         status: 200,
         message: "Get service by search successfully",

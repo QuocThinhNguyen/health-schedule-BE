@@ -5,6 +5,7 @@ import { upload } from "../utils/uploadCloudinary.js";
 
 const router = express.Router();
 
+router.get("/getClinicByProvinceId", clinicController.getClinicByProvinceId)
 router.get("/dropdown", clinicController.getDropdownClinics);
 router.get("/", clinicController.filterClinics);
 router.post(

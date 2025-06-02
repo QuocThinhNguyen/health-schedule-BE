@@ -244,6 +244,46 @@ const updateViewVideo = (videoId) => {
   });
 };
 
+const getTopVideo = () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const topVideo = await videos.aggregate([
+        {
+          $addFields: {
+            score: { $add: ["$views", "$likes"] },
+          },
+        },
+        { $sort: { score: -1 } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "doctorId",
+            foreignField: "userId",
+            as: "doctor",
+          },
+        },
+        { $unwind: "$doctor" },
+        {
+          $lookup: {
+            from: "specialties",
+            localField: "specialtyId",
+            foreignField: "specialtyId",
+            as: "specialty",
+          },
+        },
+        { $unwind: "$specialty" },
+      ]);
+
+      resolve({
+        status: 200,
+        message: "Get top video successfull",
+        data: topVideo,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
 export default {
   addVideo,
   getAllVideoByDoctorId,
@@ -254,4 +294,5 @@ export default {
   likeVideo,
   dislikeVideo,
   updateViewVideo,
+  getTopVideo,
 };

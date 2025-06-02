@@ -6,6 +6,7 @@ import { upload } from '../utils/uploadCloudinary.js';
 
 const router = express.Router();
 router.post('/',authDoctorMiddleware,upload.single("video"),videoController.addVideo);
+router.get('/top',videoController.getTopVideo)
 router.get('/:doctorId',videoController.getAllVideoByDoctorId);
 router.get('/detail/:videoId',videoController.getDetailVideoByVideoId);
 router.put('/:videoId',authMiddleware,videoController.updateVideo);

@@ -4,62 +4,151 @@ import serviceCategory from "../models/service_category.js";
 import uploadFile from "../utils/uploadFile.js";
 import cloudinary from "../configs/cloudinaryConfig.js";
 import scheduleService from "./ScheduleService.js";
-const getServiceBySearchAndFilter = (keyword, filter, pageNo, pageSize) => {
+import { elasticClient } from "../configs/connectElastic.js";
+import { syncServicesToElasticsearch } from "../integrations/elasticsearch/syncServices.js";
+const getServiceBySearchAndFilter = (
+  keyword,
+  serviceCategoryId,
+  clinicId,
+  minPrice,
+  maxPrice,
+  sort,
+  pageNo,
+  pageSize
+) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const query = {};
+      //elastice search
+      // const query = {};
+      // if (keyword) {
+      //   query.name = { $regex: keyword, $options: "i" };
+      // }
+      // if (filter.serviceCategoryId) {
+      //   query.serviceCategoryId = filter.serviceCategoryId;
+      // }
+      // if (filter.clinicId) {
+      //   query.clinicId = filter.clinicId;
+      // }
+      // if (filter.minPrice && filter.maxPrice) {
+      //   query.price = {
+      //     $gte: parseFloat(filter.minPrice),
+      //     $lte: parseFloat(filter.maxPrice),
+      //   };
+      // }
+
+      // const services = await service
+      //   .find(query)
+      //   .populate({
+      //     path: "clinicId",
+      //     model: "Clinic",
+      //     localField: "clinicId",
+      //     foreignField: "clinicId",
+      //     select: "name address ",
+      //   })
+      //   .populate({
+      //     path: "serviceCategoryId",
+      //     model: "ServiceCategory",
+      //     localField: "serviceCategoryId",
+      //     foreignField: "serviceCategoryId",
+      //     select: "name ",
+      //   })
+
+      //   .skip((pageNo - 1) * pageSize)
+      //   .limit(pageSize)
+      //   .sort({ createdAt: -1 });
+      // const totalServices = await service.countDocuments(query);
+
+      let keywordQueries = [];
+      let filterQueries = [];
+      let sortQueries = [];
+
       if (keyword) {
-        query.name = { $regex: keyword, $options: "i" };
-      }
-      if (filter.serviceCategoryId) {
-        query.serviceCategoryId = filter.serviceCategoryId;
-      }
-      if (filter.clinicId) {
-        query.clinicId = filter.clinicId;
-      }
-      if (filter.minPrice && filter.maxPrice) {
-        query.price = {
-          $gte: parseFloat(filter.minPrice),
-          $lte: parseFloat(filter.maxPrice),
-        };
-      }
-
-      let sortOption = { createdAt: -1 }; // mặc định: mới nhất
-      if (filter.sort === "gia-thap-den-cao") {
-        sortOption = { price: 1 };
-      } else if (filter.sort === "gia-cao-den-thap") {
-        sortOption = { price: -1 };
+        const words = keyword.toLowerCase().split(" ");
+        const nameQueries = words.map((word) => ({
+          match_phrase: {
+            name: word,
+          },
+        }));
+        keywordQueries.push({
+          bool: {
+            should: [...nameQueries],
+            minimum_should_match: 1,
+          },
+        });
       }
 
-      const services = await service
-        .find(query)
-        .populate({
-          path: "clinicId",
-          model: "Clinic",
-          localField: "clinicId",
-          foreignField: "clinicId",
-          select: "name address ",
-        })
-        .populate({
-          path: "serviceCategoryId",
-          model: "ServiceCategory",
-          localField: "serviceCategoryId",
-          foreignField: "serviceCategoryId",
-          select: "name ",
-        })
+      if (clinicId) {
+        filterQueries.push({
+          term: { clinicId: clinicId },
+        });
+      }
+      if (serviceCategoryId) {
+        filterQueries.push({
+          term: { serviceCategoryId: serviceCategoryId },
+        });
+      }
 
-        .skip((pageNo - 1) * pageSize)
-        .limit(pageSize)
-        .sort(sortOption);
-      const totalServices = await service.countDocuments(query);
+      if (minPrice || maxPrice) {
+        let priceRange = {};
+        if (minPrice) {
+          priceRange.gte = minPrice;
+        }
+        if (maxPrice) {
+          priceRange.lte = maxPrice;
+        }
+        filterQueries.push({
+          range: { price: priceRange },
+        });
+      }
 
+      if (sort) {
+        switch (sort) {
+          case "gia-cao-den-thap":
+            sortQueries.push({ price: "desc" });
+            break;
+          case "gia-thap-den-cao":
+            sortQueries.push({ price: "asc" });
+            break;
+        }
+      }
+      console.log("keywordQueries", keywordQueries);
+      console.log("filterQueries", filterQueries);
+      console.log("sortQueries",sortQueries);
+      const results = await elasticClient.search({
+        index: "services",
+        body: {
+          query: {
+            bool: {
+              must:
+                keywordQueries.length > 0
+                  ? [...keywordQueries]
+                  : { match_all: {} },
+              filter: filterQueries,
+            },
+          },
+          sort: sortQueries,
+          from: (pageNo - 1) * pageSize,
+          size: pageSize,
+          track_total_hits: true,
+          highlight: {
+            fields: {
+              name: {},
+            },
+          },
+        },
+      });
+      const totalServices = results.body?.hits?.total.value;
+      const totalPages = Math.ceil(totalServices / pageSize);
       return resolve({
         status: 200,
         message: "Get service by search successfully",
         currentPage: pageNo,
-        totalPages: Math.ceil(totalServices / pageSize),
+        totalPage: totalPages,
         totalElement: totalServices,
-        data: services,
+        data: results.body?.hits?.hits.map((hit) => ({
+          ...hit._source,
+          highlight: hit.highlight || {},
+        })),
       });
     } catch (e) {
       reject(e);
@@ -197,7 +286,7 @@ const createService = (data) => {
         clinicId: data.clinicId,
         serviceCategoryId: data.serviceCategoryId,
       });
-      console.log("2");
+      syncServicesToElasticsearch();
       return resolve({
         status: 200,
         message: "Create service successfully",
@@ -286,6 +375,7 @@ const updateService = (id, data) => {
       }
 
       await service.updateOne({ serviceId: id }, serviceData);
+      syncServicesToElasticsearch();
       return resolve({
         status: 200,
         message: "Update service successfully",
@@ -307,6 +397,7 @@ const deleteService = (id) => {
         });
       }
       await service.delete({ serviceId: id });
+      syncServicesToElasticsearch();
       return resolve({
         status: 200,
         message: "Delete service successfully",

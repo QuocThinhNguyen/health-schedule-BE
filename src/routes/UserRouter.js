@@ -8,7 +8,9 @@ import { upload } from "../utils/uploadCloudinary.js";
 
 const router = express.Router();
 
+
 router.get("/suggestions",userController.getSuggest)
+router.get("/statistics/:idUser",authMiddleware,userController.getPatientStatistics)
 //CRUD user
 router.get(
   "/dropdown",
@@ -42,7 +44,7 @@ router.post(
   userController.updatePasswordController
 ); // Định nghĩa tuyến đường để cập nhật mật khẩu
 
-router.get("/statistics/:idUser",authMiddleware,userController.getPatientStatistics)
+
 
 
 export default router;

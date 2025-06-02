@@ -488,6 +488,18 @@ const getClinicIdByUserId = async (req, res) => {
   }
 };
 
+const getStatisticsHomePage = async (req, res) => {
+  try {
+    const data = await userService.getStatisticsHomePage();
+    return res.status(200).json(data);
+  } catch (e) {
+    return res.status(404).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+}
+
 export default {
   createUserController,
   loginUserController,
@@ -509,4 +521,5 @@ export default {
   getPatientStatistics,
   getSuggest,
   getClinicIdByUserId,
+  getStatisticsHomePage
 };

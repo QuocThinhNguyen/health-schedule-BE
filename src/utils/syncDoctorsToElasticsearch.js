@@ -6,79 +6,67 @@ import feedBacks from "../models/feedbacks.js";
 import { elasticClient } from "../configs/connectElastic.js";
 
 async function syncSetupDoctorsToElasticsearch() {
-  console.log(`Xóa index 'doctors' nếu đã tồn tại...`);
-
-  // const indexExists = await elasticClient.indices.exists({ index: "doctors" });
-
-  // if (indexExists) {
-  //   await elasticClient.indices.delete({ index: "doctors" });
-  //   console.log(`Đã xóa index 'doctors'.`);
-  // }
-
-  const { body: indexExists } = await elasticClient.indices.exists({ index: "doctors" });
-
-if (indexExists) {
-  await elasticClient.indices.delete({ index: "doctors" });
-  console.log(`Đã xóa index 'doctors'.`);
-} else {
-  console.log(`Index 'doctors' chưa tồn tại, bỏ qua bước xóa.`);
-}
-
-
-  console.log(`Tạo lại index 'doctors' với settings & mappings mới...`);
-
-  await elasticClient.indices.create({
-    index: "doctors",
-    body: {
-      settings: {
-        analysis: {
-          filter: {
-            edge_ngram_filter: {
-              type: "edge_ngram",
-              min_gram: 3,
-              max_gram: 5,
-              preserve_original: true,
+  try {
+    const indexExists = await elasticClient.indices.exists({
+      index: "doctors",
+    });
+    if (indexExists) {
+      await elasticClient.indices.delete({ index: "doctors" });
+    }
+    await elasticClient.indices.create({
+      index: "doctors",
+      body: {
+        settings: {
+          analysis: {
+            filter: {
+              edge_ngram_filter: {
+                type: "edge_ngram",
+                min_gram: 3,
+                max_gram: 5,
+                preserve_original: true,
+              },
+            },
+            analyzer: {
+              custom_vietnamese: {
+                tokenizer: "standard",
+                filter: [
+                  "lowercase",
+                  "icu_normalizer",
+                  "icu_folding",
+                  "edge_ngram_filter",
+                ],
+              },
+              search_vietnamese: {
+                tokenizer: "standard",
+                filter: ["lowercase", "icu_normalizer", "icu_folding"],
+              },
             },
           },
-          analyzer: {
-            custom_vietnamese: {
-              tokenizer: "standard",
-              filter: [
-                "lowercase",
-                "icu_normalizer",
-                "icu_folding",
-                "edge_ngram_filter",
-              ],
+        },
+        mappings: {
+          properties: {
+            fullname: {
+              type: "text",
+              analyzer: "custom_vietnamese",
+              search_analyzer: "search_vietnamese",
             },
-            search_vietnamese: {
-              tokenizer: "standard",
-              filter: ["lowercase", "icu_normalizer", "icu_folding"],
+            clinicId: { type: "keyword" },
+            specialtyId: { type: "keyword" },
+            gender: { type: "keyword" },
+            price: { type: "float" },
+            avgRating: { type: "float" },
+            comments: {
+              type: "text",
+              search_analyzer: "search_vietnamese",
             },
           },
         },
       },
-      mappings: {
-        properties: {
-          fullname: {
-            type: "text",
-            analyzer: "custom_vietnamese",
-            search_analyzer: "search_vietnamese",
-          },
-          clinicId: { type: "keyword" },
-          specialtyId: { type: "keyword" },
-          gender: { type: "keyword" },
-          price: { type: "float" },
-          avgRating: { type: "float" },
-          comments: {
-            type: "text",
-            search_analyzer: "search_vietnamese",
-          },
-        },
-      },
-    },
-  });
-
-  console.log(`Đã tạo lại index 'doctors' thành công!`);
+    });
+  } catch (error) {
+    console.error("Lỗi khi đồng bộ dữ liệu lên Elasticsearch:", error);
+    throw error;
+  }
 }
 
 async function syncDoctorsToElasticsearch() {

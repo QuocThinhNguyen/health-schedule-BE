@@ -17,7 +17,8 @@ const clinicManagerSchema = new Schema(
     },
     clinicId: {
       type: Number,
-      unique: true,
+      ref: "Clinic",
+      required: true,
     },
   },
   {

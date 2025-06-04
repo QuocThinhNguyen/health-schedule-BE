@@ -179,6 +179,7 @@ const updateUserController = async (req, res) => {
       ...req.body,
     };
 
+    console.log("Data:", data)
     if (image) {
       data.image = image;
     }

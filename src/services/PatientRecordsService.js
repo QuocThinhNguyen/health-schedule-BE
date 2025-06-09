@@ -58,6 +58,17 @@ const createPatientRecord = (data) => {
           message: "Missing required fields",
         });
       } else {
+        const checkRecord = await patientRecords.findOne({
+          CCCD: data.CCCD,
+        });
+
+        if (checkRecord) {
+          return resolve({
+            status: 404,
+            message: "CCCD đã tồn tại trong hệ thống",
+          });
+        }
+
         await patientRecords.create({
           patientId: data.patientId,
           fullname: data.fullname,
@@ -134,7 +145,7 @@ const deletePatientRecord = (id) => {
             "Không thể xóa hồ sơ bệnh nhân này vì có lịch hẹn đang chờ xác nhận",
         });
       } else {
-        await patientRecords.deleteOne({
+        await patientRecords.delete({
           patientRecordId: id,
         });
 

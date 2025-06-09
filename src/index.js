@@ -4,14 +4,8 @@ import cookieParser from "cookie-parser";
 import routers from "./routes/index.js";
 import connectDB from "./configs/connectDB.js";
 import { connectElastic } from "./configs/connectElastic.js";
-import upload from "./utils/fileUpload.js";
 import dotenv from "dotenv";
-import multer from "multer";
 import cors from "cors";
-import {
-  syncSetupDoctorsToElasticsearch,
-  syncDoctorsToElasticsearch,
-} from "./utils/syncDoctorsToElasticsearch.js";
 import http from "http";
 import { Server } from "socket.io";
 import { initSocket } from "./integrations/socket/index.js";
@@ -46,7 +40,7 @@ routers(app);
 
 await connectDB();
 await connectElastic();
-await initializeElasticsearch();
+await initializeElasticsearch(false);
 // await syncSetupDoctorsToElasticsearch();
 // await syncDoctorsToElasticsearch();
 

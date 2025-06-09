@@ -111,9 +111,7 @@ const getServiceBySearchAndFilter = (
             break;
         }
       }
-      console.log("keywordQueries", keywordQueries);
-      console.log("filterQueries", filterQueries);
-      console.log("sortQueries",sortQueries);
+
       const results = await elasticClient.search({
         index: "services",
         body: {
@@ -228,8 +226,6 @@ const getServiceById = (id) => {
 const createService = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("data", data);
-      console.log("1");
 
       if (
         !data ||
@@ -244,7 +240,6 @@ const createService = (data) => {
           message: "Missing required fields",
         });
       }
-      console.log("!data", !data);
 
       const existingClinic = await clinic.findOne({ clinicId: data.clinicId });
       if (!existingClinic) {
@@ -303,7 +298,6 @@ const createService = (data) => {
 const updateService = (id, data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      console.log("data:", data);
 
       if (
         !data ||

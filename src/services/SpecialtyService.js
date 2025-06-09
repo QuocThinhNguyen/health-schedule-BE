@@ -191,7 +191,7 @@ const getSpecialtyByClinicId = (clinicId) => {
         const specialties = [
           ...new Map(
             doctorInfos.map((doc) => [
-              doc.specialtyId.specialtyId,
+              doc.specialtyId?.specialtyId,
               doc.specialtyId,
             ])
           ).values(),

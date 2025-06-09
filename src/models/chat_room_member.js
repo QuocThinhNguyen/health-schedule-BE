@@ -17,7 +17,7 @@ const ChatRoomMemberSchema = new Schema(
     },
     userId: {
       type: Number,
-      ref: "User",
+      ref: "Users",
       required: true,
     },
     role: {

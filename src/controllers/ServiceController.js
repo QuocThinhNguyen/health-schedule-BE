@@ -5,11 +5,15 @@ const getServiceBySearchAndFilter = async (req, res) => {
     const keyword = req.query.keyword;
     const serviceCategoryId = parseInt(req.query.serviceCategoryId);
     const clinicId = parseInt(req.query.clinicId);
-    const minPrice=  parseFloat(req.query.minPrice);
-    const maxPrice= parseFloat(req.query.maxPrice);
+    const minPrice = parseFloat(req.query.minPrice);
+    const maxPrice = parseFloat(req.query.maxPrice);
     const sort = req.query.sort;
     const pageNo = parseInt(req.query.pageNo) || 1;
     const pageSize = parseInt(req.query.pageSize) || 20;
+    console.log(
+      "getServiceBySearchAndFilter controller called with params:",
+      req.query
+    );
 
     const result = await serviceService.getServiceBySearchAndFilter(
       keyword,

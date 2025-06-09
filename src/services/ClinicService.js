@@ -16,6 +16,8 @@ const createClinic = (data) => {
           message: "Missing required fields",
         });
       } else {
+        const encodedAddress = encodeURIComponent(data.address);
+        const map_url = `https://www.google.com/maps?q=${encodedAddress}`;
         await clinic.create({
           name: data.name,
           address: data.address,
@@ -30,6 +32,7 @@ const createClinic = (data) => {
           wardCode: data.wardCode,
           wardName: data.wardName,
           street: data.street,
+          mapUrl: map_url,
         });
         resolve({
           status: 200,
@@ -54,7 +57,13 @@ const updateClinic = (id, data) => {
           message: "Clinic not found",
         });
       }
+      console.log("Check data", data);
+
+      const encodedAddress = encodeURIComponent(data.address);
+      const map_url = `https://www.google.com/maps?q=${encodedAddress}`;
+      data.mapUrl = map_url;
       await clinic.updateOne({ clinicId: id }, data, { new: true });
+
       return resolve({
         status: 200,
         message: "Update clinic successfully",
@@ -68,7 +77,7 @@ const updateClinic = (id, data) => {
 const getAllClinic = () => {
   return new Promise(async (resolve, reject) => {
     try {
-      const clinics = await clinic.find();
+      const clinics = await clinic.find().sort({ updatedAt: -1 });
       resolve({
         status: 200,
         message: "Get all clinic successfully",
@@ -282,8 +291,8 @@ const filterClinics = (query) => {
 
         // Sắp xếp nếu có sort
         ...(sortDirection !== null
-          ? [{ $sort: { avgRating: sortDirection } }]
-          : []),
+          ? [{ $sort: { avgRating: sortDirection, updatedAt: -1 } }] // Sort theo rating và updatedAt
+          : [{ $sort: { updatedAt: -1 } }]),
 
         // Phân trang
         { $skip: skip },
@@ -310,6 +319,8 @@ const getDropdownClinics = () => {
   return new Promise(async (resolve, reject) => {
     try {
       const clinics = await clinic.find();
+      // console.log("Clinics data:", clinics);
+      
       const clinicsWithSpecialties = await Promise.all(
         clinics.map(async (clinicItem) => {
           const specialties = await SpecialtyService.getSpecialtyByClinicId(

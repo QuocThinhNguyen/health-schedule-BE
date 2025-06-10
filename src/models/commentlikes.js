@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import pkg from "mongoose-sequence";
+import mongoose_delete from "mongoose-delete";
 
 const AutoIncrement = pkg(mongoose);
-
 const { Schema } = mongoose;
 
 const commentLikeSchema = new Schema({
@@ -28,6 +28,10 @@ const commentLikeSchema = new Schema({
 
 commentLikeSchema.index({ userId: 1, commentId: 1 }, { unique: true });
 commentLikeSchema.plugin(AutoIncrement, { inc_field: 'commentLikeId', start_seq: 1 });
+commentLikeSchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
 const CommentLikes = mongoose.model('CommentLikes', commentLikeSchema);
 
 export default CommentLikes;

@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
-import pkg from "mongoose-sequence"; // Import AutoIncrement
-const AutoIncrement = pkg(mongoose);
+import pkg from "mongoose-sequence";
+import mongoose_delete from "mongoose-delete";
 
+const AutoIncrement = pkg(mongoose);
 const { Schema } = mongoose;
 
 const bookingSchema = new Schema(
@@ -51,6 +52,10 @@ const bookingSchema = new Schema(
 );
 
 bookingSchema.plugin(AutoIncrement, { inc_field: "bookingId", start_seq: 1 });
+bookingSchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
 const Booking = mongoose.model("Booking", bookingSchema);
 
 export default Booking;

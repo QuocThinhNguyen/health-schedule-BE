@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
-import pkg from 'mongoose-sequence';  // Import AutoIncrement
-const AutoIncrement = pkg(mongoose);
+import pkg from 'mongoose-sequence'; 
+import mongoose_delete from "mongoose-delete";
 
+const AutoIncrement = pkg(mongoose);
 const { Schema } = mongoose;
 
 const specialtySchema = new Schema({
@@ -20,10 +21,15 @@ const specialtySchema = new Schema({
     description: {
         type: String
     }
-});
+  },
+  { timestamps: true }
+);
 
 specialtySchema.plugin(AutoIncrement, { inc_field: 'specialtyId', start_seq: 1 });
-
+specialtySchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
 const Specialty = mongoose.model('Specialty', specialtySchema);
 
 export default Specialty;

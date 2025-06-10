@@ -42,6 +42,10 @@ const bookingSchema = new Schema(
       ref: "AllCodes",
       default: "",
     },
+    paymentMethod: {
+      type: String,
+      enum: ["CASH", "MOMO", "VNPAY", "BANK_TRANSFER"],
+    },
   },
   { timestamps: true }
 );

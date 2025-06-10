@@ -710,6 +710,7 @@ const patientBookingOnline = (data) => {
                 appointmentDate: data.appointmentDate,
                 timeType: data.timeType,
                 price: data.price,
+                paymentMethod: "MOMO",
                 reason: data.reason || "",
                 status: "S5",
               });
@@ -784,6 +785,7 @@ const patientBookingDirect = (data) => {
                 appointmentDate: data.appointmentDate,
                 timeType: data.timeType,
                 price: data.price,
+                paymentMethod: "CASH",
                 reason: data.reason || "",
                 status: "S1",
               });

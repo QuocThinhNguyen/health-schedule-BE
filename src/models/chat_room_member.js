@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
-import pkg from "mongoose-sequence"; // Import AutoIncrement
-const AutoIncrement = pkg(mongoose);
+import pkg from "mongoose-sequence"; 
+import mongoose_delete from "mongoose-delete";
 
+const AutoIncrement = pkg(mongoose);
 const { Schema } = mongoose;
 
 const ChatRoomMemberSchema = new Schema(
@@ -17,7 +18,7 @@ const ChatRoomMemberSchema = new Schema(
     },
     userId: {
       type: Number,
-      ref: "User",
+      ref: "Users",
       required: true,
     },
     role: {
@@ -30,6 +31,10 @@ const ChatRoomMemberSchema = new Schema(
 );
 
 ChatRoomMemberSchema.plugin(AutoIncrement, { inc_field: "chatRoomMemberId", start_seq: 1 });
+ChatRoomMemberSchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
 const ChatRoomMember = mongoose.model("ChatRoomMember", ChatRoomMemberSchema);
 
 export default ChatRoomMember;

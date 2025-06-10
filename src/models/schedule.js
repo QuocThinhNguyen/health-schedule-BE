@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import AutoIncrementFactory from "mongoose-sequence";
+import mongoose_delete from "mongoose-delete";
 
 const AutoIncrement = AutoIncrementFactory(mongoose);
-
 const { Schema } = mongoose;
 
 const scheduleSchema = new Schema({
@@ -33,11 +33,16 @@ const scheduleSchema = new Schema({
     type: String,
     required: true,
   },
-});
+  },
+  { timestamps: true }
+);
 
 // Thêm plugin AutoIncrement cho trường scheduleId
 scheduleSchema.plugin(AutoIncrement, { inc_field: "scheduleId", start_seq: 1 });
-
+scheduleSchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
 const Schedule = mongoose.model("Schedule", scheduleSchema);
 
 export default Schedule;

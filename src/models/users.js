@@ -1,58 +1,66 @@
-import mongoose from 'mongoose';
-import pkg from 'mongoose-sequence';  
+import mongoose from "mongoose";
+import pkg from "mongoose-sequence";
+import mongoose_delete from "mongoose-delete";
+
 const AutoIncrement = pkg(mongoose);
 const { Schema } = mongoose;
 
-const userSchema = new Schema({
+const userSchema = new Schema(
+  {
     userId: {
-        type: Number,
-        unique: true
+      type: Number,
+      unique: true,
     },
     email: {
-        type: String,
-        required: true,
-        unique: true
+      type: String,
+      required: true,
+      unique: true,
     },
     password: {
-        type: String,
-        // required: true
+      type: String,
+      // required: true
     },
     fullname: {
-        type: String,
+      type: String,
     },
     address: {
-        type: String
+      type: String,
     },
     gender: {
-        type: String,
-        enum: ['Male', 'Female', 'Other']
+      type: String,
+      enum: ["Male", "Female", "Other"],
     },
     birthDate: {
-        type: Date
+      type: Date,
     },
     roleId: {
-        type: String,
-        default: 'R3'
+      type: String,
+      default: "R3",
     },
     phoneNumber: {
-        type: String
+      type: String,
     },
     image: {
-        type: String
+      type: String,
     },
     isVerified: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
     otpCode: {
-        type: String
-    }
-},
-{
-    timestamps: true
-});
-userSchema.plugin(AutoIncrement, { inc_field: 'userId', start_seq: 1 });
+      type: String,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-const User = mongoose.model('Users', userSchema);
+userSchema.plugin(AutoIncrement, { inc_field: "userId", start_seq: 1 });
+userSchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
+const User = mongoose.model("Users", userSchema);
 
 export default User;

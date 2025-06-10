@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import pkg from "mongoose-sequence";
+import mongoose_delete from "mongoose-delete";
 
 const AutoIncrement = pkg(mongoose);
-
 const { Schema } = mongoose;
 
 const commentSchema = new Schema({
@@ -34,6 +34,10 @@ const commentSchema = new Schema({
 })
 
 commentSchema.plugin(AutoIncrement, { inc_field: 'commentId', start_seq: 1 });
+commentSchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
 const Comments = mongoose.model('Comments', commentSchema);
 
 export default Comments;

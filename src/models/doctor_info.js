@@ -1,43 +1,54 @@
-import mongoose from 'mongoose';
-import pkg from 'mongoose-sequence';  // Import AutoIncrement
-const AutoIncrement = pkg(mongoose);
+import mongoose from "mongoose";
+import pkg from "mongoose-sequence";
+import mongoose_delete from "mongoose-delete";
 
+const AutoIncrement = pkg(mongoose);
 const { Schema } = mongoose;
 
-const doctorInfoSchema = new Schema({
+const doctorInfoSchema = new Schema(
+  {
     doctorInforId: {
-        type: Number,
-        unique: true
+      type: Number,
+      unique: true,
     },
     doctorId: {
-        type: Number,
-        ref: 'Users',
-        required: true
+      type: Number,
+      ref: "Users",
+      required: true,
     },
     specialtyId: {
-        type: Number,
-        ref: 'Specialty',
+      type: Number,
+      ref: "Specialty",
     },
     clinicId: {
-        type: Number,
-        ref: 'Clinic',
+      type: Number,
+      ref: "Clinic",
     },
     price: {
-        type: String,
+      type: String,
     },
     note: {
-        type: String
+      type: String,
     },
     position: {
-        type: String,
-        ref: 'Allcodes'
+      type: String,
+      ref: "Allcodes",
     },
     description: {
-        type: String
-    }
-});
+      type: String,
+    },
+  },
+  { timestamps: true }
+);
 
-doctorInfoSchema.plugin(AutoIncrement, { inc_field: 'doctorInforId', start_seq: 1 });
-const DoctorInfo = mongoose.model('DoctorInfo', doctorInfoSchema);
+doctorInfoSchema.plugin(AutoIncrement, {
+  inc_field: "doctorInforId",
+  start_seq: 1,
+});
+doctorInfoSchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
+const DoctorInfo = mongoose.model("DoctorInfo", doctorInfoSchema);
 
 export default DoctorInfo;

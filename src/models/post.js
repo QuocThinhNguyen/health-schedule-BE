@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
-import pkg from "mongoose-sequence"; // Import AutoIncrement
-const AutoIncrement = pkg(mongoose);
+import pkg from "mongoose-sequence";
+import mongoose_delete from "mongoose-delete";
 
+const AutoIncrement = pkg(mongoose);
 const { Schema } = mongoose;
 
 const postSchema = new Schema({
@@ -17,9 +18,9 @@ const postSchema = new Schema({
     type: String,
     required: true,
   },
-  title:{
+  title: {
     type: String,
-    required: true
+    required: true,
   },
   content: {
     type: String,
@@ -36,6 +37,10 @@ const postSchema = new Schema({
 });
 
 postSchema.plugin(AutoIncrement, { inc_field: "postId", start_seq: 1 });
+postSchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
 const Post = mongoose.model("Post", postSchema);
 
 export default Post;

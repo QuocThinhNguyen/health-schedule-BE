@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
-import pkg from "mongoose-sequence"; // Import AutoIncrement
-const AutoIncrement = pkg(mongoose);
+import pkg from "mongoose-sequence";
+import mongoose_delete from "mongoose-delete";
 
+const AutoIncrement = pkg(mongoose);
 const { Schema } = mongoose;
 
 const chatMessageSchema = new Schema(
@@ -49,9 +50,10 @@ chatMessageSchema.plugin(AutoIncrement, {
   inc_field: "chatMessageId",
   start_seq: 1,
 });
-const ChatMessage = mongoose.model(
-  "ChatMessage",
-  chatMessageSchema
-);
+chatMessageSchema.plugin(mongoose_delete, {
+  deletedAt: true,
+  overrideMethods: "all",
+});
+const ChatMessage = mongoose.model("ChatMessage", chatMessageSchema);
 
 export default ChatMessage;

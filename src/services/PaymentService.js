@@ -109,6 +109,8 @@ const handlePaymentReturn = async (req, res) => {
         nameDoctor,
         nameUser,
         imageClinic,
+        clinicAddress,
+        clinicMapLink,
       } = emailResult.data;
 
       const booking = await Booking.findOne({
@@ -144,6 +146,8 @@ const handlePaymentReturn = async (req, res) => {
         nameUser,
         imageClinic,
         button,
+        clinicAddress,
+        clinicMapLink,
       };
 
       const schedule = await Schedules.findOne({

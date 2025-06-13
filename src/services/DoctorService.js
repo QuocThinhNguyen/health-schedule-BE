@@ -43,7 +43,9 @@ const getDoctorInfor = (id) => {
 
       const bookingCount = await booking.countDocuments({
         doctorId: doctorData.doctorId,
+        status: "S4",
       });
+      console.log("Booking count", bookingCount);
 
       const combinedData = {
         doctorInforId: doctorData.doctorInforId,
@@ -202,7 +204,7 @@ const getAllDoctor = (query) => {
 
       // Đếm số lượt được đặt khám của từng bác sĩ trong bảng Booking
       const bookingCounts = await booking.aggregate([
-        { $match: { doctorId: { $in: doctorIds } } },
+        { $match: { doctorId: { $in: doctorIds }, status: "S4" } },
         { $group: { _id: "$doctorId", count: { $sum: 1 } } },
       ]);
 
@@ -603,7 +605,7 @@ const searchDoctorByElasticeSearch = (
 
       const totalDoctors = results.body?.hits?.total.value;
       const totalPages = Math.ceil(totalDoctors / pagination.limit);
-    
+
       resolve({
         status: 200,
         message: "get doctors by elasticsearch successfully",

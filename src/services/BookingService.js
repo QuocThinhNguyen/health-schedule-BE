@@ -8,6 +8,7 @@ import user from "../models/users.js";
 import sendMail from "../utils/SendMail.js";
 import bookingMedia from "../models/booking_media.js";
 import { resolve } from "path";
+import { model } from "mongoose";
 
 const getAllBookingByUserId = (userId, startDate, endDate) => {
   return new Promise(async (resolve, reject) => {
@@ -227,17 +228,47 @@ const getBooking = (id) => {
         .populate({
           path: "patientRecordId",
           model: "PatientRecords",
+          populate: {
+            path: "patientId",
+            model: "Users",
+            localField: "patientId",
+            foreignField: "userId",
+            select: "fullname email",
+          },
           localField: "patientRecordId",
           foreignField: "patientRecordId",
           select:
             "fullname gender phoneNumber birthDate address CCCD email job",
         })
+        
         .lean();
+
+      const findDoctor = await doctor_Info
+        .findOne({
+          doctorId: bookingFind.doctorId.userId,
+        })
+        .populate({
+          path: "clinicId",
+          model: "Clinic",
+          localField: "clinicId",
+          foreignField: "clinicId",
+          select: "name",
+        })
+        .populate({
+          path: "specialtyId",
+          model: "Specialty",
+          localField: "specialtyId",
+          foreignField: "specialtyId",
+          select: "name",
+        });
+
+       
       const newBooking = {
         ...bookingFind,
         appointmentDate: bookingFind.appointmentDate
           .toISOString()
           .split("T")[0], // Chỉ lấy ngày
+        info: findDoctor,
       };
       if (newBooking === null) {
         resolve({
@@ -354,10 +385,17 @@ const getBookingByDoctorId = (
         .populate({
           path: "patientRecordId",
           model: "PatientRecords",
+          populate: {
+            path: "patientId",
+            model: "Users",
+            localField: "patientId",
+            foreignField: "userId",
+            select: "fullname email",
+          },
           localField: "patientRecordId",
           foreignField: "patientRecordId",
           select:
-            "fullname gender birthDate phoneNumber CCCD email job address patientRecordId",
+            "fullname gender birthDate phoneNumber CCCD email job address patientRecordId patientId",
         })
         .populate({
           path: "status",
@@ -978,7 +1016,7 @@ const getEmailByBookingId = async (bookingId) => {
         {
           clinicId: clinicId,
         },
-        "name image"
+        "name image address mapUrl"
       );
 
       const specialtyFind = await specialty.findOne(
@@ -1019,6 +1057,8 @@ const getEmailByBookingId = async (bookingId) => {
           nameUser: userFind.fullname,
           imageClinic: clinicFind.image,
           timeKey: bookingFind.timeType.keyMap,
+          clinicAddress: clinicFind.address,
+          clinicMapLink: clinicFind.mapUrl,
         },
       });
     } catch (e) {

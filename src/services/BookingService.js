@@ -763,6 +763,8 @@ const patientBookingDirect = (data) => {
           // status: "S2" || "S3",
           status: { $in: ["S2", "S3"] },
         });
+        console.log("existingBooking", existingBooking);
+        
         if (existingBooking) {
           return resolve({
             status: 409,
@@ -774,6 +776,7 @@ const patientBookingDirect = (data) => {
             scheduleDate: data.appointmentDate,
             timeType: data.timeType,
           });
+          console.log("schedule", schedule);
           if (schedule) {
             if (schedule.currentNumber < schedule.maxNumber) {
               // schedule.currentNumber += 1;
@@ -789,9 +792,15 @@ const patientBookingDirect = (data) => {
                 reason: data.reason || "",
                 status: "S1",
               });
+              console.log("newBooking", newBooking);
+              
               await newBooking.save();
               const bookingId = newBooking.bookingId;
+              console.log("bookingId", bookingId);
+              
               const emailResult = await getEmailByBookingId(bookingId);
+              console.log("emailResult", emailResult);
+              
               const {
                 patientEmail,
                 userEmail,
@@ -824,6 +833,7 @@ const patientBookingDirect = (data) => {
                   foreignField: "patientRecordId",
                   select: "fullname gender phoneNumber birthDate",
                 });
+              console.log("bookingFind", bookingFind);
               const doctorId = bookingFind.doctorId.userId;
               const timeType = bookingFind.timeType;
               const { appointmentDate } = bookingFind;
@@ -850,6 +860,8 @@ const patientBookingDirect = (data) => {
                 datas,
                 "Xác nhận đặt khám"
               );
+              console.log("Email sent successfully to:", newBooking);
+              
               return resolve({
                 status: 200,
                 message: "SUCCESS",
@@ -968,11 +980,11 @@ const getEmailByBookingId = async (bookingId) => {
         });
       }
 
-      const patientRecordEmail = bookingFind.patientRecordId.email;
-      const patientId = bookingFind.patientRecordId.patientId;
-      const clinicId = bookingFind.doctorId.clinicId;
-      const specialtyId = bookingFind.doctorId.specialtyId;
-      const doctorId = bookingFind.doctorId.doctorId;
+      const patientRecordEmail = bookingFind.patientRecordId?.email;
+      const patientId = bookingFind.patientRecordId?.patientId;
+      const clinicId = bookingFind.doctorId?.clinicId;
+      const specialtyId = bookingFind.doctorId?.specialtyId;
+      const doctorId = bookingFind.doctorId?.doctorId;
 
       const clinicFind = await clinic.findOne(
         {
@@ -1007,18 +1019,18 @@ const getEmailByBookingId = async (bookingId) => {
         message: "SUCCESS",
         data: {
           patientEmail: patientRecordEmail,
-          userEmail: userFind.email,
-          namePatient: bookingFind.patientRecordId.fullname,
-          reason: bookingFind.reason,
-          appointmentDate: bookingFind.appointmentDate,
-          price: bookingFind.price,
-          time: bookingFind.timeType.valueVi,
-          nameClinic: clinicFind.name,
-          nameSpecialty: specialtyFind.name,
-          nameDoctor: doctorFind.fullname,
-          nameUser: userFind.fullname,
-          imageClinic: clinicFind.image,
-          timeKey: bookingFind.timeType.keyMap,
+          userEmail: userFind?.email,
+          namePatient: bookingFind.patientRecordId?.fullname,
+          reason: bookingFind?.reason,
+          appointmentDate: bookingFind?.appointmentDate,
+          price: bookingFind?.price,
+          time: bookingFind?.timeType?.valueVi,
+          nameClinic: clinicFind?.name,
+          nameSpecialty: specialtyFind?.name,
+          nameDoctor: doctorFind?.fullname,
+          nameUser: userFind?.fullname,
+          imageClinic: clinicFind?.image,
+          timeKey: bookingFind.timeType?.keyMap,
         },
       });
     } catch (e) {

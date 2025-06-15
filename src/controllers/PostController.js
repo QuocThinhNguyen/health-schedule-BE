@@ -91,8 +91,6 @@ const getPostInClinic = async (req, res) => {
     );
     return res.status(200).json(response);
   } catch (e) {
-    console.log("erorr", e);
-
     return res.status(500).json({
       status: 500,
       message: "Error from server",

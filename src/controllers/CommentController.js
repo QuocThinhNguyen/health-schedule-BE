@@ -2,7 +2,6 @@ import CommentService from "../services/CommentService.js";
 
 const addComment = async (req, res) => {
     try{
-        console.log("CHECK:",req.body)
         const data = await CommentService.addComment(req.body);
         if(data.status === 200){
             return res.status(200).json(data)

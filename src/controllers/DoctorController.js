@@ -109,7 +109,6 @@ const searchDoctorByElasticeSearch = async (req, res) => {
       page,
       limit,
     } = req.query;
-    console.log("query", req.query);
 
     const filters = {
       clinicId,

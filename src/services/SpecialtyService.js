@@ -4,7 +4,7 @@ import doctorInfo from "../models/doctor_info.js"
 const createSpecialty = (data) => {
     return new Promise(async (resolve, reject) => {
       try {
-        if (!data.description || !data.image || !data.name) {
+        if (!data.image || !data.name) {
           resolve({
             status: 400,
             message: "Missing required fields"
@@ -118,7 +118,7 @@ const deleteSpecialty = (id) => {
           });
         }
   
-        await specialty.deleteOne({
+        await specialty.delete({
           specialtyId: id,
         });
   

@@ -1,7 +1,7 @@
 import express from 'express';
 import feedBackController from '../controllers/FeedBackController.js';
 import { authAdminMiddleware } from '../middlewares/authMiddleware.js';
-import upload from "../utils/fileUpload.js";
+import { upload } from "../utils/uploadCloudinary.js";
 
 const router = express.Router();
 router.get('/filter',feedBackController.getAllFeedBackByFilter);

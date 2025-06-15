@@ -5,10 +5,6 @@ const getDropdownServiceCategory = async (req, res) => {
     const result = await serviceCategoryService.getDropdownServiceCategory();
     return res.status(200).json(result);
   } catch (e) {
-    console.log(
-      "Error from getDropdownServiceCategory controller: ",
-      e.message
-    );
     return res.status(500).json({
       status: 500,
       message: "Error from server",
@@ -28,10 +24,6 @@ const getServiceCategoryBySearch = async (req, res) => {
     );
     return res.status(200).json(result);
   } catch (e) {
-    console.log(
-      "Error from getServiceCategoryBySearch controller: ",
-      e.message
-    );
     return res.status(500).json({
       status: 500,
       message: "Error from server",

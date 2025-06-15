@@ -12,7 +12,6 @@ const createClinic = async (req, res) => {
       image,
     };
 
-    console.log("Data:", clinicData);
     const infor = await clinicService.createClinic(clinicData);
     return res.status(200).json(infor);
   } catch (err) {
@@ -110,7 +109,6 @@ const getDropdownClinics = async (req, res) => {
 const getClinicByProvinceId = async (req, res) => {
   try {
     const id = req.query.id;
-    console.log(id)
     const data = await clinicService.getClinicByProvinceId(id);
     return res.status(200).json(data);
   } catch (err) {

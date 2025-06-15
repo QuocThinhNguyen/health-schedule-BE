@@ -196,6 +196,16 @@ const updateUserService = (id, data) => {
         updateData, // Giá trị cần cập nhật
         { new: true }
       );
+      
+      if (data.roleId === "R4" && data.clinicId){
+        console.log("update clininic id")
+        await clinicManager.updateOne(
+          {userId:id},
+          {clinicId: data.clinicId},
+          {new:true}
+        )
+      }
+
       resolve({
         status: 200,
         message: "SUCCESS",
@@ -283,6 +293,24 @@ const getDetailsUserService = (id) => {
           ...userFind,
           birthDate: birthDateOnly,
         };
+      }
+
+      if (userFind.roleId === "R4") {
+        const clinicObj = await clinicManager.findOne({
+          userId: id,
+        });
+        console.log("CLININID:", clinicObj)
+        
+        if (clinicObj) {
+          const clinicId = clinicObj.clinicId
+          const clinicInfo = await clinic.find({
+            clinicId: clinicId,
+          });
+          console.log("CLINICINFO", clinicInfo)
+          if (clinicInfo) {
+            formatUser.clinic = clinicInfo;
+          }
+        }
       }
 
       resolve({

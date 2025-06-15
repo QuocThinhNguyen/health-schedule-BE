@@ -72,6 +72,8 @@ const sendMailSuccess = async (emails, data, subject) => {
     nameUser,
     imageClinic,
     button,
+    clinicAddress,
+    clinicMapLink,
   } = data;
   let priceInVND = Number(price).toLocaleString("vi-VN", {
     style: "currency",
@@ -209,6 +211,10 @@ const sendMailSuccess = async (emails, data, subject) => {
                     <span class="label">Chuyên khoa:</span>
                     <span class="value">${nameSpecialty}</span>
                 </div>
+              <div class="info-row">
+                    <span class="label">Bác sĩ:</span>
+                    <span class="value">${nameDoctor}</span>
+                </div>
                 <div class="info-row">
                     <span class="label">Ngày khám:</span>
                     <span class="value">${appointmentDateString}</span>
@@ -228,6 +234,14 @@ const sendMailSuccess = async (emails, data, subject) => {
                 <div class="info-row">
                     <span class="label">Lý do khám:</span>
                     <span class="value">${reason}</span>
+                </div>
+              <div class="info-row">
+                    <span class="label">Địa điểm:</span>
+                    <span class="value">${clinicAddress}</span>
+                </div>
+              <div class="info-row">
+                    <span class="label">Xem bản đồ:</span>
+                    <span class="value"><a href="${clinicMapLink}" target="_blank">Google Maps</a></span>
                 </div>
             </div>
         </div>
@@ -453,9 +467,78 @@ const sendMailVerify = async (emails, data, subject) => {
   return info;
 };
 
+const sendMailReminder = async (email, data, subject) => {
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for port 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_NAME,
+      pass: process.env.EMAIL_APP_PASSWORD,
+    },
+  });
+
+  let {
+    bookerName,
+    patientName,
+    clinicName,
+    appointmentDate,
+    timeRange,
+    doctorName,
+    specialtyName,
+    reason,
+    price,
+    statusText,
+    clinicAddress,
+    clinicMapLink,
+    clinicEmail,
+  } = data;
+
+  const info = await transporter.sendMail({
+    from: '"EasyMed" <no-reply@easymed.com>',
+    to: email,
+    subject,
+    html: `
+    <div style="font-family: Arial, sans-serif; color: #333; padding: 16px; line-height: 1.6;">
+    <h2 style="color: #2e7d32;">🔔 Thông báo lịch khám bệnh</h2>
+
+    <p>Xin chào <strong>${bookerName}</strong>,</p>
+
+    <p>Bạn đã đặt lịch khám bệnh cho bệnh nhân <strong>${patientName}</strong> tại <strong>${clinicName}</strong>.</p>
+
+    <p><strong>Thông tin lịch khám:</strong></p>
+    <ul>
+      <li><strong>Ngày khám:</strong> ${appointmentDate}</li>
+      <li><strong>Giờ khám:</strong> ${timeRange}</li>
+      <li><strong>Bác sĩ:</strong> ${doctorName}</li>
+      <li><strong>Chuyên khoa:</strong> ${specialtyName}</li>
+      <li><strong>Lý do khám:</strong> ${reason}</li>
+      <li><strong>Chi phí khám:</strong> ${price} VND</li>
+      <li><strong>Trạng thái:</strong> ${statusText}</li>
+      <li><strong>Địa điểm:</strong> ${clinicAddress}</li>
+      <li><strong>Xem bản đồ:</strong> <a href="${clinicMapLink}" target="_blank">Google Maps</a></li>
+    </ul>
+
+    <p>📌 Vui lòng đảm bảo bệnh nhân đến đúng giờ. Nên đến trước <strong>15 phút</strong> để được hỗ trợ tốt nhất.</p>
+
+    <p>Nếu bạn cần hỗ trợ hoặc muốn thay đổi lịch khám, vui lòng liên hệ:</p>
+    <ul>
+      <li>📞 Số điện thoại: 19002115</li>
+      <li>✉️ Email: ${clinicEmail}</li>
+    </ul>
+
+    <p>Trân trọng,</p>
+    <p><strong>Đội ngũ EasyMed</strong></p>
+  </div>
+    `,
+  });
+  return info;
+};
+
 export default {
   sendMail,
   sendMailSuccess,
   sendMailVerify,
   sendMailResetPassword,
+  sendMailReminder,
 };

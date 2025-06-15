@@ -10,6 +10,7 @@ import http from "http";
 import { Server } from "socket.io";
 import { initSocket } from "./integrations/socket/index.js";
 import { initializeElasticsearch } from "./integrations/elasticsearch/index.js";
+import initializeCronJobs from "./cronjobs/index.js";
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ routers(app);
 await connectDB();
 await connectElastic();
 await initializeElasticsearch(false);
+await initializeCronJobs();
 // await syncSetupDoctorsToElasticsearch();
 // await syncDoctorsToElasticsearch();
 

@@ -90,7 +90,6 @@ const handlePaymentReturn = async (req, res) => {
     // console.log("QUERYYYYY", req.query);
     const { orderId, resultCode } = req.query;
     const bookingId = orderId.split("_")[0];
-    
 
     if (resultCode === "0") {
       // Thanh toán thành công
@@ -98,7 +97,21 @@ const handlePaymentReturn = async (req, res) => {
       // const booking = await bookingService.getBooking(bookingId);
 
       const emailResult = await bookingService.getEmailByBookingId(bookingId);
-      const {patientEmail, userEmail, namePatient, reason, price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic }=emailResult.data;
+      const {
+        patientEmail,
+        userEmail,
+        namePatient,
+        reason,
+        price,
+        time,
+        nameClinic,
+        nameSpecialty,
+        nameDoctor,
+        nameUser,
+        imageClinic,
+        clinicAddress,
+        clinicMapLink,
+      } = emailResult.data;
 
       const booking = await Booking.findOne({
         bookingId: bookingId,
@@ -120,8 +133,22 @@ const handlePaymentReturn = async (req, res) => {
         });
       const { doctorId, appointmentDate, timeType } = booking;
       const appointmentDateString = appointmentDate.toISOString().split("T")[0]; // Chỉ lấy phần ngày
-      const button = "Đã thanh toán"
-      const data = {namePatient, reason, appointmentDateString,price,time,nameClinic,nameSpecialty,nameDoctor,nameUser,imageClinic,button};
+      const button = "Đã thanh toán";
+      const data = {
+        namePatient,
+        reason,
+        appointmentDateString,
+        price,
+        time,
+        nameClinic,
+        nameSpecialty,
+        nameDoctor,
+        nameUser,
+        imageClinic,
+        button,
+        clinicAddress,
+        clinicMapLink,
+      };
 
       const schedule = await Schedules.findOne({
         doctorId: doctorId.userId,
@@ -130,7 +157,11 @@ const handlePaymentReturn = async (req, res) => {
       });
       schedule.currentNumber += 1;
       await schedule.save();
-      await sendMail.sendMailSuccess([patientEmail, userEmail], data, "Đặt lịch khám thành công");
+      await sendMail.sendMailSuccess(
+        [patientEmail, userEmail],
+        data,
+        "Đặt lịch khám thành công"
+      );
       return res.redirect(`${process.env.URL_REACT}/`);
       // return res.status(200).json({
       //   status: "OK",

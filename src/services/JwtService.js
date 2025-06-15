@@ -82,8 +82,8 @@ const handleResetPasswordTokenService = async (token) => {
       const tempPassword = crypto.randomBytes(8).toString("hex").slice(0, 8);
       const hash = bcrypt.hashSync(tempPassword, 10);
       const updateUser = await user.findOneAndUpdate(
-        { email: decoded.email }, 
-        { password: hash }, 
+        { email: decoded.email },
+        { password: hash },
         { new: true }
       );
 

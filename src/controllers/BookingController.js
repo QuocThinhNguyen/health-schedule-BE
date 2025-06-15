@@ -31,7 +31,6 @@ const getAllBookingByUserId = async (req, res) => {
 const getAllBooking = async (req, res) => {
   try {
     const data = await bookingService.getAllBooking(req.query);
-    console.log(req.query);
     return res.status(200).json(data);
   } catch (e) {
     return res.status(500).json({
@@ -273,7 +272,6 @@ const getBookingByPatientId = async (req, res) => {
 const getAllBookingByClinic = async (req, res) => {
   try {
     const data = await bookingService.getAllBookingByClinic(req.query);
-    console.log(req.query);
     return res.status(200).json(data);
   } catch (e) {
     return res.status(500).json({
@@ -285,7 +283,6 @@ const getAllBookingByClinic = async (req, res) => {
 
 const getBookingByTimeType = async (req, res) => {
   try {
-    // console.log("Check query:",req.query);
     const data = await bookingService.getBookingByTimeType(req.query);
     return res.status(200).json(data);
   } catch (e) {

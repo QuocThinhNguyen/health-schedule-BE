@@ -2,17 +2,14 @@ import feedBackService from "../services/FeedBackService.js";
 import ReviewMedia from "../models/review_media.js";
 const createFeedBack = async (req, res) => {
   try {
-    console.log("CHECK:", req.body);
     const files = req.files || [];
-    console.log("FILES:", files);
     const info = await feedBackService.createFeedBack(req.body);
-    console.log("INFO:", info);
 
     if (info.status === 200) {
       for (const file of files) {
         await ReviewMedia.create({
           feedBackId: info.data.feedBackId,
-          mediaName: file.filename,
+          mediaName: file.path,
         });
       }
       return res.status(200).json(info);
@@ -97,7 +94,6 @@ const getFeedBackByDoctorId = async (req, res) => {
 const checkFeedBacked = async (req, res) => {
   try {
     const { patientId, doctorId, date } = req.body;
-    // console.log(req.body)
     const data = await feedBackService.checkFeedBacked(
       patientId,
       doctorId,
@@ -118,10 +114,7 @@ const checkFeedBacked = async (req, res) => {
 
 const getAllFeedBackByFilter = async (req, res) => {
   try {
-    // Gọi service và truyền query từ request
     const data = await feedBackService.getAllFeedBackByFilter(req.query);
-    // console.log('Query received:', req.query);
-
     return res.status(200).json(data);
   } catch (err) {
     return res.status(500).json({

@@ -5,7 +5,6 @@ const chatWithGemini = async (req, res) => {
         const { message, imageUrl } = req.body;
         const userId = req.params.userId;
         const sessionId = req.params.sessionId;
-        // console.log("Check", req.body);
         if (!message) return res.status(400).json({ error: "Message không được để trống" });
 
         const response = await ChatBotService.chatWithGemini(userId,message, imageUrl,sessionId);

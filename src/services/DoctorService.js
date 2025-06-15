@@ -14,20 +14,20 @@ import { syncDoctorsToElasticsearch } from "../integrations/elasticsearch/syncDo
 const getDoctorInfor = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
-      // Tìm tài liệu doctor_info dựa trên doctorId
       const doctorData = await doctorInfor.findOne({ doctorId: id });
       if (!doctorData) {
-        resolve({
+        return resolve({
           status: 404,
           message: "Cannot find doctor",
         });
-        return;
       }
 
       const userData = await users.findOne({ userId: doctorData.doctorId });
-      const specialtyData = await specialties.findOne({
+      const specialtyData = await specialties.findOneWithDeleted({
         specialtyId: doctorData.specialtyId,
       });
+      console.log("Specialty Data:", specialtyData);
+      
       const clinicData = await clinics.findOne({
         clinicId: doctorData.clinicId,
       });

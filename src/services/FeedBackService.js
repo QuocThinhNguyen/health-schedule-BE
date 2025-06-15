@@ -4,7 +4,6 @@ import ReviewMedia from "../models/review_media.js";
 import { syncDoctorsToElasticsearch } from "../utils/syncDoctorsToElasticsearch.js";
 
 const createFeedBack = (data) => {
-  console.log("DATA: ", data);
   return new Promise(async (resolve, reject) => {
     try {
       if (
@@ -14,7 +13,7 @@ const createFeedBack = (data) => {
         !data.comment ||
         !data.date
       ) {
-        resolve({
+        return resolve({
           status: 400,
           message: "Missing required fields",
         });
@@ -27,8 +26,10 @@ const createFeedBack = (data) => {
           date: data.date,
           clinicId: data.clinicId,
         });
-        syncDoctorsToElasticsearch();
-        resolve({
+        console.log("New Feedback Created: ", newFeedBack);
+        
+        await syncDoctorsToElasticsearch();
+        return resolve({
           status: 200,
           message: "Create feedback successfully",
           data: newFeedBack,
@@ -55,7 +56,7 @@ const updateFeedBack = (id, data) => {
       }
 
       await feedBack.updateOne({ feedBackId: id }, data, { new: true });
-
+      await syncDoctorsToElasticsearch();
       resolve({
         status: 200,
         message: "Update feedback successfully",
@@ -98,7 +99,7 @@ const deleteFeedBack = (id) => {
       await feedBack.deleteOne({
         feedBackId: id,
       });
-
+      await syncDoctorsToElasticsearch();
       resolve({
         status: 200,
         message: "Delete feedback successfully",

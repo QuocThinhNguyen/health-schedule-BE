@@ -16,7 +16,6 @@ const getMessageByChatRoomId = async (req, res) => {
     );
     return res.status(200).json(result);
   } catch (err) {
-    console.log("Error:", err);
     return res.status(500).json({
       status: 500,
       message: "Error from server",

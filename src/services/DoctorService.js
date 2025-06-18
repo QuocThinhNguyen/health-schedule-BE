@@ -27,7 +27,7 @@ const getDoctorInfor = (id) => {
         specialtyId: doctorData.specialtyId,
       });
       console.log("Specialty Data:", specialtyData);
-      
+
       const clinicData = await clinics.findOne({
         clinicId: doctorData.clinicId,
       });
@@ -603,6 +603,32 @@ const searchDoctorByElasticeSearch = (
         },
       });
 
+      const doctors = results.body?.hits?.hits.map((hit) => ({
+        ...hit._source,
+        highlight: hit.highlight || {},
+      }));
+
+      // Lấy danh sách doctorId
+      const doctorIds = doctors.map((doc) => doc.doctorId);
+
+      // Đếm số booking cho từng doctorId
+      const bookingCounts = await booking.aggregate([
+        { $match: { doctorId: { $in: doctorIds }, status: "S4" } },
+        { $group: { _id: "$doctorId", count: { $sum: 1 } } },
+      ]);
+
+      // Tạo map doctorId -> count
+      const bookingCountMap = {};
+      bookingCounts.forEach((item) => {
+        bookingCountMap[item._id] = item.count;
+      });
+
+      // Gộp số lượt đặt khám vào từng doctor
+      const doctorsWithBookingCount = doctors.map((doc) => ({
+        ...doc,
+        totalBookings: bookingCountMap[doc.doctorId] || 0,
+      }));
+
       const totalDoctors = results.body?.hits?.total.value;
       const totalPages = Math.ceil(totalDoctors / pagination.limit);
 
@@ -611,10 +637,11 @@ const searchDoctorByElasticeSearch = (
         message: "get doctors by elasticsearch successfully",
         totalPages: totalPages,
         totalDoctors: totalDoctors,
-        data: results.body?.hits?.hits.map((hit) => ({
-          ...hit._source,
-          highlight: hit.highlight || {},
-        })),
+        // data: results.body?.hits?.hits.map((hit) => ({
+        //   ...hit._source,
+        //   highlight: hit.highlight || {},
+        // })),
+        data: doctorsWithBookingCount,
       });
     } catch (e) {
       reject(e);

@@ -85,7 +85,7 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
               model: "Clinic",
               localField: "clinicId",
               foreignField: "clinicId",
-              select: "name address",
+              select: "name address mapUrl",
             })
             .sort({ createdAt: -1 });
 

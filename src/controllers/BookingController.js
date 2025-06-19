@@ -6,6 +6,8 @@ const getAllBookingByUserId = async (req, res) => {
   try {
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
+    const pageNo = parseInt(req.query.pageNo) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
     const userId = req.body.userId;
     if (!userId) {
       // userId is required
@@ -17,7 +19,9 @@ const getAllBookingByUserId = async (req, res) => {
     const response = await bookingService.getAllBookingByUserId(
       userId,
       startDate,
-      endDate
+      endDate,
+      pageNo,
+      pageSize
     );
     return res.status(200).json(response);
   } catch (error) {

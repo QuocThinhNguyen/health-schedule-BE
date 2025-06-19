@@ -8,12 +8,8 @@ import orderCounter from '../models/order_counter.js';
  * @param {string} bookingType - Loại booking (SERVICE hoặc DOCTOR)
  * @returns {Promise<number>} - Số thứ tự mới
  */
-const generateOrderNumber = async (entityId, appointmentDate, bookingType) => {
+const generateOrderNumber = async (entityId, appointmentDate, bookingType = "DOCTOR") => {
   try {
-    // Chuyển đổi appointmentDate thành chuỗi YYYY-MM-DD
-    // const date = new Date(appointmentDate);
-    // const dateString = date.toISOString().split('T')[0];
-    
     // Tìm và cập nhật (hoặc tạo mới nếu chưa có) bản ghi counter
     const result = await orderCounter.findOneAndUpdate(
       {
@@ -28,6 +24,7 @@ const generateOrderNumber = async (entityId, appointmentDate, bookingType) => {
         runValidators: true // Chạy validation
       }
     );
+    console.log("Số thứ tự đã được tạo:", result);
     
     return result.sequence;
   } catch (error) {

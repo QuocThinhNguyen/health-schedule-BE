@@ -2,15 +2,11 @@ import mongoose from "mongoose";
 import pkg from "mongoose-sequence";
 import mongoose_delete from "mongoose-delete";
 
-const AutoIncrement = pkg(mongoose);
+// const AutoIncrement = pkg(mongoose);
 const { Schema } = mongoose;
 
 const orderCounterSchema = new Schema(
   {
-    orderCounterId: {
-      type: Number,
-      unique: true,
-    },
     appointmentDate: {
       type: String,
       required: true,
@@ -24,6 +20,9 @@ const orderCounterSchema = new Schema(
     entityId: {
       type: Number,
       required: true,
+      ref: function () {
+        return this.bookingType === "SERVICE" ? "Service" : "Doctor";
+      },
     }, // serviceId hoặc doctorId
     sequence: {
       type: Number,
@@ -33,7 +32,6 @@ const orderCounterSchema = new Schema(
   { timestamps: true }
 );
 
-orderCounterSchema.plugin(AutoIncrement, { inc_field: "orderCounterId", start_seq: 1 });
 orderCounterSchema.plugin(mongoose_delete, {
   deletedAt: true,
   overrideMethods: "all",

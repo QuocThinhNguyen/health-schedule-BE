@@ -15,7 +15,13 @@ import paymentService from "./PaymentService.js";
 import allCodes from "../models/allcodes.js";
 import OrderCounterService from "./OrderCounterService.js";
 
-const getAllBookingByUserId = (userId, startDate, endDate) => {
+const getAllBookingByUserId = (
+  userId,
+  startDate,
+  endDate,
+  pageNo,
+  pageSize
+) => {
   return new Promise(async (resolve, reject) => {
     try {
       const patientRecords = await patient_Records.find({ patientId: userId });
@@ -26,14 +32,27 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
         });
       }
 
-      // console.log("patientRecords", patientRecords);
+      // Tìm tất cả booking
+      let query = {
+        patientRecordId: {
+          $in: patientRecords.map((record) => record.patientRecordId),
+        },
+      };
+
+      // Thêm điều kiện lọc theo ngày nếu có
+      if (startDate && endDate) {
+        query.appointmentDate = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        };
+      }
+
+      const totalBookings = await booking.countDocuments(query);
+      // const totalPages = Math.ceil(totalBookings / pageSize);
+      // const skip = (pageNo - 1) * pageSize;
 
       const bookings = await booking
-        .find({
-          patientRecordId: {
-            $in: patientRecords.map((record) => record.patientRecordId),
-          },
-        })
+        .find(query)
         .populate({
           path: "patientRecordId",
           model: "PatientRecords",
@@ -47,7 +66,7 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
           model: "Users",
           localField: "doctorId",
           foreignField: "userId",
-          select: "fullname",
+          select: "fullname image",
         })
         .populate({
           path: "status",
@@ -62,8 +81,31 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
           localField: "timeType",
           foreignField: "keyMap",
           select: "valueEn valueVi",
-        });
-
+        })
+        .populate({
+          path: "serviceId",
+          model: "Service",
+          localField: "serviceId",
+          foreignField: "serviceId",
+          select: "name serviceCategoryId",
+          populate: {
+            path: "serviceCategoryId",
+            model: "ServiceCategory",
+            localField: "serviceCategoryId",
+            foreignField: "serviceCategoryId",
+            select: "name", // adjust fields as needed
+          },
+          populate: {
+            path: "clinicId",
+            model: "Clinic",
+            localField: "clinicId",
+            foreignField: "clinicId",
+            select: "name address mapUrl", // adjust fields as needed
+          },
+        })
+        .sort({ appointmentDate: -1, updatedAt: -1 }) 
+        // .skip(skip)
+        // .limit(pageSize);
       if (bookings.length === 0) {
         return resolve({
           status: 404,
@@ -75,9 +117,8 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
         bookings.map(async (booking) => {
           const doctorInfo = await doctor_Info
             .findOne({
-              doctorId: booking.doctorId.userId,
+              doctorId: booking?.doctorId?.userId,
             })
-            .populate("specialtyId", "name description")
             .populate({
               path: "specialtyId",
               model: "Specialty",
@@ -103,29 +144,27 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
           };
         })
       );
+      // let result = [];
+      // if (startDate && endDate) {
+      //   result = detailedBookings.filter((booking) => {
+      //     const appointmentDate = new Date(booking.appointmentDate);
+      //     if (appointmentDate >= startDate && appointmentDate <= endDate)
+      //       return booking;
+      //     else return null;
+      //   });
+      // } else {
+      //   result = detailedBookings;
+      // }
 
-      // console.log("detailedBookings", detailedBookings);
-
-      let result = [];
-      if (startDate && endDate) {
-        result = detailedBookings.filter((booking) => {
-          const appointmentDate = new Date(booking.appointmentDate);
-          if (appointmentDate >= startDate && appointmentDate <= endDate)
-            return booking;
-          else return null;
-        });
-      } else {
-        result = detailedBookings;
-      }
-
-      result.sort(
-        (a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate)
-      );
+      // result.sort(
+      //   (a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate)
+      // );
+      // console.log("result", result);
 
       return resolve({
         status: 200,
         message: "SUCCESS",
-        data: result,
+        data: detailedBookings,
       });
     } catch (e) {
       console.error(e);
@@ -748,13 +787,15 @@ const patientBookingOnline = (data) => {
               // await schedule.save();
               const newBooking = await booking.create({
                 doctorId: data.doctorId,
+                bookingType: "DOCTOR",
                 patientRecordId: data.patientRecordId,
                 appointmentDate: data.appointmentDate,
                 timeType: data.timeType,
                 price: data.price,
                 paymentMethod: "MOMO",
+                paymentStatus: "UNPAID",
                 reason: data.reason || "",
-                status: "S5",
+                status: "S1",
               });
               await newBooking.save();
 
@@ -826,11 +867,13 @@ const patientBookingDirect = (data) => {
 
               const newBooking = await booking.create({
                 doctorId: data.doctorId,
+                bookingType: "DOCTOR",
                 patientRecordId: data.patientRecordId,
                 appointmentDate: data.appointmentDate,
                 timeType: data.timeType,
                 price: data.price,
-                paymentMethod: "CASH",
+                paymentMethod: "COD",
+                paymentStatus: "UNPAID",
                 reason: data.reason || "",
                 status: "S1",
               });
@@ -855,6 +898,10 @@ const patientBookingDirect = (data) => {
                 nameDoctor,
                 nameUser,
                 imageClinic,
+                clinicAddress,
+                clinicMapLink,
+                paymentMethod,
+                paymentStatus,
               } = emailResult.data;
               const bookingFind = await booking
                 .findOne({
@@ -896,6 +943,10 @@ const patientBookingDirect = (data) => {
                 bookingId,
                 doctorId,
                 timeType,
+                clinicAddress,
+                clinicMapLink,
+                paymentMethod,
+                paymentStatus,
               };
               await sendMail.sendMailVerify(
                 [patientEmail, userEmail],
@@ -1450,8 +1501,11 @@ const getEmailByBookingId = async (bookingId) => {
           nameUser: userFind.fullname,
           imageClinic: clinicFind.image,
           timeKey: bookingFind.timeType.keyMap,
-          clinicAddress: clinicFind.address,
+          clinicAddress: clinicFind?.address,
           clinicMapLink: clinicFind.mapUrl,
+          orderNumber: bookingFind?.orderNumber,
+          paymentMethod: bookingFind?.paymentMethod,
+          paymentStatus: bookingFind?.paymentStatus,
         },
       });
     } catch (e) {
@@ -1507,7 +1561,7 @@ const getInfoToSendMailService = async (bookingId) => {
     const serviceCategoryInfo = await serviceCategory.findOne({
       serviceCategoryId: info?.serviceId?.serviceCategoryId,
     });
-    
+
     console.log("Service category info:", serviceCategoryInfo);
     return {
       patientEmail: info?.patientRecordId?.email,
@@ -1540,7 +1594,19 @@ const confirmBooking = async ({
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      await updateBookingStatus(bookingId, "S2");
+      // await updateBookingStatus(bookingId, "S2");
+      const orderNumber = await OrderCounterService.generateOrderNumber(
+        doctorId,
+        appointmentDate,
+        "DOCTOR"
+      );
+      console.log("Generated order number confirm booking:", orderNumber);
+
+      await booking.updateOne(
+        { bookingId: bookingId },
+        { status: "S2", orderNumber: orderNumber, paymentStatus: "UNPAID" },
+        { new: true }
+      );
       // Tìm lịch trình của bác sĩ
       const schedule = await schedules.findOne({
         doctorId,
@@ -1568,6 +1634,10 @@ const confirmBooking = async ({
         nameDoctor,
         nameUser,
         imageClinic,
+        clinicAddress,
+        clinicMapLink,
+        paymentMethod,
+        paymentStatus,
       } = emailResult.data;
       const appointmentDateString = appointmentDate;
       const button = "Đã xác nhận";
@@ -1583,6 +1653,13 @@ const confirmBooking = async ({
         nameUser,
         imageClinic,
         button,
+        clinicAddress,
+        clinicMapLink,
+        paymentMethod,
+        paymentStatus,
+        clinicAddress,
+        clinicMapLink,
+        orderNumber: orderNumber,
       };
 
       await sendMail.sendMailSuccess(
@@ -1698,14 +1775,6 @@ const getBookingByPatientId = (data) => {
         })
         .sort({ appointmentDate: -1 });
 
-      // const feedbacksWithMedia = await Promise.all(feedBacks.map(async (feedback) => {
-      //   const media = await ReviewMedia.find({ feedBackId: feedback.feedBackId }).select("mediaName");
-      //   return {
-      //     ...feedback._doc,
-      //     mediaNames: media.map(m => m.mediaName)
-      //   };
-      // }));
-
       const bookingWithMedia = await Promise.all(
         bookingFind.map(async (booking) => {
           const media = await bookingMedia
@@ -1726,6 +1795,8 @@ const getBookingByPatientId = (data) => {
           message: "The booking is not defined",
         });
       }
+      console.log("bookingWithMedia", bookingWithMedia);
+
       resolve({
         status: 200,
         message: "SUCCESS",

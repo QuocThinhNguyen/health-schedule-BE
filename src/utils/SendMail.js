@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { getPaymentStatusText } from "./paymentUtils.js";
 
 const sendMail = async (email, text, subject) => {
   const transporter = nodemailer.createTransport({
@@ -74,6 +75,9 @@ const sendMailSuccess = async (emails, data, subject) => {
     button,
     clinicAddress,
     clinicMapLink,
+    paymentMethod,
+    paymentStatus,
+    orderNumber,
   } = data;
   let priceInVND = Number(price).toLocaleString("vi-VN", {
     style: "currency",
@@ -220,12 +224,20 @@ const sendMailSuccess = async (emails, data, subject) => {
                     <span class="value">${appointmentDateString}</span>
                 </div>
                 <div class="info-row">
+                    <span class="label">Số thứ tự:</span>
+                    <span class="value">${orderNumber}</span>
+                </div>
+                <div class="info-row">
                     <span class="label">Giờ khám:</span>
                     <span class="value">${time}</span>
                 </div>
                 <div class="info-row">
                     <span class="label">Giá tiền:</span>
                     <span class="value">${priceInVND}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Phương thức thanh toán:</span>
+                     <span class="value">${paymentMethod} (${getPaymentStatusText(paymentStatus)})</span>
                 </div>
                 <div class="info-row">
                     <span class="label">Họ và tên:</span>
@@ -287,6 +299,10 @@ const sendMailVerify = async (emails, data, subject) => {
     bookingId,
     doctorId,
     timeType,
+    paymentStatus,
+    paymentMethod,
+    clinicAddress,
+    clinicMapLink,
   } = data;
   let priceInVND = Number(price).toLocaleString("vi-VN", {
     style: "currency",
@@ -442,12 +458,24 @@ const sendMailVerify = async (emails, data, subject) => {
                     <span class="value">${priceInVND}</span>
                 </div>
                 <div class="info-row">
+                    <span class="label">Phương thức thanh toán:</span>
+                     <span class="value">${paymentMethod} (${getPaymentStatusText(paymentStatus)})</span>
+                </div>
+                <div class="info-row">
                     <span class="label">Họ và tên:</span>
                     <span class="value">${namePatient}</span>
                 </div>
                 <div class="info-row">
                     <span class="label">Lý do khám:</span>
                     <span class="value">${reason}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Địa điểm:</span>
+                    <span class="value">${clinicAddress}</span>
+                </div>
+              <div class="info-row">
+                    <span class="label">Xem bản đồ:</span>
+                    <span class="value"><a href="${clinicMapLink}" target="_blank">Google Maps</a></span>
                 </div>
             </div>
         </div>
@@ -492,6 +520,9 @@ const sendMailReminder = async (email, data, subject) => {
     clinicAddress,
     clinicMapLink,
     clinicEmail,
+    orderNumber,
+    paymentStatus,
+    paymentMethod,
   } = data;
 
   const info = await transporter.sendMail({
@@ -509,11 +540,13 @@ const sendMailReminder = async (email, data, subject) => {
     <p><strong>Thông tin lịch khám:</strong></p>
     <ul>
       <li><strong>Ngày khám:</strong> ${appointmentDate}</li>
+      <li><strong>Số thứ tự:</strong> ${orderNumber}</li>
       <li><strong>Giờ khám:</strong> ${timeRange}</li>
       <li><strong>Bác sĩ:</strong> ${doctorName}</li>
       <li><strong>Chuyên khoa:</strong> ${specialtyName}</li>
       <li><strong>Lý do khám:</strong> ${reason}</li>
       <li><strong>Chi phí khám:</strong> ${price} VND</li>
+      <li><strong>Phương thức thanh toán:</strong> ${paymentMethod} (${getPaymentStatusText(paymentStatus)})</li>
       <li><strong>Trạng thái:</strong> ${statusText}</li>
       <li><strong>Địa điểm:</strong> ${clinicAddress}</li>
       <li><strong>Xem bản đồ:</strong> <a href="${clinicMapLink}" target="_blank">Google Maps</a></li>
@@ -562,7 +595,7 @@ const sendMailSuccessService = async (emails, data, subject) => {
     button,
     clinicAddress,
     clinicMapLink,
-    orderNumber
+    orderNumber,
   } = data;
   let priceInVND = Number(price).toLocaleString("vi-VN", {
     style: "currency",

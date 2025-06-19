@@ -6,6 +6,8 @@ import Schedules from "../models/schedule.js";
 import Booking from "../models/booking.js";
 import serviceSchedule from "../models/service_schedule.js";
 import sendMail from "../utils/SendMail.js";
+import OrderCounter from "../models/order_counter.js";
+import OrderCounterService from "./OrderCounterService.js";
 
 const createPaymentUrl = async (bookingId, amount, orderInfo) => {
   const requestId = bookingId + "_" + new Date().getTime();
@@ -94,8 +96,25 @@ const handlePaymentReturn = async (req, res) => {
 
     if (resultCode === "0") {
       // Thanh toán thành công
-      await bookingService.updateBookingStatus(bookingId, "S3");
+      const appointmentDateString = appointmentDate.toISOString().split("T")[0]; // Chỉ lấy phần ngày
+      // await bookingService.updateBookingStatus(bookingId, "S3");
       // const booking = await bookingService.getBooking(bookingId);
+      const bookingDetails = await Booking.findOne({
+        bookingId: bookingId,
+      });
+      const { doctorId, appointmentDate, timeType } = bookingDetails;
+      const orderNumber = await OrderCounterService.generateOrderNumber(
+        bookingDetails?.doctorId,
+        bookingDetails?.appointmentDateString,
+        bookingDetails?.bookingType
+      );
+      console.log("Order number:", orderNumber);
+
+      await Booking.updateOne(
+        { bookingId: bookingId },
+        { status: "S3", paymentStatus: "PAID", orderNumber: orderNumber },
+        { new: true }
+      );
 
       const emailResult = await bookingService.getEmailByBookingId(bookingId);
       const {
@@ -112,28 +131,30 @@ const handlePaymentReturn = async (req, res) => {
         imageClinic,
         clinicAddress,
         clinicMapLink,
+        paymentStatus,
+        paymentMethod,
       } = emailResult.data;
 
-      const booking = await Booking.findOne({
-        bookingId: bookingId,
-      })
-        .populate("doctorId", "fullname email")
-        .populate({
-          path: "doctorId",
-          model: "Users",
-          localField: "doctorId",
-          foreignField: "userId",
-          select: "fullname email",
-        })
-        .populate({
-          path: "patientRecordId",
-          model: "PatientRecords",
-          localField: "patientRecordId",
-          foreignField: "patientRecordId",
-          select: "fullname gender phoneNumber birthDate",
-        });
-      const { doctorId, appointmentDate, timeType } = booking;
-      const appointmentDateString = appointmentDate.toISOString().split("T")[0]; // Chỉ lấy phần ngày
+      // const booking = await Booking.findOne({
+      //   bookingId: bookingId,
+      // })
+      //   .populate("doctorId", "fullname email")
+      //   .populate({
+      //     path: "doctorId",
+      //     model: "Users",
+      //     localField: "doctorId",
+      //     foreignField: "userId",
+      //     select: "fullname email",
+      //   })
+      //   .populate({
+      //     path: "patientRecordId",
+      //     model: "PatientRecords",
+      //     localField: "patientRecordId",
+      //     foreignField: "patientRecordId",
+      //     select: "fullname gender phoneNumber birthDate",
+      //   });
+      // const { doctorId, appointmentDate, timeType } = bookingDetails;
+
       const button = "Đã thanh toán";
       const data = {
         namePatient,
@@ -149,13 +170,18 @@ const handlePaymentReturn = async (req, res) => {
         button,
         clinicAddress,
         clinicMapLink,
+        paymentStatus,
+        paymentMethod,
+        orderNumber,
       };
 
       const schedule = await Schedules.findOne({
-        doctorId: doctorId.userId,
-        scheduleDate: appointmentDateString,
+        doctorId: doctorId,
+        scheduleDate: appointmentDate,
         timeType: timeType,
       });
+      console.log("Schedule handle payment return:", schedule);
+
       schedule.currentNumber += 1;
       await schedule.save();
       await sendMail.sendMailSuccess(
@@ -164,13 +190,14 @@ const handlePaymentReturn = async (req, res) => {
         "Đặt lịch khám thành công"
       );
       return res.redirect(`${process.env.URL_REACT}/`);
-      // return res.status(200).json({
-      //   status: "OK",
-      //   message: "Payment successful",
-      // });
     } else {
       // Thanh toán thất bại
-      await bookingService.updateBookingStatus(bookingId, "S5");
+      // await bookingService.updateBookingStatus(bookingId, "S5");
+      await Booking.updateOne(
+        { bookingId: bookingId },
+        { status: "S5", paymentStatus: "FAILED" },
+        { new: true }
+      );
       return res.status(400).json({
         status: "ERR",
         message: "Payment failed",

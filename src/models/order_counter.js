@@ -8,9 +8,9 @@ const { Schema } = mongoose;
 const orderCounterSchema = new Schema(
   {
     appointmentDate: {
-      type: String,
+      type: Date,
       required: true,
-    }, // Format: YYYY-MM-DD
+    },
     bookingType: {
       type: String,
       required: true,

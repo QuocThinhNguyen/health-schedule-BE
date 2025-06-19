@@ -96,20 +96,24 @@ const handlePaymentReturn = async (req, res) => {
 
     if (resultCode === "0") {
       // Thanh toán thành công
-      const appointmentDateString = appointmentDate.toISOString().split("T")[0]; // Chỉ lấy phần ngày
+      
       // await bookingService.updateBookingStatus(bookingId, "S3");
       // const booking = await bookingService.getBooking(bookingId);
       const bookingDetails = await Booking.findOne({
         bookingId: bookingId,
       });
-      const { doctorId, appointmentDate, timeType } = bookingDetails;
+      console.log("bookingDetails", bookingDetails);
+      
+      // Chỉ lấy phần ngày
       const orderNumber = await OrderCounterService.generateOrderNumber(
         bookingDetails?.doctorId,
-        bookingDetails?.appointmentDateString,
+        bookingDetails?.appointmentDate,
         bookingDetails?.bookingType
       );
       console.log("Order number:", orderNumber);
-
+const { doctorId, appointmentDate, timeType } = bookingDetails;
+      const appointmentDateString = appointmentDate.toISOString().split("T")[0]; 
+      
       await Booking.updateOne(
         { bookingId: bookingId },
         { status: "S3", paymentStatus: "PAID", orderNumber: orderNumber },

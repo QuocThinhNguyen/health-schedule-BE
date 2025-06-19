@@ -65,6 +65,9 @@ export async function runReminder1DayJob() {
     const clinicAddress = findClinic.address;
     const clinicMapLink = findClinic.mapUrl;
     const clinicEmail = findClinic.email;
+    const orderNumber = booking?.orderNumber || "N/A";
+    const paymentStatus = booking?.paymentStatus || "N/A";
+    const paymentMethod = booking?.paymentMethod || "N/A";
 
     const datas = {
       bookerName,
@@ -80,6 +83,10 @@ export async function runReminder1DayJob() {
       clinicAddress,
       clinicMapLink,
       clinicEmail,
+      orderNumber,
+      paymentMethod,
+      paymentStatus,
+      
     };
 
     await sendMail.sendMailReminder(findUser.email, datas, subject);

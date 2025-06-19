@@ -11,10 +11,22 @@ const bookingSchema = new Schema(
       type: Number,
       unique: true,
     },
+    bookingType: {
+      type: String,
+      enum: ["DOCTOR", "SERVICE"],
+      required: true,
+    },
     doctorId: {
       type: Number,
       ref: "Users",
-      required: true,
+    },
+    serviceId: {
+      type: Number,
+      ref: "Users",
+    },
+    orderNumber: {
+      type: Number,
+      default: "",
     },
     patientRecordId: {
       type: Number,
@@ -45,7 +57,15 @@ const bookingSchema = new Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["CASH", "MOMO", "VNPAY", "BANK_TRANSFER"],
+      enum: ["CASH", "MOMO", "VNPAY", "COD", "BANK_TRANSFER"],
+    },
+    paymentStatus: {
+      type: String,
+      enum: [, "UNPAID", "PAID", "FAILED", "EXPIRED"],
+    },
+    paymentUrl: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true }

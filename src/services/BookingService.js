@@ -7,10 +7,21 @@ import schedules from "../models/schedule.js";
 import user from "../models/users.js";
 import sendMail from "../utils/SendMail.js";
 import bookingMedia from "../models/booking_media.js";
-import { resolve } from "path";
-import { model } from "mongoose";
+import service from "../models/service.js";
+import BookingMedia from "../models/booking_media.js";
+import serviceCategory from "../models/service_category.js";
+import serviceSchedule from "../models/service_schedule.js";
+import paymentService from "./PaymentService.js";
+import allCodes from "../models/allcodes.js";
+import OrderCounterService from "./OrderCounterService.js";
 
-const getAllBookingByUserId = (userId, startDate, endDate) => {
+const getAllBookingByUserId = (
+  userId,
+  startDate,
+  endDate,
+  pageNo,
+  pageSize
+) => {
   return new Promise(async (resolve, reject) => {
     try {
       const patientRecords = await patient_Records.find({ patientId: userId });
@@ -21,14 +32,27 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
         });
       }
 
-      // console.log("patientRecords", patientRecords);
+      // Tìm tất cả booking
+      let query = {
+        patientRecordId: {
+          $in: patientRecords.map((record) => record.patientRecordId),
+        },
+      };
+
+      // Thêm điều kiện lọc theo ngày nếu có
+      if (startDate && endDate) {
+        query.appointmentDate = {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        };
+      }
+
+      const totalBookings = await booking.countDocuments(query);
+      // const totalPages = Math.ceil(totalBookings / pageSize);
+      // const skip = (pageNo - 1) * pageSize;
 
       const bookings = await booking
-        .find({
-          patientRecordId: {
-            $in: patientRecords.map((record) => record.patientRecordId),
-          },
-        })
+        .find(query)
         .populate({
           path: "patientRecordId",
           model: "PatientRecords",
@@ -42,7 +66,7 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
           model: "Users",
           localField: "doctorId",
           foreignField: "userId",
-          select: "fullname",
+          select: "fullname image",
         })
         .populate({
           path: "status",
@@ -57,8 +81,31 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
           localField: "timeType",
           foreignField: "keyMap",
           select: "valueEn valueVi",
-        });
-
+        })
+        .populate({
+          path: "serviceId",
+          model: "Service",
+          localField: "serviceId",
+          foreignField: "serviceId",
+          select: "name serviceCategoryId",
+          populate: {
+            path: "serviceCategoryId",
+            model: "ServiceCategory",
+            localField: "serviceCategoryId",
+            foreignField: "serviceCategoryId",
+            select: "name", // adjust fields as needed
+          },
+          populate: {
+            path: "clinicId",
+            model: "Clinic",
+            localField: "clinicId",
+            foreignField: "clinicId",
+            select: "name address mapUrl", // adjust fields as needed
+          },
+        })
+        .sort({ appointmentDate: -1, updatedAt: -1 }) 
+        // .skip(skip)
+        // .limit(pageSize);
       if (bookings.length === 0) {
         return resolve({
           status: 404,
@@ -70,9 +117,8 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
         bookings.map(async (booking) => {
           const doctorInfo = await doctor_Info
             .findOne({
-              doctorId: booking.doctorId.userId,
+              doctorId: booking?.doctorId?.userId,
             })
-            .populate("specialtyId", "name description")
             .populate({
               path: "specialtyId",
               model: "Specialty",
@@ -98,29 +144,27 @@ const getAllBookingByUserId = (userId, startDate, endDate) => {
           };
         })
       );
+      // let result = [];
+      // if (startDate && endDate) {
+      //   result = detailedBookings.filter((booking) => {
+      //     const appointmentDate = new Date(booking.appointmentDate);
+      //     if (appointmentDate >= startDate && appointmentDate <= endDate)
+      //       return booking;
+      //     else return null;
+      //   });
+      // } else {
+      //   result = detailedBookings;
+      // }
 
-      // console.log("detailedBookings", detailedBookings);
-
-      let result = [];
-      if (startDate && endDate) {
-        result = detailedBookings.filter((booking) => {
-          const appointmentDate = new Date(booking.appointmentDate);
-          if (appointmentDate >= startDate && appointmentDate <= endDate)
-            return booking;
-          else return null;
-        });
-      } else {
-        result = detailedBookings;
-      }
-
-      result.sort(
-        (a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate)
-      );
+      // result.sort(
+      //   (a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate)
+      // );
+      // console.log("result", result);
 
       return resolve({
         status: 200,
         message: "SUCCESS",
-        data: result,
+        data: detailedBookings,
       });
     } catch (e) {
       console.error(e);
@@ -240,7 +284,7 @@ const getBooking = (id) => {
           select:
             "fullname gender phoneNumber birthDate address CCCD email job",
         })
-        
+
         .lean();
 
       const findDoctor = await doctor_Info
@@ -262,7 +306,6 @@ const getBooking = (id) => {
           select: "name",
         });
 
-       
       const newBooking = {
         ...bookingFind,
         appointmentDate: bookingFind.appointmentDate
@@ -724,7 +767,7 @@ const patientBookingOnline = (data) => {
           patientRecordId: data.patientRecordId,
           appointmentDate: data.appointmentDate,
           timeType: data.timeType,
-          status: "S2" || "S3",
+          status: "S1" || "S2" || "S3",
         });
 
         if (existingBooking) {
@@ -744,13 +787,15 @@ const patientBookingOnline = (data) => {
               // await schedule.save();
               const newBooking = await booking.create({
                 doctorId: data.doctorId,
+                bookingType: "DOCTOR",
                 patientRecordId: data.patientRecordId,
                 appointmentDate: data.appointmentDate,
                 timeType: data.timeType,
                 price: data.price,
                 paymentMethod: "MOMO",
+                paymentStatus: "UNPAID",
                 reason: data.reason || "",
-                status: "S5",
+                status: "S1",
               });
               await newBooking.save();
 
@@ -802,7 +847,7 @@ const patientBookingDirect = (data) => {
           status: { $in: ["S2", "S3"] },
         });
         console.log("existingBooking", existingBooking);
-        
+
         if (existingBooking) {
           return resolve({
             status: 409,
@@ -822,23 +867,25 @@ const patientBookingDirect = (data) => {
 
               const newBooking = await booking.create({
                 doctorId: data.doctorId,
+                bookingType: "DOCTOR",
                 patientRecordId: data.patientRecordId,
                 appointmentDate: data.appointmentDate,
                 timeType: data.timeType,
                 price: data.price,
-                paymentMethod: "CASH",
+                paymentMethod: "COD",
+                paymentStatus: "UNPAID",
                 reason: data.reason || "",
                 status: "S1",
               });
               console.log("newBooking", newBooking);
-              
+
               await newBooking.save();
               const bookingId = newBooking.bookingId;
               console.log("bookingId", bookingId);
-              
+
               const emailResult = await getEmailByBookingId(bookingId);
               console.log("emailResult", emailResult);
-              
+
               const {
                 patientEmail,
                 userEmail,
@@ -851,6 +898,10 @@ const patientBookingDirect = (data) => {
                 nameDoctor,
                 nameUser,
                 imageClinic,
+                clinicAddress,
+                clinicMapLink,
+                paymentMethod,
+                paymentStatus,
               } = emailResult.data;
               const bookingFind = await booking
                 .findOne({
@@ -892,6 +943,10 @@ const patientBookingDirect = (data) => {
                 bookingId,
                 doctorId,
                 timeType,
+                clinicAddress,
+                clinicMapLink,
+                paymentMethod,
+                paymentStatus,
               };
               await sendMail.sendMailVerify(
                 [patientEmail, userEmail],
@@ -899,7 +954,7 @@ const patientBookingDirect = (data) => {
                 "Xác nhận đặt khám"
               );
               console.log("Email sent successfully to:", newBooking);
-              
+
               return resolve({
                 status: 200,
                 message: "SUCCESS",
@@ -924,6 +979,382 @@ const patientBookingDirect = (data) => {
     }
   });
 };
+
+const bookingAppointment = (
+  bookingType,
+  docktorId,
+  serviceId,
+  patientRecordId,
+  appointmentDate,
+  timeType,
+  reason,
+  paymentMethod,
+  files
+) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (
+        !patientRecordId ||
+        !appointmentDate ||
+        !timeType ||
+        !paymentMethod ||
+        (bookingType === "DOCTOR" && !doctorId) ||
+        (bookingType === "SERVICE" && !serviceId)
+      ) {
+        return resolve({
+          status: 400,
+          message: "Data is not enough",
+        });
+      }
+      console.log("bookingType", bookingType);
+
+      if (bookingType === "DOCTOR") {
+        const res = await bookingWithDoctor(
+          bookingType,
+          docktorId,
+          patientReordId,
+          appointmentDate,
+          timeType,
+          reason,
+          paymentMethod,
+          files
+        );
+        return resolve({
+          status: 200,
+          message: "Booking with doctor successful",
+          data: res,
+        });
+      } else if (bookingType === "SERVICE") {
+        const res = await bookingWithService(
+          bookingType,
+          serviceId,
+          patientRecordId,
+          appointmentDate,
+          timeType,
+          reason,
+          paymentMethod,
+          files
+        );
+        return resolve(res);
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+async function bookingWithDoctor(
+  bookingType,
+  docktorId,
+  patientReordId,
+  appointmentDate,
+  timeType,
+  reason,
+  paymentMethod,
+  files
+) {
+  console.log("bookingWithDoctor called with:");
+
+  //   try {
+  //     const doctorInfo = await doctor_Info.findOne({
+  //       doctorId: docktorId,
+  //     });
+  //     if (!doctorInfo) {
+  //       return {
+  //         status: 404,
+  //         message: "Doctor not found",
+  //       };
+  //     }
+  //     const patientRecord = await patient_Records.findOne({
+  //       patientRecordId: patientReordId,
+  //     });
+  //     if (!patientRecord) {
+  //       return {
+  //         status: 404,
+  //         message: "Patient record not found",
+  //       };
+  //     }
+  //     const existingBooking = await booking.findOne({
+  //       doctorId: docktorId,
+  //       patientRecordId: patientReordId,
+  //       appointmentDate: appointmentDate,
+  //       timeType: timeType,
+  //       status: { $in: ["S2", "S3"] },
+  //     });
+  //     if (existingBooking) {
+  //       return {
+  //         status: 409,
+  //         message: "Bạn đã đặt khung giờ này rồi. Hãy chọn khung giờ khác!",
+  //       };
+  //     }
+  //     const schedule = await schedules.findOne({
+  //       doctorId: docktorId,
+  //       scheduleDate: appointmentDate,
+  //       timeType: timeType,
+  //     });
+  //     if (!schedule) {
+  //       return {
+  //         status: 404,
+  //         message: "This schedule is not existed",
+  //       };
+  //     }
+  //     if (schedule.currentNumber >= schedule.maxNumber) {
+  //       return {
+  //         status: 409,
+  //         message: "This schedule is full",
+  //       };
+  //     }
+  //     schedule.currentNumber += 1;
+  //     await schedule.save();
+  //     const newBooking = await booking.create({
+  //         bookingType: bookingType,
+  //         doctorId: docktorId,
+  //         patientRecordId: patientReordId,
+  //         appointmentDate: appointmentDate,
+  //         timeType: timeType,
+  //         price: price,
+  //         reason: reason || "",
+  //         paymentMethod: paymentMethod,
+  //         paymentStatus: "PENDING",
+  //         status: "S1",
+  //       });
+  //       await newBooking.save();
+  //        const bookingId = newBooking.bookingId;
+  //     if (paymentMethod === "MOMO") {
+  //     }
+  //     else if (paymentMethod === "COD") {
+  //     try {
+  //         const emailResult = await getEmailByBookingId(bookingId);
+  //         const {
+  //             patientEmail,
+  //             userEmail,
+  //             namePatient,
+  //             // reason,
+  //             price,
+  //             time,
+  //             nameClinic,
+  //             nameSpecialty,
+  //             nameDoctor,
+  //             nameUser,
+  //             imageClinic,
+  //         } = emailResult.data;
+  //         const appointmentDateString = appointmentDate
+  //             .toISOString()
+  //             .split("T")[0];
+  //         const emailData = {
+  //             namePatient,
+  //             reason,
+  //             appointmentDateString,
+  //             price,
+  //             time,
+  //             nameClinic,
+  //             nameSpecialty,
+  //             nameDoctor,
+  //             nameUser,
+  //             imageClinic,
+  //             bookingId,
+  //             doctorId,
+  //             timeType,
+  //         };
+  //         // Send confirmation email
+  //         await sendMail.sendMailVerify(
+  //             [patientEmail, userEmail],
+  //             emailData,
+  //             "Xác nhận đặt khám"
+  //         );
+  //         console.log("Email sent successfully to:", patientEmail, userEmail);
+  //     } catch (error) {
+  //         console.error("Error sending confirmation email:", error);
+  //         throw error;
+  //     }
+  // }
+  //       return {
+  //         status: 200,
+  //         message: "Tạo lịch hẹn thanh toán online thành công",
+  //         data: newBooking,
+  //       };
+  //     }
+  // } catch (e) {
+  //   throw e;
+  // }
+}
+async function bookingWithService(
+  bookingType,
+  serviceId,
+  patientRecordId,
+  appointmentDate,
+  timeType,
+  reason,
+  paymentMethod,
+  files
+) {
+  try {
+    console.log("bookingWithService called with:");
+    const serviceInfo = await service
+      .findOne({
+        serviceId: serviceId,
+      })
+      .populate({
+        path: "clinicId",
+        model: "Clinic",
+        localField: "clinicId",
+        foreignField: "clinicId",
+        select: "name image address mapUrl",
+      })
+      .populate({
+        path: "serviceCategoryId",
+        model: "ServiceCategory",
+        localField: "serviceCategoryId",
+        foreignField: "serviceCategoryId",
+        select: "name",
+      });
+    if (!serviceInfo) {
+      return {
+        status: 404,
+        message: "Service not found",
+      };
+    }
+    const patientRecord = await patient_Records
+      .findOne({
+        patientRecordId: patientRecordId,
+      })
+      .populate({
+        path: "patientId",
+        model: "PatientRecords",
+        localField: "patientId",
+        foreignField: "patientId",
+        select: "fullname email phoneNumber birthDate address",
+      });
+    if (!patientRecord) {
+      return {
+        status: 404,
+        message: "Patient record not found",
+      };
+    }
+    const existingBooking = await booking.findOne({
+      serviceId: serviceId,
+      patientRecordId: patientRecordId,
+      appointmentDate: appointmentDate,
+      timeType: timeType,
+      status: { $in: ["S1", "S2", "S3"] },
+    });
+    console.log("existingBooking", existingBooking);
+
+    if (existingBooking) {
+      return {
+        status: 409,
+        message: "Bạn đã đặt khung giờ này rồi. Hãy chọn khung giờ khác!",
+      };
+    }
+    const schedule = await serviceSchedule.findOne({
+      serviceId: serviceId,
+      scheduleDate: appointmentDate,
+      timeType: timeType,
+    });
+    console.log("This schedule is  existed", schedule);
+
+    if (!schedule) {
+      return {
+        status: 404,
+        message: "This schedule is not existed",
+      };
+    }
+    if (schedule.currentNumber >= schedule.maxNumber) {
+      return {
+        status: 409,
+        message: "This schedule is full",
+      };
+    }
+    schedule.currentNumber += 1;
+    console.log("Updated schedule currentNumber:", schedule.currentNumber);
+
+    await schedule.save();
+
+    const newBooking = await booking.create({
+      bookingType: bookingType,
+      serviceId: serviceId,
+      patientRecordId: patientRecordId,
+      appointmentDate: appointmentDate,
+      timeType: timeType,
+      price: serviceInfo.price,
+      reason: reason || "",
+      paymentMethod: paymentMethod,
+      paymentStatus: "UNPAID",
+      status: "S1",
+    });
+    console.log("New booking created:", newBooking);
+
+    await newBooking.save();
+    const bookingId = newBooking.bookingId;
+    for (const file of files) {
+      await BookingMedia.create({
+        bookingId: bookingId,
+        name: file.path,
+      });
+    }
+
+    if (paymentMethod === "MOMO") {
+      const paymentUrl = await paymentService.createPaymentUrl(
+        bookingId.toString(),
+        serviceInfo.price,
+        "Payment for service booking"
+      );
+      console.log("Payment URL created:", paymentUrl);
+
+      return {
+        status: 200,
+        message:
+          "Tạo lịch hẹn thanh toán online thành công. Tiếp theo là thanhn toán",
+        data: {
+          newBooking,
+          paymentUrl,
+        },
+      };
+    } else if (paymentMethod === "COD") {
+      const allcodeInfo = await allCodes.findOne({
+        keyMap: timeType,
+        type: "TIME",
+      });
+
+      const emailData = {
+        namePatient: patientRecord.fullname,
+        reason: reason || "",
+        appointmentDateString: appointmentDate,
+        price: serviceInfo.price,
+        time: allcodeInfo?.valueVi || "Không xác định",
+        nameClinic: serviceInfo?.clinicId?.name,
+        nameServiceCategory: serviceInfo?.serviceCategoryId?.name,
+        nameService: serviceInfo.name,
+        nameUser: patientRecord?.patientId?.fullname,
+        imageClinic: serviceInfo?.clinicId?.image,
+        bookingId: bookingId,
+        serviceId: serviceId,
+        timeType: timeType,
+      };
+      console.log("Email data prepared:", emailData);
+
+      // Send confirmation email
+      await sendMail.sendMailVerifyService(
+        [patientRecord?.email, patientRecord?.patientId?.email],
+        emailData,
+        "Xác nhận đặt khám"
+      );
+      console.log(
+        "Email sent successfully to:",
+        patientRecord?.email,
+        patientRecord?.patientId?.email
+      );
+      return {
+        status: 200,
+        message: "Tạo lịch hẹn thanh toán trực tiếp thành công",
+        data: newBooking,
+      };
+    }
+  } catch (e) {
+    console.error("Error in bookingWithService:", e);
+    throw e;
+  }
+}
 
 const updateBookingStatus = (bookingId, status) => {
   return new Promise(async (resolve, reject) => {
@@ -954,11 +1385,12 @@ const updateBookingStatus = (bookingId, status) => {
 const updateBookingPaymentUrl = async (bookingId, paymentUrl) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const bookingFind = await booking.findOneAndUpdate(
+      const bookingFind = await booking.updateOne(
         { bookingId: bookingId },
         { paymentUrl: paymentUrl },
         { new: true }
       );
+      console.log("bookingFind", bookingFind);
 
       if (!bookingFind) {
         return resolve({
@@ -1069,8 +1501,11 @@ const getEmailByBookingId = async (bookingId) => {
           nameUser: userFind.fullname,
           imageClinic: clinicFind.image,
           timeKey: bookingFind.timeType.keyMap,
-          clinicAddress: clinicFind.address,
+          clinicAddress: clinicFind?.address,
           clinicMapLink: clinicFind.mapUrl,
+          orderNumber: bookingFind?.orderNumber,
+          paymentMethod: bookingFind?.paymentMethod,
+          paymentStatus: bookingFind?.paymentStatus,
         },
       });
     } catch (e) {
@@ -1083,6 +1518,74 @@ const getEmailByBookingId = async (bookingId) => {
   });
 };
 
+const getInfoToSendMailService = async (bookingId) => {
+  try {
+    console.log("getInfoToSendMailService called with bookingId:", bookingId);
+
+    const info = await booking
+      .findOne({
+        bookingId: bookingId,
+      })
+      .populate({
+        path: "serviceId",
+        model: "Service",
+        localField: "serviceId",
+        foreignField: "serviceId",
+        select: "name price clinicId serviceCategoryId",
+      })
+      .populate({
+        path: "patientRecordId",
+        model: "PatientRecords",
+        localField: "patientRecordId",
+        foreignField: "patientRecordId",
+        select: "fullname birthDate email phoneNumber patientId",
+      })
+      .populate({
+        path: "timeType",
+        model: "AllCodes",
+        localField: "timeType",
+        foreignField: "keyMap",
+        select: "valueEn valueVi keyMap",
+      });
+    console.log("Booking info:", info);
+
+    const userInfo = await user.findOne({
+      userId: info?.patientRecordId?.patientId,
+    });
+    console.log("User info:", userInfo);
+
+    const clinicInfo = await clinic.findOne({
+      clinicId: info?.serviceId?.clinicId,
+    });
+    console.log("Clinic info:", clinicInfo);
+    const serviceCategoryInfo = await serviceCategory.findOne({
+      serviceCategoryId: info?.serviceId?.serviceCategoryId,
+    });
+
+    console.log("Service category info:", serviceCategoryInfo);
+    return {
+      patientEmail: info?.patientRecordId?.email,
+      userEmail: userInfo?.email,
+      namePatient: info?.patientRecordId?.fullname,
+      reason: info.reason,
+      price: info.price,
+      time: info?.timeType?.valueVi,
+      nameClinic: clinicInfo?.name,
+      nameServiceCategory: serviceCategoryInfo?.name,
+      nameService: info?.serviceId?.name,
+      nameUser: userInfo?.fullname,
+      imageClinic: clinicInfo?.image,
+      clinicAddress: clinicInfo?.address,
+      clinicMapLink: clinicInfo?.mapUrl,
+      appointmentDate: info?.appointmentDate,
+      timeType: info?.timeType?.keyMap,
+    };
+  } catch (error) {
+    console.error("Error in getInfoToSendMailSerice:", error);
+    throw error;
+  }
+};
+
 const confirmBooking = async ({
   bookingId,
   doctorId,
@@ -1091,7 +1594,19 @@ const confirmBooking = async ({
 }) => {
   return new Promise(async (resolve, reject) => {
     try {
-      await updateBookingStatus(bookingId, "S2");
+      // await updateBookingStatus(bookingId, "S2");
+      const orderNumber = await OrderCounterService.generateOrderNumber(
+        doctorId,
+        appointmentDate,
+        "DOCTOR"
+      );
+      console.log("Generated order number confirm booking:", orderNumber);
+
+      await booking.updateOne(
+        { bookingId: bookingId },
+        { status: "S2", orderNumber: orderNumber, paymentStatus: "UNPAID" },
+        { new: true }
+      );
       // Tìm lịch trình của bác sĩ
       const schedule = await schedules.findOne({
         doctorId,
@@ -1119,6 +1634,10 @@ const confirmBooking = async ({
         nameDoctor,
         nameUser,
         imageClinic,
+        clinicAddress,
+        clinicMapLink,
+        paymentMethod,
+        paymentStatus,
       } = emailResult.data;
       const appointmentDateString = appointmentDate;
       const button = "Đã xác nhận";
@@ -1134,12 +1653,88 @@ const confirmBooking = async ({
         nameUser,
         imageClinic,
         button,
+        clinicAddress,
+        clinicMapLink,
+        paymentMethod,
+        paymentStatus,
+        clinicAddress,
+        clinicMapLink,
+        orderNumber: orderNumber,
       };
 
       await sendMail.sendMailSuccess(
         [patientEmail, userEmail],
         datas,
         "Xác nhận đặt lịch khám thành công"
+      );
+
+      resolve({
+        status: 200,
+        message: "Booking confirmed successfully",
+      });
+    } catch (e) {
+      reject({
+        status: 500,
+        message: e.message,
+        error: e.message,
+      });
+    }
+  });
+};
+
+const confirmBookingService = async ({
+  bookingId,
+  serviceId,
+  appointmentDate,
+  timeType,
+}) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log("confirmBookingSerice called with:", {
+        bookingId,
+        serviceId,
+        appointmentDate,
+        timeType,
+      });
+
+      const orderNumber = await OrderCounterService.generateOrderNumber(
+        serviceId,
+        appointmentDate,
+        "SERVICE"
+      );
+
+      console.log("Generated order number:", orderNumber);
+
+      await booking.updateOne(
+        { bookingId: bookingId },
+        {
+          status: "S2",
+          orderNumber: orderNumber,
+        },
+        { new: true }
+      );
+
+      const infoToSendMail = await getInfoToSendMailService(bookingId);
+      console.log("infoToSendMail", infoToSendMail);
+
+      const appointmentDateString = appointmentDate;
+      const button = "Đã xác nhận";
+      const datas = {
+        ...infoToSendMail,
+        orderNumber,
+        appointmentDateString,
+        button,
+      };
+
+      await sendMail.sendMailSuccessService(
+        [infoToSendMail?.patientEmail, infoToSendMail?.userEmail],
+        datas,
+        "Xác nhận đặt lịch khám dịch vụ thành công"
+      );
+      console.log(
+        "Email sent successfully to:",
+        infoToSendMail?.patientEmail,
+        infoToSendMail?.userEmail
       );
 
       resolve({
@@ -1180,14 +1775,6 @@ const getBookingByPatientId = (data) => {
         })
         .sort({ appointmentDate: -1 });
 
-      // const feedbacksWithMedia = await Promise.all(feedBacks.map(async (feedback) => {
-      //   const media = await ReviewMedia.find({ feedBackId: feedback.feedBackId }).select("mediaName");
-      //   return {
-      //     ...feedback._doc,
-      //     mediaNames: media.map(m => m.mediaName)
-      //   };
-      // }));
-
       const bookingWithMedia = await Promise.all(
         bookingFind.map(async (booking) => {
           const media = await bookingMedia
@@ -1208,6 +1795,8 @@ const getBookingByPatientId = (data) => {
           message: "The booking is not defined",
         });
       }
+      console.log("bookingWithMedia", bookingWithMedia);
+
       resolve({
         status: 200,
         message: "SUCCESS",
@@ -1384,6 +1973,42 @@ const getBookingByTimeType = (query) => {
   });
 };
 
+// const generateOrderNumber = async (
+//   serviceId,
+//   doctorId,
+//   appointmentDate,
+//   bookingType
+// ) => {
+//   try {
+//     if (bookingType === "SERVICE") {
+//       const appointmentDateObj = new Date(appointmentDate);
+
+//       const startOfDay = new Date(appointmentDateObj);
+//       startOfDay.setHours(0, 0, 0, 0);
+//       const endOfDay = new Date(appointmentDateObj);
+//       endOfDay.setHours(23, 59, 59, 999);
+
+//       const existingBookingsCount = await booking.count({
+//         where: {
+//           serviceId: serviceId,
+//           appointmentDate: {
+//             $gte: startOfDay,
+//             $lte: endOfDay,
+//           },
+//           bookingType: "SERVICE",
+//         },
+//       });
+//       console.log("Existing bookings count generateOrderNumber:", existingBookingsCount);
+
+//       const orderNumber = existingBookingsCount + 1;
+//       return orderNumber;
+//     }
+//   } catch (error) {
+//     console.error("Error generating order number:", error);
+//     throw error;
+//   }
+// };
+
 export default {
   getAllBookingByUserId,
   getAllBooking,
@@ -1393,10 +2018,13 @@ export default {
   getBookingByDoctorId,
   patientBookingOnline,
   patientBookingDirect,
+  bookingAppointment,
   updateBookingStatus,
   updateBookingPaymentUrl,
   getEmailByBookingId,
+  getInfoToSendMailService,
   confirmBooking,
+  confirmBookingService,
   getBookingLatestByDoctorId,
   getBookingByPatientId,
   getAllBookingByClinic,

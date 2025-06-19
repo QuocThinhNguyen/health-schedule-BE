@@ -221,8 +221,48 @@ const patientBookingDirect = async (req, res) => {
   }
 };
 
+const bookingAppointment = async (req, res) => {
+  try {
+    const files = req.files || [];
+
+    const bookingType = req.body.bookingType || "SERVICE";
+    const docktorId = parseInt(req.body.doctorId);
+    const serviceId = parseInt(req.body.serviceId) || null;
+    const patientRecordId = parseInt(req.body.patientRecordId) || null;
+    const appointmentDate = req.body.appointmentDate || null;
+    const timeType = req.body.timeType || null;
+    const reason = req.body.reason || "";
+    const paymentMethod = req.body.paymentMethod || "COD";
+    console.log("Booking appointment data:", req.body);
+
+    const response = await bookingService.bookingAppointment(
+      bookingType,
+      docktorId,
+      serviceId,
+      patientRecordId,
+      appointmentDate,
+      timeType,
+      reason,
+      paymentMethod,
+      files
+    );
+
+    return res.status(200).json(response);
+  } catch (e) {
+    console.error("Error in bookingAppointment controller:", e);
+    return res.status(500).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+};
+
 const handlePaymentReturn = async (req, res) => {
   return paymentService.handlePaymentReturn(req, res);
+};
+
+const handlePaymentReturnService = async (req, res) => {
+  return paymentService.handlePaymentReturnService(req, res);
 };
 
 const getEmailByBookingId = async (req, res) => {
@@ -244,6 +284,24 @@ const confirmBooking = async (req, res) => {
     const response = await bookingService.confirmBooking({
       bookingId,
       doctorId,
+      appointmentDate,
+      timeType,
+    });
+    return res.redirect(`${process.env.URL_REACT}/`);
+  } catch (e) {
+    return res.status(500).json({
+      status: 500,
+      message: e.message,
+    });
+  }
+};
+
+const confirmBookingService = async (req, res) => {
+  try {
+    const { bookingId, serviceId, appointmentDate, timeType } = req.query;
+    const response = await bookingService.confirmBookingService({
+      bookingId,
+      serviceId,
       appointmentDate,
       timeType,
     });
@@ -302,9 +360,12 @@ export default {
   getBookingByDoctorId,
   patientBookingOnline,
   patientBookingDirect,
+  bookingAppointment,
   handlePaymentReturn,
+  handlePaymentReturnService,
   getEmailByBookingId,
   confirmBooking,
+  confirmBookingService,
   getBookingLatestByDoctorId,
   getBookingByPatientId,
   getAllBookingByClinic,

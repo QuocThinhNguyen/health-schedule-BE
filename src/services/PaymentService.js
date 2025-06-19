@@ -4,6 +4,7 @@ import momoConfig from "../configs/momoConfig.js";
 import bookingService from "../services/BookingService.js";
 import Schedules from "../models/schedule.js";
 import Booking from "../models/booking.js";
+import serviceSchedule from "../models/service_schedule.js";
 import sendMail from "../utils/SendMail.js";
 
 const createPaymentUrl = async (bookingId, amount, orderInfo) => {
@@ -184,7 +185,81 @@ const handlePaymentReturn = async (req, res) => {
   }
 };
 
+const handlePaymentReturnService = async (req, res) => {
+  try {
+    const { orderId, resultCode } = req.query;
+    const bookingId = orderId.split("_")[0];
+
+    if (resultCode === "0") {
+      const orderNumber = await bookingService.getOrderNumberByBookingId(
+        bookingId
+      );
+      await booking.updateOne(
+        { bookingId: bookingId },
+        { status: "S3", paymentStatus: "PAID", orderNumber: orderNumber },
+        { new: true }
+      );
+
+      const emailResult = await bookingService.getInfoToSendMailSerice(
+        bookingId
+      );
+      const appointmentDateString = emailResult?.appointmentDate
+        .toISOString()
+        .split("T")[0]; // Chỉ lấy phần ngày
+      const button = "Đã thanh toán";
+      const data = {
+        ...emailResult,
+        appointmentDateString,
+        button,
+      };
+
+      await sendMail.sendMailSuccess(
+        [emailResult?.patientEmail, emailResult?.userEmail],
+        data,
+        "Đặt lịch khám thành công"
+      );
+      return res.redirect(`${process.env.URL_REACT}/`);
+    } else {
+      await Booking.updateOne(
+        { bookingId: bookingId },
+        { status: "S5", paymentStatus: "FAILED" },
+        { new: true }
+      );
+      const schedule = await serviceSchedule.findOne({
+        serviceId: serviceId,
+        scheduleDate: appointmentDate,
+        timeType: timeType,
+      });
+      if (!schedule) {
+        return res.status(404).json({
+          status: "ERR",
+          message: "Schedule not found",
+        });
+      }
+      if (schedule.currentNumber <= 0) {
+        return res.status(400).json({
+          status: "ERR",
+          message: "No available slots",
+        });
+      }
+      schedule.currentNumber -= 1;
+      await schedule.save();
+      return res.status(400).json({
+        status: "ERR",
+        message: "Payment failed",
+      });
+    }
+  } catch (error) {
+    console.error("Error handling payment return:", error.message);
+    return res.status(500).json({
+      status: "ERR",
+      message: "Error from server",
+    });
+  }
+};
+
 export default {
   createPaymentUrl,
   handlePaymentReturn,
+  handlePaymentReturnService,
 };

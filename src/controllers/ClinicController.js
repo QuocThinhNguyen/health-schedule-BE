@@ -1,4 +1,78 @@
 import clinicService from "../services/ClinicService.js";
+import scheduleService from "../services/ScheduleService.js";
+
+const getStatistics = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const clinicId = await scheduleService.getClinicIdByUserId(userId);
+    const data = await clinicService.getStatistics(clinicId);
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("Error in getStatistics:", err);
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+};
+
+const revenueChart = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const clinicId = await scheduleService.getClinicIdByUserId(userId);
+    const data = await clinicService.revenueChart(clinicId);
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("Error in revenueChart:", err);
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+};
+
+const statusBookingChart = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const clinicId = await scheduleService.getClinicIdByUserId(userId);
+    const data = await clinicService.statusBookingChart(clinicId);
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("Error in statusBookingChart:", err);
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+};
+const bookingDayInMonthChart = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const clinicId = await scheduleService.getClinicIdByUserId(userId);
+    const data = await clinicService.bookingDayInMonthChart(clinicId);
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("Error in bookingDayInMonthChart:", err);
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+};
+const bookingMonthInYearChart = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const clinicId = await scheduleService.getClinicIdByUserId(userId);
+    const data = await clinicService.bookingMonthInYearChart(clinicId);
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error("Error in bookingMonthInYearChart:", err);
+    return res.status(500).json({
+      status: 500,
+      message: "Error from server",
+    });
+  }
+};
 
 const createClinic = async (req, res) => {
   try {
@@ -120,6 +194,11 @@ const getClinicByProvinceId = async (req, res) => {
 };
 
 export default {
+  getStatistics,
+  revenueChart,
+  statusBookingChart,
+  bookingDayInMonthChart,
+  bookingMonthInYearChart,
   createClinic,
   updateClinic,
   getAllClinic,

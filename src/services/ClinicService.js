@@ -1,7 +1,432 @@
-import clinic from "../models/clinic.js";
 import SpecialtyService from "./SpecialtyService.js";
-import doctorInfo from "../models/doctor_info.js"
-import feedBack from "../models/feedbacks.js"
+import doctorInfo from "../models/doctor_info.js";
+import feedBack from "../models/feedbacks.js";
+import booking from "../models/booking.js";
+import clinic from "../models/clinic.js";
+
+const COMMISSION_RATE = process.env.DEFAULT_COMMISSION_RATEE || 0.04;
+
+const getStatistics = (clinicId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!clinicId) {
+        return resolve({
+          status: 400,
+          message: "Missing clinicId",
+        });
+      }
+      const currentDate = new Date();
+      const firstDayOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+      const lastDayOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+        23,
+        59,
+        59
+      );
+      const clinicInfo = await clinic.findOne({ clinicId });
+      console.log("Clinic Info:", clinicInfo);
+
+      if (!clinicInfo) {
+        return res.status(404).json({
+          status: 404,
+          message: "Không tìm thấy bệnh viện",
+        });
+      }
+      //1. Tính tổng doanh thu tháng này của bệnh viện
+
+      const doctorInfos = await doctorInfo.find({ clinicId: clinicId });
+      const doctorIds = doctorInfos.map((info) => info.doctorId);
+
+      const completedBookings = await booking.find({
+        doctorId: { $in: doctorIds },
+        status: "S4",
+        appointmentDate: {
+          $gte: firstDayOfMonth,
+          $lte: lastDayOfMonth,
+        },
+      });
+      console.log("Completed Bookings:", completedBookings);
+      // Tính tổng doanh thu từ booking và dịch vụ
+      const totalRevenue = completedBookings.reduce(
+        (sum, booking) => sum + (Number(booking.price) || 0),
+        0
+      );
+      console.log("Total Revenue:", totalRevenue);
+      const commission = totalRevenue * COMMISSION_RATE;
+      console.log("Commission:", commission);
+      const actualRevenue = totalRevenue - commission;
+      console.log("Actual Revenue:", actualRevenue);
+
+      const bookingsThisMonth = await booking.countDocuments({
+        doctorId: { $in: doctorIds },
+        appointmentDate: {
+          $gte: firstDayOfMonth,
+          $lte: lastDayOfMonth,
+        },
+      });
+      console.log("Bookings This Month:", bookingsThisMonth);
+
+      const countDoctorInfos = await doctorInfo.countDocuments({
+        clinicId: clinicId,
+      });
+      console.log("Doctor Infos Count:", doctorInfos);
+      const successfulPatientRecords = await booking
+        .find({
+          doctorId: { $in: doctorIds },
+          status: "S4",
+        })
+        .distinct("patientRecordId");
+      const totalPatients = successfulPatientRecords.length;
+      console.log("Total Patients:", totalPatients);
+
+      resolve({
+        status: 200,
+        message: "Get clinic statistics successfully",
+        data: {
+          clinic: {
+            clinicId: clinicInfo.clinicId,
+            name: clinicInfo.name,
+            address: clinicInfo.address,
+          },
+          statistics: {
+            totalRevenue,
+            commission,
+            actualRevenue,
+            countDoctorInfos,
+            totalPatients,
+            bookingsThisMonth,
+          },
+          period: {
+            fromDate: firstDayOfMonth,
+            toDate: lastDayOfMonth,
+          },
+        },
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+const revenueChart = async (clinicId) => {
+  return new Promise(async (resolve, reject) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+
+    try {
+      // Bước 1: Tìm tất cả doctorId thuộc clinicId này
+      const doctorIds = await getListDoctorIdsByClinicId(clinicId);
+      console.log("Doctor IDs:", doctorIds);
+
+      // Bước 2: Tính doanh thu theo tháng với điều kiện doctorId nằm trong danh sách
+      const revenueEachMonth = await booking.aggregate([
+        {
+          $match: {
+            appointmentDate: {
+              $gte: new Date(currentYear, 0, 1),
+              $lt: new Date(currentYear + 1, 0, 1),
+            },
+            status: "S4",
+            doctorId: { $in: doctorIds },
+          },
+        },
+        {
+          $group: {
+            _id: { month: { $month: "$appointmentDate" } },
+            totalRevenue: {
+              $sum: {
+                $toDouble: "$price",
+              },
+            },
+          },
+        },
+        {
+          $sort: { "_id.month": 1 },
+        },
+      ]);
+      console.log("Revenue Each Month:", revenueEachMonth);
+
+      const fullYearRevenue = Array.from({ length: 12 }, (_, i) => ({
+        month: i + 1,
+        totalRevenue: 0,
+      }));
+      console.log("Full Year Revenue Before Update:", fullYearRevenue);
+
+      revenueEachMonth.forEach((item) => {
+        fullYearRevenue[item._id.month - 1].totalRevenue = item.totalRevenue;
+      });
+
+      const labels = fullYearRevenue.map((item) => `Tháng ${item.month}`);
+      const values = fullYearRevenue.map((item) => item.totalRevenue);
+      console.log("Labels:", labels);
+      console.log("Values:", values);
+
+      resolve({
+        status: 200,
+        message: "Success",
+        data: {
+          labels,
+          values,
+        },
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+const statusBookingChart = async (clinicId) => {
+  return new Promise(async (resolve, reject) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+    const firstDayOfNextMonth = new Date(currentYear, currentMonth + 1, 1);
+
+    try {
+      // Trường hợp có clinicId, cần tìm tất cả doctorId thuộc về clinic
+      let doctorIds = [];
+      if (clinicId) {
+        doctorIds = await getListDoctorIdsByClinicId(clinicId);
+      }
+
+      // Xây dựng điều kiện match
+      const matchCondition = {
+        appointmentDate: {
+          $gte: firstDayOfMonth,
+          $lt: firstDayOfNextMonth,
+        },
+      };
+
+      // Nếu có clinicId, thêm điều kiện lọc theo doctorId
+      if (clinicId && doctorIds.length > 0) {
+        matchCondition.doctorId = { $in: doctorIds };
+      }
+
+      const statusBooking = await booking.aggregate([
+        {
+          $match: matchCondition,
+        },
+        {
+          $group: {
+            _id: { status: "$status" },
+            total: {
+              $sum: 1,
+            },
+          },
+        },
+      ]);
+
+      const defaultStatuses = ["S1", "S2", "S3", "S4", "S5"];
+      const statusLabels = {
+        S1: "Chưa xác nhận",
+        S2: "Đã xác nhận",
+        S3: "Đã thanh toán",
+        S4: "Đã hoàn thành",
+        S5: "Đã hủy",
+      };
+      const fullStatusBooking = defaultStatuses.map((status) => ({
+        status,
+        total: 0,
+      }));
+
+      statusBooking.forEach((item) => {
+        const index = fullStatusBooking.findIndex(
+          (s) => s.status === item._id.status
+        );
+        if (index !== -1) {
+          fullStatusBooking[index].total = item.total;
+        }
+      });
+
+      const labels = fullStatusBooking.map((item) => statusLabels[item.status]);
+      const values = fullStatusBooking.map((item) => item.total);
+
+      resolve({
+        status: 200,
+        message: "Success",
+        data: {
+          labels,
+          values,
+        },
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+const bookingDayInMonthChart = async (clinicId) => {
+  return new Promise(async (resolve, reject) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+    const firstDayOfNextMonth = new Date(currentYear, currentMonth + 1, 1);
+
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    try {
+      // Xây dựng điều kiện match
+      let matchCondition = {
+        appointmentDate: {
+          $gte: firstDayOfMonth,
+          $lt: firstDayOfNextMonth,
+        },
+        status: { $in: ["S2", "S3", "S4"] },
+      };
+
+      // Nếu có clinicId, tìm tất cả doctorIds thuộc clinic này
+      if (clinicId) {
+        const doctorIds = await getListDoctorIdsByClinicId(clinicId);
+
+        // Thêm điều kiện lọc theo doctorIds
+        matchCondition.doctorId = { $in: doctorIds };
+      }
+
+      const bookingDayInMonth = await booking.aggregate([
+        {
+          $match: matchCondition,
+        },
+        {
+          $group: {
+            _id: {
+              day: { $dayOfMonth: "$appointmentDate" },
+            },
+            total: {
+              $sum: 1,
+            },
+          },
+        },
+        {
+          $sort: { "_id.day": 1 },
+        },
+      ]);
+
+      const fullMonth = Array.from({ length: daysInMonth }, (_, i) => ({
+        day: i + 1,
+        total: 0,
+      }));
+
+      bookingDayInMonth.forEach((item) => {
+        const index = fullMonth.findIndex((d) => d.day === item._id.day);
+        if (index !== -1) {
+          fullMonth[index].total = item.total;
+        }
+      });
+
+      const labels = fullMonth.map((item) => item.day);
+      const values = fullMonth.map((item) => item.total);
+
+      resolve({
+        status: 200,
+        message: "Success",
+        data: {
+          labels,
+          values,
+        },
+      });
+    } catch (e) {
+      console.error("Error in bookingDayInMonthChart:", e);
+      reject(e);
+    }
+  });
+};
+
+const bookingMonthInYearChart = async (clinicId) => {
+  return new Promise(async (resolve, reject) => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+
+    try {
+      // Xây dựng pipeline
+      const pipeline = [];
+
+      // Nếu có clinicId, thêm lookup để lọc theo clinicId
+      if (clinicId) {
+        pipeline.push(
+          // Lookup để kết nối với doctorInfo và lấy thông tin clinic
+          {
+            $lookup: {
+              from: "doctorinfos", // Tên collection doctorInfo trong MongoDB
+              localField: "doctorId",
+              foreignField: "doctorId",
+              as: "doctorInfo",
+            },
+          },
+          // Unwrap mảng doctorInfo
+          {
+            $unwind: "$doctorInfo",
+          },
+          // Lọc theo clinicId
+          {
+            $match: {
+              "doctorInfo.clinicId": clinicId,
+            },
+          }
+        );
+      }
+
+      // Thêm các bước match thời gian và status, group theo tháng
+      pipeline.push(
+        {
+          $match: {
+            appointmentDate: {
+              $gte: new Date(currentYear, 0, 1),
+              $lt: new Date(currentYear + 1, 0, 1),
+            },
+            status: { $in: ["S2", "S3", "S4"] },
+          },
+        },
+        {
+          $group: {
+            _id: { month: { $month: "$appointmentDate" } },
+            total: {
+              $sum: 1,
+            },
+          },
+        },
+        {
+          $sort: { "_id.month": 1 },
+        }
+      );
+
+      const bookingMonthInYear = await booking.aggregate(pipeline);
+
+      // Khởi tạo mảng với tất cả các tháng trong năm
+      const fullYear = Array.from({ length: 12 }, (_, i) => ({
+        month: i + 1,
+        total: 0,
+      }));
+
+      // Cập nhật tổng số booking cho mỗi tháng
+      bookingMonthInYear.forEach((item) => {
+        fullYear[item._id.month - 1].total = item.total;
+      });
+
+      const labels = fullYear.map((item) => `Tháng ${item.month}`);
+      const values = fullYear.map((item) => item.total);
+
+      resolve({
+        status: 200,
+        message: "Success",
+        data: {
+          labels,
+          values,
+        },
+      });
+    } catch (e) {
+      console.error("Error in bookingMonthInYearChart:", e);
+      reject(e);
+    }
+  });
+};
 
 const createClinic = (data) => {
   return new Promise(async (resolve, reject) => {
@@ -344,11 +769,16 @@ const getDropdownClinics = () => {
               },
             ]);
 
-            avgRating = ratingResult.length > 0 ? parseFloat(ratingResult[0].avg.toFixed(1)) : 0;
+            avgRating =
+              ratingResult.length > 0
+                ? parseFloat(ratingResult[0].avg.toFixed(1))
+                : 0;
           }
 
           // Lấy chuyên khoa
-          const specialties = await SpecialtyService.getSpecialtyByClinicId(clinicItem.clinicId);
+          const specialties = await SpecialtyService.getSpecialtyByClinicId(
+            clinicItem.clinicId
+          );
 
           return {
             ...clinicItem._doc,
@@ -372,13 +802,12 @@ const getDropdownClinics = () => {
   });
 };
 
-
 // const getDropdownClinics = () => {
 //   return new Promise(async (resolve, reject) => {
 //     try {
 //       const clinics = await clinic.find();
 //       // console.log("Clinics data:", clinics);
-      
+
 //       const clinicsWithSpecialties = await Promise.all(
 //         clinics.map(async (clinicItem) => {
 //           const specialties = await SpecialtyService.getSpecialtyByClinicId(
@@ -481,7 +910,6 @@ const getDropdownClinics = () => {
 //   });
 // };
 
-
 const getClinicByProvinceId = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -508,7 +936,17 @@ const getClinicByProvinceId = (id) => {
   });
 };
 
+async function getListDoctorIdsByClinicId(clinicId) {
+  const doctorInfos = await doctorInfo.find({ clinicId });
+  return doctorInfos.map((info) => info.doctorId);
+}
+
 export default {
+  getStatistics,
+  revenueChart,
+  statusBookingChart,
+  bookingDayInMonthChart,
+  bookingMonthInYearChart,
   createClinic,
   updateClinic,
   getAllClinic,

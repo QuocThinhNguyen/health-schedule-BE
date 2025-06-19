@@ -186,7 +186,7 @@ const bookingDayInMonthChart = async () => {
               $gte: firstDayOfMonth,
               $lt: firstDayOfNextMonth,
             },
-            status: { $in: ["S2", "S3", "S4", "S5"] },
+            status: { $in: ["S2", "S3", "S4"] },
           },
         },
         {
@@ -247,7 +247,7 @@ const bookingMonthInYearChart = async () => {
               $gte: new Date(currentYear, 0, 1),
               $lt: new Date(currentYear + 1, 0, 1),
             },
-            status: { $in: ["S2", "S3", "S4", "S5"] },
+            status: { $in: ["S2", "S3", "S4"] },
           },
         },
         {

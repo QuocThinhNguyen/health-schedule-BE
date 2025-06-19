@@ -48,25 +48,25 @@ const getDoctorInfor = (id) => {
       console.log("Booking count", bookingCount);
 
       const combinedData = {
-        doctorInforId: doctorData.doctorInforId,
-        doctorId: doctorData.doctorId,
-        email: userData.email,
-        fullname: userData.fullname,
-        address: userData.address,
-        gender: userData.gender,
-        phoneNumber: userData.phoneNumber,
-        birthDate: userData.birthDate,
-        image: userData.image,
-        specialtyName: specialtyData.name,
-        specialtyId: doctorData.specialtyId,
-        clinicName: clinicData.name,
-        addressClinic: clinicData.address,
-        clinicId: doctorData.clinicId,
-        price: doctorData.price,
-        note: doctorData.note,
-        description: doctorData.description,
-        position: allCodeData.keyMap,
-        avgRating: rate.averageRating,
+        doctorInforId: doctorData?.doctorInforId,
+        doctorId: doctorData?.doctorId,
+        email: userData?.email,
+        fullname: userData?.fullname,
+        address: userData?.address,
+        gender: userData?.gender,
+        phoneNumber: userData?.phoneNumber,
+        birthDate: userData?.birthDate,
+        image: userData?.image,
+        specialtyName: specialtyData?.name,
+        specialtyId: doctorData?.specialtyId,
+        clinicName: clinicData?.name,
+        addressClinic: clinicData?.address,
+        clinicId: doctorData?.clinicId,
+        price: doctorData?.price,
+        note: doctorData?.note,
+        description: doctorData?.description,
+        position: allCodeData?.keyMap,
+        avgRating: rate?.averageRating,
         bookingCount: bookingCount,
       };
       resolve({
@@ -446,6 +446,8 @@ const getDropdownDoctors = () => {
       dropdownDoctors.forEach((doctor) => {
         doctor._doc.bookingCount = bookingMap[doctor.doctorId.userId] || 0;
       });
+
+      dropdownDoctors.sort((a, b) => b._doc.avgRating - a._doc.avgRating);
 
       resolve({
         status: 200,

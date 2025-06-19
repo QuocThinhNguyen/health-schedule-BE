@@ -1,5 +1,7 @@
 import clinic from "../models/clinic.js";
 import SpecialtyService from "./SpecialtyService.js";
+import doctorInfo from "../models/doctor_info.js"
+import feedBack from "../models/feedbacks.js"
 
 const createClinic = (data) => {
   return new Promise(async (resolve, reject) => {
@@ -319,30 +321,166 @@ const getDropdownClinics = () => {
   return new Promise(async (resolve, reject) => {
     try {
       const clinics = await clinic.find();
-      // console.log("Clinics data:", clinics);
-      
-      const clinicsWithSpecialties = await Promise.all(
+
+      const clinicsWithSpecialtiesAndRating = await Promise.all(
         clinics.map(async (clinicItem) => {
-          const specialties = await SpecialtyService.getSpecialtyByClinicId(
-            clinicItem.clinicId
-          );
+          // Lấy danh sách doctorId thuộc clinic
+          const doctors = await doctorInfo
+            .find({ clinicId: clinicItem.clinicId })
+            .select("doctorId");
+          const doctorIds = doctors.map((doc) => doc.doctorId);
+
+          let avgRating = 0;
+
+          if (doctorIds.length > 0) {
+            // Tính trung bình rating từ feedbacks
+            const ratingResult = await feedBack.aggregate([
+              { $match: { doctorId: { $in: doctorIds } } },
+              {
+                $group: {
+                  _id: null,
+                  avg: { $avg: "$rating" },
+                },
+              },
+            ]);
+
+            avgRating = ratingResult.length > 0 ? parseFloat(ratingResult[0].avg.toFixed(1)) : 0;
+          }
+
+          // Lấy chuyên khoa
+          const specialties = await SpecialtyService.getSpecialtyByClinicId(clinicItem.clinicId);
+
           return {
             ...clinicItem._doc,
             specialties: specialties.data,
+            avgRating: avgRating,
           };
         })
       );
 
+      // Sắp xếp theo avgRating giảm dần
+      clinicsWithSpecialtiesAndRating.sort((a, b) => b.avgRating - a.avgRating);
+
       resolve({
         status: 200,
         message: "Get dropdown clinic successfully",
-        data: clinicsWithSpecialties,
+        data: clinicsWithSpecialtiesAndRating,
       });
     } catch (e) {
       reject(e);
     }
   });
 };
+
+
+// const getDropdownClinics = () => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const clinics = await clinic.find();
+//       // console.log("Clinics data:", clinics);
+      
+//       const clinicsWithSpecialties = await Promise.all(
+//         clinics.map(async (clinicItem) => {
+//           const specialties = await SpecialtyService.getSpecialtyByClinicId(
+//             clinicItem.clinicId
+//           );
+//           return {
+//             ...clinicItem._doc,
+//             specialties: specialties.data,
+//           };
+//         })
+//       );
+
+//       resolve({
+//         status: 200,
+//         message: "Get dropdown clinic successfully",
+//         data: clinicsWithSpecialties,
+//       });
+//     } catch (e) {
+//       reject(e);
+//     }
+//   });
+// };
+
+// const getDropdownClinics = () => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       // Lấy thông tin tất cả clinic
+//       const clinics = await clinic.aggregate([
+//         {
+//           // Nối doctorInfo để lấy doctor theo clinicId
+//           $lookup: {
+//             from: "doctorinfos",
+//             localField: "clinicId",
+//             foreignField: "clinicId",
+//             as: "doctors",
+//           },
+//         },
+//         {
+//           // Lấy mảng các doctorId
+//           $addFields: {
+//             doctorIds: {
+//               $map: {
+//                 input: "$doctors",
+//                 as: "doc",
+//                 in: "$$doc.doctorId",
+//               },
+//             },
+//           },
+//         },
+//         {
+//           // Nối bảng feedback theo doctorIds
+//           $lookup: {
+//             from: "feedbacks",
+//             let: { doctorIds: "$doctorIds" },
+//             pipeline: [
+//               {
+//                 $match: {
+//                   $expr: { $in: ["$doctorId", "$$doctorIds"] },
+//                 },
+//               },
+//             ],
+//             as: "feedbacks",
+//           },
+//         },
+//         {
+//           // Tính avgRating
+//           $addFields: {
+//             avgRating: {
+//               $cond: [
+//                 { $gt: [{ $size: "$feedbacks" }, 0] },
+//                 {
+//                   $round: [
+//                     {
+//                       $avg: "$feedbacks.rating",
+//                     },
+//                     1,
+//                   ],
+//                 },
+//                 0,
+//               ],
+//             },
+//           },
+//         },
+//         {
+//           $sort: {
+//             avgRating: -1, // sắp xếp giảm dần
+//           },
+//         },
+//       ]);
+
+//       resolve({
+//         status: 200,
+//         message: "Get dropdown clinics with avgRating successfully",
+//         data: clinics,
+//       });
+//     } catch (err) {
+//       console.error("Error getDropdownClinics:", err.message);
+//       reject(err);
+//     }
+//   });
+// };
+
 
 const getClinicByProvinceId = (id) => {
   return new Promise(async (resolve, reject) => {

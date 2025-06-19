@@ -103,7 +103,7 @@ const getAllBookingByUserId = (
             select: "name address mapUrl", // adjust fields as needed
           },
         })
-        .sort({ appointmentDate: -1, updatedAt: -1 }) 
+        .sort({  updatedAt: -1 }) 
         // .skip(skip)
         // .limit(pageSize);
       if (bookings.length === 0) {

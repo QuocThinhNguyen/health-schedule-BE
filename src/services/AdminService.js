@@ -3,6 +3,8 @@ import doctor from "../models/doctor_info.js";
 import clinic from "../models/clinic.js";
 import booking from "../models/booking.js";
 
+const COMMISSION_RATE = process.env.DEFAULT_COMMISSION_RATEE || 0.04;
+
 const adminHomePage = async () => {
   return new Promise(async (resolve, reject) => {
     const currentDate = new Date();
@@ -28,6 +30,17 @@ const adminHomePage = async () => {
         },
       });
 
+       const completedBookings = await booking.find({
+        status: "S4"
+      });
+      
+      const totalRevenue = completedBookings.reduce(
+        (sum, booking) => sum + (Number(booking.price) || 0),
+        0
+      );
+      
+      const commission = totalRevenue * COMMISSION_RATE;
+
       resolve({
         status: 200,
         message: "Success",
@@ -36,6 +49,8 @@ const adminHomePage = async () => {
           totalDoctors: totalDoctors,
           countOfNewUserThisMonth: countOfNewUserThisMonth,
           totalBookingThisMonth: totalBookingThisMonth,
+          totalRevenue: totalRevenue,
+          commission: commission
         },
       });
     } catch (e) {
